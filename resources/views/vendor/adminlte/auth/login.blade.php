@@ -5,49 +5,55 @@
 
 <style>
 
-body{
-    background:#f4f6f9;
+/* Fondo */
+.login-page{
+    background:#f4f6f9 !important;
 }
 
-/* Caja del login */
+/* Tarjeta */
 .login-box .card{
     border-radius:10px;
     border:none;
     box-shadow:0 8px 20px rgba(0,0,0,0.15);
 }
 
-/* Logo */
-.login-logo img{
-    width:110px;
-    margin-bottom:10px;
-}
-
-/* Botón */
-.btn-login{
-    background:#000;
-    color:#fff;
-    font-weight:600;
-}
-
-.btn-login:hover{
-    background:#333;
-}
-
-/* Inputs */
-.form-control:focus{
-    border-color:#333;
-    box-shadow:none;
-}
-
-/* Encabezado */
+/* Header */
 .login-title{
     font-weight:600;
     color:#000;
 }
 
 .login-subtitle{
-    font-size:14px;
     color:#6c757d;
+    font-size:14px;
+}
+
+/* Inputs */
+.form-control{
+    border-radius:6px;
+}
+
+.form-control:focus{
+    border-color:#444;
+    box-shadow:none;
+}
+
+/* Botón login */
+.btn-login{
+    background:#000 !important;
+    border:none !important;
+    color:#fff !important;
+    font-weight:600;
+    border-radius:6px;
+}
+
+.btn-login:hover{
+    background:#333 !important;
+}
+
+/* Iconos */
+.input-group-text{
+    background:#f8f9fa;
 }
 
 </style>
