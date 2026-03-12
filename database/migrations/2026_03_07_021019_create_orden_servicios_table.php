@@ -19,7 +19,7 @@ return new class extends Migration
                 ->cascadeOnUpdate();
 
             $table->foreignId('id_usuario')
-                ->constrained('usuarios', 'id_usuario')
+                ->constrained('usuario', 'id_usuario')
                 ->cascadeOnUpdate();
 
 
