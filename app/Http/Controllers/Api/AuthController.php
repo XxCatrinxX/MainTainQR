@@ -58,3 +58,4 @@ class AuthController extends Controller
         return response()->json(['message' => 'Logout OK']);
     }
 }
+// Este controlador maneja la autenticación de usuarios para la API. Permite a los usuarios iniciar sesión, obtener su información y cerrar sesión.

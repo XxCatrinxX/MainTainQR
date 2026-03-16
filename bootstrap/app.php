@@ -17,3 +17,4 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withExceptions(function (Exceptions $exceptions): void {
         //
     })->create();
+//esto es el archivo de arranque de la aplicacion, aqui se configura la aplicacion, se definen las rutas, los middleware y las excepciones.
