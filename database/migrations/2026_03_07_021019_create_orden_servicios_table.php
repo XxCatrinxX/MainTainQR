@@ -19,7 +19,8 @@ return new class extends Migration
                 ->cascadeOnUpdate();
 
             $table->foreignId('id_usuario')
-                ->constrained('usuario', 'id_usuario')
+                ->references('id')
+                ->on('users')
                 ->cascadeOnUpdate();
 
 
@@ -55,7 +56,7 @@ return new class extends Migration
                 'dejar_para_refacciones'
             ])->nullable();
 
-            $table->decimal('monto_compra_equipo'. 10, 2)->nullable();
+            $table->decimal('monto_compra_equipo', 10, 2)->nullable();
                 
             $table->timestamps();
         });
