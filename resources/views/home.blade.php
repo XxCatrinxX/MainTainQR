@@ -118,9 +118,9 @@
 
 <div class="row">
     <div class="col-12 text-right mb-4">
-        <button class="btn btn-success btn-lg shadow">
+        <a href="{{ route('ordenes.create') }}" class="btn btn-success btn-lg shadow">
             <i class="fas fa-plus"></i> Nueva Orden
-        </button>
+        </a>
     </div>
 </div>
 @endsection
