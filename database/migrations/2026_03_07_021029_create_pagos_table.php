@@ -15,7 +15,7 @@ return new class extends Migration
              $table->id('id_pago');
 
     $table->foreignId('id_orden')
-        ->constrained('ordenes_servicio','id_orden');
+        ->constrained('orden_servicios','id_orden');
 
     $table->decimal('monto',10,2);
 
