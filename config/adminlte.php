@@ -336,6 +336,11 @@ return [
             'url' => 'equipos',
             'icon' => 'fas fa-desktop',
         ],
+        [
+            'text' => 'Almacen',
+            'url' => 'almacen',
+            'icon' => 'fas fa-warehouse',
+        ],
         ['header' => 'account_settings'],
         [
             'text' => 'profile',

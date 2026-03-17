@@ -12,7 +12,32 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('refaccion_productos', function (Blueprint $table) {
-            $table->id();
+            $table->id('id_refaccion');
+
+            $table->string('nombre', 150);
+            $table->text('descripcion')->nullable();
+            $table->string('codigo', 100)->unique()->nullable();
+            $table->string('marca', 100)->nullable();
+            $table->string('modelo', 100)->nullable();
+
+            $table->decimal('precio', 10, 2);
+            $table->integer('stock')->default(0);
+            $table->integer('stock_minimo')->default(0);
+
+            $table->enum('estado', [
+                'disponible',
+                'agotado',
+                'descontinuado'
+            ])->default('disponible');
+
+            $table->enum('tipo_pieza', [
+                'original',
+                'generica',
+                'usada'
+            ])->default('original');
+
+            $table->text('observaciones')->nullable();
+
             $table->timestamps();
         });
     }
