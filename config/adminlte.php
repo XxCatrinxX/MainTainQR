@@ -336,6 +336,12 @@ return [
             'url' => 'equipos',
             'icon' => 'fas fa-desktop',
         ],
+        [
+            'text' => 'Clientes',
+            'url' => 'clientes',
+            'icon' => 'fas fa-users',
+        ],
+
         ['header' => 'account_settings'],
         [
             'text' => 'profile',
