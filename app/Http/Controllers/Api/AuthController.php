@@ -59,4 +59,4 @@ class AuthController extends Controller
     }
 }
 // Este controlador maneja la autenticación de usuarios para la API. Permite a los usuarios iniciar sesión, obtener su información y cerrar sesión.
-//aaaa
+// de momento solo toma los daros de usuario y contraseña, faltan agregar los demas datos para que la app jale todo
