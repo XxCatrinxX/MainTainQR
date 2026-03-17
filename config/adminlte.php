@@ -337,11 +337,18 @@ return [
             'icon' => 'fas fa-desktop',
         ],
         [
+<<<<<<< HEAD
             'text' => 'Clientes',
             'url' => 'clientes',
             'icon' => 'fas fa-users',
         ],
 
+=======
+            'text' => 'Almacen',
+            'url' => 'almacen',
+            'icon' => 'fas fa-warehouse',
+        ],
+>>>>>>> 796ac03b16866941c175e140f6c4e0c0e8aca9ad
         ['header' => 'account_settings'],
         [
             'text' => 'profile',
