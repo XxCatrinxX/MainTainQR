@@ -119,7 +119,7 @@
                 <select name="id_usuario" class="form-control">
                     <option value="">-- Seleccionar técnico --</option>
                     @foreach($usuarios as $usuario)
-                        <option value="{{ $usuario->id }}">{{ $usuario->name }}</option>
+                        <option value="{{ $usuario->id }}">{{ $usuario->nombre }}</option>
                     @endforeach
                 </select>
             </div>
