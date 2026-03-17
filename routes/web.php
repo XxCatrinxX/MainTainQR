@@ -16,3 +16,4 @@ Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])
 
 Route::get('/ordenes/nueva', [OrdenServicioController::class, 'create'])->name('ordenes.create');
 Route::post('/ordenes/guardar', [OrdenServicioController::class, 'store'])->name('ordenes.store');
+Route::get('/ordenes', [OrdenServicioController::class, 'index'])->name('ordenes.index');

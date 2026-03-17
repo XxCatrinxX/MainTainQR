@@ -10,13 +10,15 @@ class Cliente extends Model
     protected $primaryKey = 'id_cliente';
     public $timestamps = false;
 
-    protected $fillable = [
-        'nombre',
-        'apellido',
-        'telefono',
-        'correo',
-        'direccion',
-    ];
+protected $fillable = [
+    'nombre',
+    'apellido_paterno',
+    'apellido_materno',
+    'telefono',
+    'correo',
+    'direccion',
+    'fecha_registro',
+];
 
     public function equipos()
     {

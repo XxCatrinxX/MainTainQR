@@ -2,123 +2,143 @@
 
 @section('title', 'Nueva Orden de Servicio')
 
-@section('content')
-<div class="container-fluid">
-    <form action="{{ route('ordenes.store') }}" method="POST">
-        @csrf
-        <div class="row">
-            <div class="col-md-8">
-                <div class="card card-primary card-outline">
-                    <div class="card-header"><h3 class="card-title font-weight-bold">Detalles de la Recepción</h3></div>
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-6 form-group">
-                                <label>Equipo</label>
-                                <select name="id_equipo" class="form-control @error('id_equipo') is-invalid @enderror">
-                                    <option value="">Seleccionar Equipo...</option>
-                                    @foreach($equipos as $equipo)
-                                        <option value="{{ $equipo->id_equipo }}" {{ old('id_equipo') == $equipo->id_equipo ? 'selected' : '' }}>{{ $equipo->marca }} - {{ $equipo->modelo }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="col-md-6 form-group">
-                                <label>Técnico / Usuario Responsable</label>
-                                <select name="id_usuario" class="form-control @error('id_usuario') is-invalid @enderror">
-                                    <option value="">Asignar a...</option>
-                                    @foreach($usuarios as $usuario)
-                                        <option value="{{ $usuario->id }}" {{ old('id_usuario') == $usuario->id ? 'selected' : '' }}>{{ $usuario->nombre }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                        </div>
-
-                        <div class="form-group">
-                            <label>Problema Reportado (Cliente)</label>
-                            <textarea name="problema_reportado" class="form-control" rows="3">{{ old('problema_reportado') }}</textarea>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-6 form-group">
-                                <label>Diagnóstico Inicial (Opcional)</label>
-                                <textarea name="diagnostico" class="form-control" rows="3">{{ old('diagnostico') }}</textarea>
-                            </div>
-                            <div class="col-md-6 form-group">
-                                <label>Actividad a Realizar</label>
-                                <textarea name="actividad_a_realizar" class="form-control" rows="3">{{ old('actividad_a_realizar') }}</textarea>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-4">
-                <div class="card card-info">
-                    <div class="card-header"><h3 class="card-title">Estado y Tiempos</h3></div>
-                    <div class="card-body">
-                        <div class="form-group">
-                            <label>Estado de la Orden</label>
-                            <select name="estado" class="form-control">
-                                <option value="abierta">Abierta</option>
-                                <option value="en_diagnostico">En Diagnóstico</option>
-                                <option value="en_proceso">En Proceso</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>Fecha de Recepción</label>
-                            <input type="datetime-local" name="fecha_recepcion" class="form-control" value="{{ date('Y-m-d\TH:i') }}">
-                        </div>
-                    </div>
-                </div>
-
-                <div class="card card-success">
-    <div class="card-header"><h3 class="card-title">Costos Iniciales (MXN)</h3></div>
-    <div class="card-body">
-        <div class="form-group">
-            <label>Costo Materiales</label>
-            <input type="number" id="costo_materiales" name="costo_materiales" step="0.01" class="form-control" value="0.00">
-        </div>
-        <div class="form-group">
-            <label>Costo Servicio</label>
-            <input type="number" id="costo_servicio" name="costo_servicio" step="0.01" class="form-control" value="0.00">
-        </div>
-        <div class="form-group">
-            <label class="text-success">Costo Total</label>
-            <input type="number" id="costo_total" name="costo_total" step="0.01" class="form-control font-weight-bold" value="0.00" readonly>
-        </div>
-    </div>
-</div>
-            </div>
-        </div>
-
-        <div class="row pb-5">
-            <div class="col-12 text-center">
-                <button type="submit" class="btn btn-primary btn-lg shadow"><i class="fas fa-save"></i> Guardar Orden de Servicio</button>
-            </div>
-        </div>
-    </form>
-</div>
+@section('content_header')
+    <h1>Registrar Orden de Servicio</h1>
 @stop
 
-@section('js')
-<script>
-    $(document).ready(function() {
-        // Función para calcular el total
-        function calcularTotal() {
-            // Obtenemos los valores. parseFloat ayuda a tratar los números correctamente.
-            let materiales = parseFloat($('#costo_materiales').val()) || 0;
-            let servicio = parseFloat($('#costo_servicio').val()) || 0;
-            
-            // Calculamos la suma
-            let total = materiales + servicio;
-            
-            // Asignamos el resultado al campo total con 2 decimales
-            $('#costo_total').val(total.toFixed(2));
-        }
+@section('content')
 
-        // Detectar cuando el usuario escribe en cualquiera de los dos campos
-        $('#costo_materiales, #costo_servicio').on('input', function() {
-            calcularTotal();
-        });
-    }); // <--- Aquí estaba el error, antes decía </div>
-</script>
+<form action="{{ route('ordenes.store') }}" method="POST">
+    @csrf
+
+    <div class="row">
+
+        {{-- ===================== CLIENTE ===================== --}}
+        <div class="col-md-6">
+            <div class="card card-primary card-outline">
+                <div class="card-header">
+                    <h3 class="card-title font-weight-bold">Datos del Cliente</h3>
+                </div>
+
+                <div class="card-body">
+
+                    <div class="form-group">
+                        <label>Nombre *</label>
+                        <input type="text" name="cliente_nombre" class="form-control @error('cliente_nombre') is-invalid @enderror" value="{{ old('cliente_nombre') }}">
+                        @error('cliente_nombre') <span class="text-danger">{{ $message }}</span> @enderror
+                    </div>
+
+                    <div class="form-group">
+                        <label>Apellido paterno *</label>
+                        <input type="text" name="cliente_apellido_paterno" class="form-control @error('cliente_apellido_paterno') is-invalid @enderror" value="{{ old('cliente_apellido_paterno') }}">
+                        @error('cliente_apellido_paterno') <span class="text-danger">{{ $message }}</span> @enderror
+                    </div>
+
+                    <div class="form-group">
+                        <label>Apellido materno</label>
+                        <input type="text" name="cliente_apellido_materno" class="form-control" value="{{ old('cliente_apellido_materno') }}">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Teléfono *</label>
+                        <input type="text" name="cliente_telefono" class="form-control @error('cliente_telefono') is-invalid @enderror" value="{{ old('cliente_telefono') }}">
+                        @error('cliente_telefono') <span class="text-danger">{{ $message }}</span> @enderror
+                    </div>
+
+                    <div class="form-group">
+                        <label>Correo</label>
+                        <input type="email" name="cliente_correo" class="form-control" value="{{ old('cliente_correo') }}">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Dirección</label>
+                        <textarea name="cliente_direccion" class="form-control">{{ old('cliente_direccion') }}</textarea>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        {{-- ===================== EQUIPO ===================== --}}
+        <div class="col-md-6">
+            <div class="card card-success card-outline">
+                <div class="card-header">
+                    <h3 class="card-title font-weight-bold">Datos del Equipo</h3>
+                </div>
+
+                <div class="card-body">
+
+                    <div class="form-group">
+                        <label>Tipo de equipo *</label>
+                        <input type="text" name="equipo_tipo" class="form-control @error('equipo_tipo') is-invalid @enderror" value="{{ old('equipo_tipo') }}">
+                        @error('equipo_tipo') <span class="text-danger">{{ $message }}</span> @enderror
+                    </div>
+
+                    <div class="form-group">
+                        <label>Marca *</label>
+                        <input type="text" name="equipo_marca" class="form-control @error('equipo_marca') is-invalid @enderror" value="{{ old('equipo_marca') }}">
+                        @error('equipo_marca') <span class="text-danger">{{ $message }}</span> @enderror
+                    </div>
+
+                    <div class="form-group">
+                        <label>Modelo</label>
+                        <input type="text" name="equipo_modelo" class="form-control" value="{{ old('equipo_modelo') }}">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Número de serie</label>
+                        <input type="text" name="equipo_num_serie" class="form-control" value="{{ old('equipo_num_serie') }}">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Color</label>
+                        <input type="text" name="equipo_color" class="form-control" value="{{ old('equipo_color') }}">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Observaciones</label>
+                        <textarea name="equipo_observaciones" class="form-control">{{ old('equipo_observaciones') }}</textarea>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    {{-- ===================== ORDEN ===================== --}}
+    <div class="card card-warning card-outline">
+        <div class="card-header">
+            <h3 class="card-title font-weight-bold">Orden de Servicio</h3>
+        </div>
+
+        <div class="card-body">
+
+            <div class="form-group">
+                <label>Técnico asignado</label>
+                <select name="id_usuario" class="form-control">
+                    <option value="">-- Seleccionar técnico --</option>
+                    @foreach($usuarios as $usuario)
+                        <option value="{{ $usuario->id }}">{{ $usuario->name }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Problema reportado *</label>
+                <textarea name="problema_reportado" class="form-control @error('problema_reportado') is-invalid @enderror">{{ old('problema_reportado') }}</textarea>
+                @error('problema_reportado') <span class="text-danger">{{ $message }}</span> @enderror
+            </div>
+
+        </div>
+    </div>
+
+    {{-- BOTONES --}}
+    <div class="text-right">
+        <a href="{{ route('home') }}" class="btn btn-secondary">Cancelar</a>
+        <button type="submit" class="btn btn-primary">Guardar Orden</button>
+    </div>
+
+</form>
+
 @stop

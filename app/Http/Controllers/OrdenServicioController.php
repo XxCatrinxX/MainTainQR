@@ -10,6 +10,12 @@ use App\Models\User;
 
 class OrdenServicioController extends Controller
 {
+    public function index()
+{
+    $ordenes = OrdenServicio::with(['cliente', 'equipo'])->get();
+
+    return view('ordenes.index', compact('ordenes'));
+}
     public function create()
     {
         $equipos = Equipo::all();
@@ -19,30 +25,53 @@ class OrdenServicioController extends Controller
         return view('ordenes.create', compact('equipos', 'usuarios', 'clientes'));
     }
 
-    public function store(Request $request)
-    {
+public function store(Request $request)
+{
     $request->validate([
-        'id_equipo' => 'required',
-        'id_usuario' => 'required',
+        'cliente_nombre' => 'required',
+        'cliente_apellido_paterno' => 'required',
+        'cliente_telefono' => 'required',
+
+        'equipo_tipo' => 'required',
+        'equipo_marca' => 'required',
         'problema_reportado' => 'required',
     ]);
 
-    // Calcular el total automáticamente
-    $total = $request->costo_materiales + $request->costo_servicio;
-
-    OrdenServicio::create([
-        'id_equipo'          => $request->id_equipo,
-        'id_usuario'         => $request->id_usuario,
-        'problema_reportado' => $request->problema_reportado,
-        'diagnostico'        => $request->diagnostico,
-        'actividad_a_realizar' => $request->actividad_a_realizar,
-        'estado'             => $request->estado ?? 'abierta',
-        'costo_materiales'   => $request->costo_materiales ?? 0,
-        'costo_servicio'     => $request->costo_servicio ?? 0,
-        'costo_total'        => $total,
-        'fecha_recepcion'    => $request->fecha_recepcion ?? now(),
+    // Crear cliente
+    $cliente = Cliente::create([
+        'nombre' => $request->cliente_nombre,
+        'apellido_paterno' => $request->cliente_apellido_paterno,
+        'apellido_materno' => $request->cliente_apellido_materno,
+        'telefono' => $request->cliente_telefono,
+        'correo' => $request->cliente_correo,
+        'direccion' => $request->cliente_direccion,
+        'fecha_registro' => now(),
     ]);
 
-    return redirect()->route('home')->with('info', 'Orden de servicio creada exitosamente.');
-    }
-}
+    // Crear equipo (YA CORREGIDO)
+    $equipo = Equipo::create([
+        'id_cliente'   => $cliente->id_cliente,
+        'tipo_equipo'  => $request->equipo_tipo,
+        'marca'        => $request->equipo_marca,
+        'modelo'       => $request->equipo_modelo,
+        'num_serie'    => $request->equipo_num_serie,
+        'color'        => $request->equipo_color,
+        'observaciones'=> $request->equipo_observaciones,
+    ]);
+
+    // Crear orden
+    OrdenServicio::create([
+        'id_cliente' => $cliente->id_cliente,
+        'id_equipo' => $equipo->id_equipo,
+        'id_usuario' => $request->id_usuario,
+        'problema_reportado' => $request->problema_reportado,
+        'estado' => 'abierta',
+        'fecha_recepcion' => now(),
+    ]);
+
+
+
+    return redirect()->route('home')
+        ->with('success', 'Orden creada correctamente');
+}}
+
