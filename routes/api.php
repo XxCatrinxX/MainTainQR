@@ -10,4 +10,3 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
 });
 // | Aquí es donde puedes registrar las rutas API para tu aplicación. Estas rutas son cargadas por el RouteServiceProvider dentro de un grupo que
-
