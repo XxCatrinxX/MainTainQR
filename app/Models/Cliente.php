@@ -7,21 +7,19 @@ use Illuminate\Database\Eloquent\Model;
 class Cliente extends Model
 {
     protected $table = 'clientes';
-    protected $primaryKey = 'id_cliente';
-    public $timestamps = false;
+    protected $primaryKey = 'id';
 
-protected $fillable = [
-    'nombre',
-    'apellido_paterno',
-    'apellido_materno',
-    'telefono',
-    'correo',
-    'direccion',
-    'fecha_registro',
-];
+    protected $fillable = [
+        'nombre',
+        'apellido_paterno',
+        'apellido_materno',
+        'telefono',
+        'correo',
+        'direccion'
+    ];
 
     public function equipos()
     {
-        return $this->hasMany(Equipo::class, 'id_cliente');
+        return $this->hasMany(Equipo::class, 'cliente_id');
     }
 }

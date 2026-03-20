@@ -11,10 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('historial_dispositivos', function (Blueprint $table) {
-            $table->id();
-            $table->timestamps();
-        });
+        Schema::create('evidencias', function (Blueprint $table) {
+    $table->id();
+    $table->foreignId('orden_servicio_id')->constrained('orden_servicios');
+    $table->string('url_foto');
+    $table->enum('momento', ['recepcion', 'diagnostico', 'reparacion', 'finalizado']);
+    $table->timestamps();
+});
     }
 
     /**
@@ -22,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('historial_dispositivos');
+        Schema::dropIfExists('evidencias');
     }
 };

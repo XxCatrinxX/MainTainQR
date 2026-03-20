@@ -1,193 +1,243 @@
 @extends('adminlte::page')
 
+@section('title', 'Dashboard')
+
+@section('css')
+<style>
+    /* Estilos globales Modernos SaaS */
+    body {
+        background-color: #fafafa !important;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+    }
+    
+    .content-wrapper {
+        background-color: transparent !important;
+    }
+
+    /* Cards Minimalistas suaves (Stripe/Vercel) */
+    .card {
+        border: 1px solid #eaeaea !important;
+        border-radius: 12px !important;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03) !important;
+        transition: box-shadow 0.3s ease, border-color 0.3s ease;
+        background-color: #ffffff;
+    }
+    .card:hover {
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+        border-color: #e0e0e0 !important;
+    }
+    .card-header {
+        background-color: transparent !important;
+        border-bottom: 1px solid #eaeaea !important;
+        padding: 1.25rem 1.5rem !important;
+    }
+    .card-title {
+        font-weight: 600 !important;
+        color: #111827 !important;
+        font-size: 1.1rem !important;
+    }
+
+    /* Tablas minimalistas */
+    .table { margin-bottom: 0 !important; }
+    .table th {
+        border-top: none !important;
+        border-bottom: 1px solid #eaeaea !important;
+        background-color: #fafafa !important;
+        color: #6b7280 !important;
+        font-weight: 500 !important;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 0.05em;
+        padding: 1rem 1.5rem !important;
+    }
+    .table td {
+        vertical-align: middle !important;
+        border-top: 1px solid #eaeaea !important;
+        padding: 1rem 1.5rem !important;
+        color: #374151;
+        font-weight: 500;
+    }
+    .table tbody tr { transition: background-color 0.2s ease; }
+    .table tbody tr:hover { background-color: #f9fafb !important; }
+
+    /* Custom Badges estilo Pastel / Pill */
+    .badge {
+        padding: 0.4em 0.8em !important;
+        border-radius: 20px !important;
+        font-weight: 500 !important;
+        font-size: 0.75rem;
+    }
+    .badge-secondary { background-color: #f3f4f6 !important; color: #4b5563 !important; }
+    .badge-warning { background-color: #fef3c7 !important; color: #92400e !important; }
+    .badge-info { background-color: #e0f2fe !important; color: #0369a1 !important; }
+    .badge-primary { background-color: #dbeafe !important; color: #1e40af !important; }
+    .badge-success { background-color: #dcfce3 !important; color: #166534 !important; }
+    .badge-dark { background-color: #111827 !important; color: #ffffff !important; }
+
+    /* Modern Buttons */
+    .btn {
+        border-radius: 8px !important;
+        font-weight: 500 !important;
+        letter-spacing: 0.01em;
+        padding: 0.5rem 1.25rem;
+        transition: all 0.2s ease;
+        box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+    }
+    .btn-dark-modern {
+        background-color: #000000 !important;
+        color: #ffffff !important;
+        border: 1px solid #000000 !important;
+    }
+    .btn-dark-modern:hover {
+        background-color: #333333 !important;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
+        transform: translateY(-1px);
+        color: white !important;
+    }
+
+    /* Small Box Stats adaptados a Modern UI */
+    .stat-box {
+        background: #fff;
+        border-radius: 12px;
+        padding: 1.5rem;
+        border: 1px solid #eaeaea;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        overflow: hidden;
+        margin-bottom: 20px;
+        transition: all 0.3s ease;
+    }
+    .stat-box:hover {
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+        transform: translateY(-2px);
+    }
+    .stat-value { font-size: 2rem; font-weight: 700; color: #111827; margin: 0.5rem 0 0 0; }
+    .stat-label { font-size: 0.875rem; color: #6b7280; font-weight: 500; }
+    .stat-icon {
+        position: absolute;
+        right: 1.5rem;
+        top: 1.5rem;
+        font-size: 1.5rem;
+        opacity: 0.8;
+    }
+    .icon-abiertas { color: #3b82f6; }
+    .icon-espera { color: #f59e0b; }
+    .icon-proceso { color: #8b5cf6; }
+    .icon-cerradas { color: #10b981; }
+
+    /* Fix header en layout principal si lo deseas sutil */
+    .content-header h1 {
+        font-weight: 700;
+        font-size: 1.5rem;
+        color: #111827;
+        margin-bottom: 0.5rem;
+    }
+</style>
+@stop
+
+@section('content_header')
+    <h1>Vista General</h1>
+    <p class="text-muted mb-0" style="font-size: 0.9rem;">Analíticas y progreso de tus órdenes de servicio.</p>
+@stop
+
 @section('content')
 
 <div class="row">
-    <!-- Órdenes Abiertas -->
-    <div class="col-lg-3 col-6">
-        <div class="small-box bg-primary">
-            <div class="inner">
-                <h3>{{ $totalAbiertas }}</h3>
-                <p>Órdenes Abiertas</p>
-            </div>
-            <div class="icon"><i class="fas fa-folder-open"></i></div>
-        </div>
-    </div>
-
-    <!-- Órdenes Pendientes -->
-    <div class="col-lg-3 col-6">
-        <div class="small-box bg-success">
-            <div class="inner">
-                <h3 class="text-white">{{ $totalPendientes }}</h3>
-                <p>Órdenes Pendientes</p>
-            </div>
-            <div class="icon"><i class="fas fa-hourglass-half"></i></div>
-        </div>
-    </div>
-
-    <!-- En proceso -->
-    <div class="col-lg-3 col-6">
-        <div class="small-box bg-warning">
-            <div class="inner">
-                <h3>{{ $totalProceso }}</h3>
-                <p>En Proceso</p>
-            </div>
-            <div class="icon"><i class="fas fa-sync-alt"></i></div>
-        </div>
-    </div>
-
-    <!-- Cerradas -->
-    <div class="col-lg-3 col-6">
-        <div class="small-box bg-danger">
-            <div class="inner">
-                <h3>{{ $totalCerradas }}</h3>
-                <p>Órdenes Cerradas</p>
-            </div>
-            <div class="icon"><i class="fas fa-check-circle"></i></div>
-        </div>
-    </div>
-</div>
-
-<div class="row">
-
-    <!-- GRÁFICA -->
+    <!-- COLUMNA PRINCIPAL (ampliada) -->
     <div class="col-md-8">
-        <div class="card">
-            <div class="card-header border-0">
-                <h3 class="card-title text-bold">Resumen de Órdenes</h3>
+        <!-- COMPANY INFO -->
+        <div class="card mb-4" style="border: none !important; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05) !important;">
+            <div class="card-header border-0 d-flex justify-content-between align-items-center" style="padding-bottom: 0;">
+                <h3 class="card-title" style="color: #111827; font-weight: 700;"><i class="fas fa-building text-primary mr-2"></i> Identidad Corporativa</h3>
             </div>
-            <div class="card-body">
-                <canvas id="orderChart" style="min-height: 250px;"></canvas>
-            </div>
-        </div>
-
-        <!-- ÓRDENES RECIENTES -->
-        <div class="card">
-            <div class="card-header border-0">
-                <h3 class="card-title text-bold">Órdenes Recientes</h3>
-            </div>
-            <div class="card-body p-0">
-                <table class="table table-striped table-valign-middle">
-                    <thead>
-                        <tr>
-                            <th>Folio</th>
-                            <th>Equipo</th>
-                            <th>Estado</th>
-                            <th>Cliente</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($ordenesRecientes as $orden)
-                        <tr>
-                            <td>ORD-{{ $orden->id_orden }}</td>
-
-                            <td>
-                                {{ $orden->equipo->tipo_equipo ?? 'N/A' }} 
-                                {{ $orden->equipo->marca ?? '' }}
-                            </td>
-
-                            <td>
-                                @php $estado = strtolower($orden->estado); @endphp
-
-                                @if($estado == 'abierta')
-                                    <span class="badge badge-secondary">Abierta</span>
-
-                                @elseif($estado == 'en_diagnostico')
-                                    <span class="badge badge-warning">Diagnóstico</span>
-
-                                @elseif($estado == 'en_cotizacion')
-                                    <span class="badge badge-info">Cotización</span>
-
-                                @elseif($estado == 'en_proceso')
-                                    <span class="badge badge-primary">En proceso</span>
-
-                                @elseif($estado == 'cerrada')
-                                    <span class="badge badge-success">Cerrada</span>
-
-                                @elseif($estado == 'cancelada')
-                                    <span class="badge badge-danger">Cancelada</span>
-
-                                @else
-                                    <span class="badge badge-light">{{ $orden->estado }}</span>
-                                @endif
-                            </td>
-
-                            <td>
-                                {{ $orden->equipo->cliente->nombre ?? 'Sin cliente' }}
-                            </td>
-                        </tr>
-                        @empty
-                        <tr>
-                            <td colspan="4" class="text-center">No hay órdenes registradas</td>
-                        </tr>
-                        @endforelse
-                    </tbody>
-                </table>
+            <div class="card-body p-4">
+                <div class="row">
+                    <div class="col-md-6 mb-3 mb-md-0">
+                        <div class="p-4" style="background-color: #f8fafc; border-radius: 12px; border-left: 4px solid #3b82f6; height: 100%;">
+                            <h5 style="font-weight: 800; color: #1e3a8a; margin-bottom: 12px; letter-spacing: -0.02em;"><i class="fas fa-bullseye mr-2"></i> Misión</h5>
+                            <p style="color: #4b5563; font-size: 0.95rem; line-height: 1.6; margin: 0;">
+                                Proveer soluciones tecnológicas integrales ofreciendo servicio técnico de vanguardia para la reparación de equipos electrónicos, asegurando el óptimo rendimiento y extendiendo su vida útil; todo respaldado por la confianza, transparencia y trazabilidad en cada una de nuestras operaciones.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="p-4" style="background-color: #f0fdf4; border-radius: 12px; border-left: 4px solid #10b981; height: 100%;">
+                            <h5 style="font-weight: 800; color: #065f46; margin-bottom: 12px; letter-spacing: -0.02em;"><i class="fas fa-eye mr-2"></i> Visión</h5>
+                            <p style="color: #4b5563; font-size: 0.95rem; line-height: 1.6; margin: 0;">
+                                Convertirnos en el Service Center referente en excelencia, distinguiéndonos nacionalmente por metodologías ágiles, diagnósticos exactos y servicio al cliente estelar, construyendo permanentemente lazos de confiabilidad absolutos en el ecosistema de reparación tecnológica.
+                            </p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- LADO DERECHO -->
+    <!-- COLUMNA SECUNDARIA (SIDEBAR RIGHT) -->
     <div class="col-md-4">
+        
+        <!-- BIENVENIDA Y FECHA -->
+        <div class="card mb-4" style="background: linear-gradient(135deg, #111827, #374151); color: white; border: none !important;">
+            <div class="card-body p-4 text-center">
+                <h4 style="font-weight: 700; margin-bottom: 0.2rem;">Hola, {{ Auth::user()->nombre ?? 'Usuario' }}</h4>
+                <p style="color: #9ca3af; font-size: 0.95rem; margin-bottom: 1rem;">
+                    Rol de sesión: <span class="badge badge-light text-capitalize" style="color: #111827 !important; padding: 0.4em 0.8em; font-size: 0.85rem;">{{ Auth::user()->rol ?? 'Administrador' }}</span>
+                </p>
+                <div class="py-2" style="background: rgba(255,255,255,0.1); border-radius: 8px;">
+                    <i class="far fa-clock mr-2"></i>
+                    <span id="reloj-tiempo-real" style="font-weight: 600; font-family: monospace; font-size: 1.1rem;">{{ now()->format('d/m/Y h:i A') }}</span>
+                </div>
+            </div>
+        </div>
 
-        <!-- BOTÓN -->
-        <div class="mb-3 text-right">
-            <a href="{{ route('ordenes.create') }}" class="btn btn-success btn-block shadow">
-                <i class="fas fa-plus"></i> Nueva Orden
+        <!-- ACTION BUTTON -->
+        <div class="mb-4">
+            <a href="{{ route('ordenes.create_paso1') }}" class="btn btn-dark-modern btn-block shadow-sm py-3" style="font-size: 1.05rem;">
+                <i class="fas fa-plus mr-2"></i> Nueva Orden de Servicio
             </a>
         </div>
 
-        <!-- INFO EXTRA -->
-        <div class="card">
-            <div class="card-header">
-                <h3 class="card-title text-bold">Información</h3>
+        <!-- MÓDULOS DEL SISTEMA -->
+        <div class="card mb-4">
+            <div class="card-header border-0 pb-0">
+                <h5 class="card-title m-0" style="font-weight: 600; color: #111827;"><i class="fas fa-th-large mr-2 text-muted"></i> Accesos Rápidos</h5>
             </div>
-            <div class="card-body">
-                <p class="text-muted">
-                    Panel de control del sistema de mantenimiento. Aquí puedes visualizar el estado actual de las órdenes.
-                </p>
+            <div class="card-body p-2 mt-2">
+                <div class="list-group list-group-flush">
+                    <a href="{{ route('ordenes.index') }}" class="list-group-item list-group-item-action border-0" style="border-radius: 8px; font-weight: 500; padding: 0.6rem 1rem;"><i class="fas fa-clipboard-list text-primary mr-3" style="width:20px; text-align: center;"></i> Base de Órdenes</a>
+                    <a href="{{ route('clientes.index') }}" class="list-group-item list-group-item-action border-0" style="border-radius: 8px; font-weight: 500; padding: 0.6rem 1rem;"><i class="fas fa-users text-info mr-3" style="width:20px; text-align: center;"></i> Consulta de Clientes</a>
+                    <a href="{{ route('equipos.index') }}" class="list-group-item list-group-item-action border-0" style="border-radius: 8px; font-weight: 500; padding: 0.6rem 1rem;"><i class="fas fa-desktop text-secondary mr-3" style="width:20px; text-align: center;"></i> Archivo de Equipos</a>
+                    <a href="{{ route('inventario.index') }}" class="list-group-item list-group-item-action border-0" style="border-radius: 8px; font-weight: 500; padding: 0.6rem 1rem;"><i class="fas fa-boxes text-warning mr-3" style="width:20px; text-align: center;"></i> Stock de Repuestos</a>
+                    <a href="{{ route('solicitudes.index') }}" class="list-group-item list-group-item-action border-0" style="border-radius: 8px; font-weight: 500; padding: 0.6rem 1rem;"><i class="fas fa-boxes text-warning mr-3" style="width:20px; text-align: center;"></i> Solicitudes de Repuestos</a>
+                    <a href="{{ route('pagos.index') }}" class="list-group-item list-group-item-action border-0" style="border-radius: 8px; font-weight: 500; padding: 0.6rem 1rem;"><i class="fas fa-wallet text-success mr-3" style="width:20px; text-align: center;"></i> Flujo de Caja y Pagos</a>
+                </div>
             </div>
         </div>
 
+        <!-- NOTAS RÁPIDAS -->
+        <div class="card mb-4">
+            <div class="card-header border-0 pb-0">
+                <h5 class="card-title m-0" style="font-weight: 600; color: #111827;"><i class="fas fa-sticky-note mr-2 text-warning"></i> Notas Personales</h5>
+            </div>
+            <div class="card-body p-3">
+                <textarea class="form-control" rows="4" style="border-radius: 8px; border: 1px dashed #cbd5e1; background-color: #f8fafc; color: #4b5563; font-size: 0.9rem; resize: vertical;" placeholder="Escribe pendientes o recordatorios rápidos aquí..."></textarea>
+                <div class="text-right mt-1"><small class="text-muted"><i class="fas fa-info-circle"></i> Volátil (No se guarda)</small></div>
+            </div>
+        </div>
     </div>
 </div>
 
 @endsection
 
-
 @section('js')
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    const abiertas = {{ $chartData['abiertas'] }};
-    const cerradas = {{ $chartData['cerradas'] }};
-
-    const ctx = document.getElementById('orderChart').getContext('2d');
-
-    new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: ['L', 'M', 'M', 'J', 'V', 'S', 'D'],
-            datasets: [
-                {
-                    label: 'Abiertas',
-                    data: [abiertas, abiertas, abiertas, abiertas, abiertas, abiertas, abiertas],
-                    borderColor: '#007bff',
-                    fill: false,
-                    tension: 0.4
-                },
-                {
-                    label: 'Cerradas',
-                    data: [cerradas, cerradas, cerradas, cerradas, cerradas, cerradas, cerradas],
-                    borderColor: '#28a745',
-                    fill: false,
-                    tension: 0.4
-                }
-            ]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false
-        }
-    });
+    // Reloj en vivo
+    setInterval(function() {
+        const now = new Date();
+        const opciones = { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true };
+        document.getElementById('reloj-tiempo-real').innerText = now.toLocaleString('es-MX', opciones).toUpperCase();
+    }, 1000);
 </script>
 @stop

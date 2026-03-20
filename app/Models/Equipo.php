@@ -7,19 +7,19 @@ use Illuminate\Database\Eloquent\Model;
 class Equipo extends Model
 {
     protected $table = 'equipos';
-    protected $primaryKey = 'id_equipo';
+    protected $primaryKey = 'id';
 
     protected $fillable = [
-        'id_cliente',
-        'tipo_equipo',
+        'cliente_id',
+        'tipo',
         'marca',
         'modelo',
-        'num_serie',
-        'color',
-        'observaciones',
+        'numero_serie',
+        'qr_token',
     ];
+
     public function cliente()
-{
-    return $this->belongsTo(Cliente::class, 'id_cliente');
-}
+    {
+        return $this->belongsTo(Cliente::class, 'cliente_id');
+    }
 }

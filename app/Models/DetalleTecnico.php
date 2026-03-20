@@ -5,20 +5,20 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Pago extends Model
+class DetalleTecnico extends Model
 {
     use HasFactory;
 
-    protected $table = 'pagos';
+    protected $table = 'detalles_tecnicos';
 
     protected $fillable = [
         'orden_servicio_id',
-        'monto',
-        'metodo_pago',
-        'tipo_pago',
+        'solucion_propuesta',
+        'trabajo_finalizado',
+        'observaciones_internas',
     ];
 
-    public function orden_servicio()
+    public function ordenServicio()
     {
         return $this->belongsTo(OrdenServicio::class, 'orden_servicio_id');
     }

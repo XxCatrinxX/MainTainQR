@@ -87,17 +87,7 @@
 
                     <div class="form-group">
                         <label>Número de serie</label>
-                        <input type="text" name="equipo_num_serie" class="form-control" value="{{ old('equipo_num_serie') }}">
-                    </div>
-
-                    <div class="form-group">
-                        <label>Color</label>
-                        <input type="text" name="equipo_color" class="form-control" value="{{ old('equipo_color') }}">
-                    </div>
-
-                    <div class="form-group">
-                        <label>Observaciones</label>
-                        <textarea name="equipo_observaciones" class="form-control">{{ old('equipo_observaciones') }}</textarea>
+                        <input type="text" name="equipo_numero_serie" class="form-control" value="{{ old('equipo_numero_serie') }}">
                     </div>
 
                 </div>
@@ -128,6 +118,12 @@
                 <label>Problema reportado *</label>
                 <textarea name="problema_reportado" class="form-control @error('problema_reportado') is-invalid @enderror">{{ old('problema_reportado') }}</textarea>
                 @error('problema_reportado') <span class="text-danger">{{ $message }}</span> @enderror
+            </div>
+
+            <div class="form-group">
+                <label>Estado físico (detalles, golpes, accesorios) *</label>
+                <textarea name="estado_fisico" class="form-control @error('estado_fisico') is-invalid @enderror">{{ old('estado_fisico') }}</textarea>
+                @error('estado_fisico') <span class="text-danger">{{ $message }}</span> @enderror
             </div>
 
         </div>

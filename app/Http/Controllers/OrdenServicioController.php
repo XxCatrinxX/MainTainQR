@@ -7,86 +7,318 @@ use App\Models\OrdenServicio;
 use App\Models\Equipo;
 use App\Models\Cliente;
 use App\Models\User;
+use App\Models\Inventario;
+use App\Models\Evidencia;
+use App\Models\DetalleTecnico;
+use App\Models\SolicitudCompra;
+use App\Notifications\DiagnosticoNotificacion;
+use App\Notifications\ListoNotificacion;
+use Illuminate\Support\Facades\Notification;
+use Endroid\QrCode\Writer\PngWriter;
+use Endroid\QrCode\Encoding\Encoding;
 
 class OrdenServicioController extends Controller
 {
-
-
-public function index()
-{
-    $ordenes = OrdenServicio::with(['equipo.cliente'])
-        ->latest()
-        ->take(5)
-        ->get();
-
-    return view('home', [
-        'totalAbiertas' => OrdenServicio::where('estado', 'abierta')->count(),
-        'totalPendientes' => OrdenServicio::where('estado', 'esperando_repuesta')->count(),
-        'totalProceso' => OrdenServicio::where('estado', 'en_proceso')->count(),
-        'totalCerradas' => OrdenServicio::where('estado', 'cerrada')->count(),
-        'ordenesRecientes' => $ordenes,
-        'chartData' => [
-            'abiertas' => OrdenServicio::where('estado', 'abierta')->count(),
-            'cerradas' => OrdenServicio::where('estado', 'cerrada')->count(),
-        ]
-    ]);
-}
-    public function create()
+    public function index()
     {
-        $equipos = Equipo::all();
-        $usuarios = User::all();
-        $clientes = Cliente::all();
-
-        return view('ordenes.create', compact('equipos', 'usuarios', 'clientes'));
+        $ordenes = OrdenServicio::with(['equipo.cliente'])->latest()->get();
+        return view('ordenes.index', [
+            'ordenes'         => $ordenes,
+            'totalRecibidas'  => OrdenServicio::where('estado', 'recibido')->count(),
+            'totalPendientes' => OrdenServicio::whereIn('estado', ['diagnostico', 'espera'])->count(),
+            'totalProceso'    => OrdenServicio::where('estado', 'reparacion')->count(),
+            'totalCerradas'   => OrdenServicio::whereIn('estado', ['listo', 'entregado'])->count(),
+            'chartData' => [
+                'abiertas' => OrdenServicio::whereIn('estado', ['recibido', 'diagnostico', 'espera', 'reparacion'])->count(),
+                'cerradas' => OrdenServicio::whereIn('estado', ['listo', 'entregado'])->count(),
+            ]
+        ]);
     }
 
-public function store(Request $request)
-{
-    $request->validate([
-        'cliente_nombre' => 'required',
-        'cliente_apellido_paterno' => 'required',
-        'cliente_telefono' => 'required',
+    public function show($id)
+    {
+        $orden = OrdenServicio::with(['equipo.cliente', 'user', 'evidencias', 'repuestos', 'pagos'])->findOrFail($id);
+        $inventario = Inventario::where('stock', '>', 0)->get();
+        return view('ordenes.show', compact('orden', 'inventario'));
+    }
 
-        'equipo_tipo' => 'required',
-        'equipo_marca' => 'required',
-        'problema_reportado' => 'required',
-    ]);
+    public function storeDiagnostico(Request $request, $id)
+    {
+        $request->validate([
+            'solucion_propuesta' => 'required|string',
+            'mano_obra'          => 'required|numeric|min:0',
+            'fotos'              => 'nullable|array',
+            'fotos.*'            => 'image|mimes:jpeg,png,jpg,gif|max:5120',
+        ]);
 
-    // Crear cliente
-    $cliente = Cliente::create([
-        'nombre' => $request->cliente_nombre,
-        'apellido_paterno' => $request->cliente_apellido_paterno,
-        'apellido_materno' => $request->cliente_apellido_materno,
-        'telefono' => $request->cliente_telefono,
-        'correo' => $request->cliente_correo,
-        'direccion' => $request->cliente_direccion,
-        'fecha_registro' => now(),
-    ]);
+        $orden = OrdenServicio::findOrFail($id);
+        $orden->solucion_propuesta = $request->solucion_propuesta;
+        $orden->mano_obra = $request->mano_obra;
+        if (in_array($orden->estado, ['recibido', 'diagnostico'])) {
+            $orden->estado = 'espera';
+        }
+        $orden->save();
 
-    // Crear equipo (YA CORREGIDO)
-    $equipo = Equipo::create([
-        'id_cliente'   => $cliente->id_cliente,
-        'tipo_equipo'  => $request->equipo_tipo,
-        'marca'        => $request->equipo_marca,
-        'modelo'       => $request->equipo_modelo,
-        'num_serie'    => $request->equipo_num_serie,
-        'color'        => $request->equipo_color,
-        'observaciones'=> $request->equipo_observaciones,
-    ]);
+        // Guardar/Actualizar en detalles_tecnicos
+        DetalleTecnico::updateOrCreate(
+            ['orden_servicio_id' => $orden->id],
+            ['solucion_propuesta' => $request->solucion_propuesta]
+        );
 
-    // Crear orden
-    OrdenServicio::create([
-        'id_cliente' => $cliente->id_cliente,
-        'id_equipo' => $equipo->id_equipo,
-        'id_usuario' => $request->id_usuario,
-        'problema_reportado' => $request->problema_reportado,
-        'estado' => 'abierta',
-        'fecha_recepcion' => now(),
-    ]);
+        // Sincronizar Repuestos (Pivot orden_repuestos)
+        if ($request->has('repuestos')) {
+            $repuestosData = [];
+            foreach ($request->repuestos as $r) {
+                $repuestosData[$r['id']] = [
+                    'cantidad' => $r['cantidad'],
+                    'precio_fijado' => $r['precio']
+                ];
+            }
+            $orden->repuestos()->sync($repuestosData);
+        } else {
+            $orden->repuestos()->detach();
+        }
 
+        if ($request->hasFile('fotos')) {
+            foreach ($request->file('fotos') as $foto) {
+                $path = $foto->store('evidencias', 'public');
+                Evidencia::create(['orden_servicio_id' => $orden->id, 'url_foto' => $path, 'momento' => 'diagnostico']);
+            }
+        }
 
+        // Enviar correo de diagnóstico al cliente (si tiene correo registrado)
+        $orden->load(['equipo.cliente', 'evidencias', 'repuestos']);
+        $correoCliente = $orden->equipo->cliente->correo ?? null;
+        if ($correoCliente) {
+            try {
+                Notification::route('mail', $correoCliente)
+                    ->notify(new DiagnosticoNotificacion($orden));
+                $msgEmail = ' Se envió el correo de diagnóstico al cliente.';
+            } catch (\Exception $e) {
+                $msgEmail = ' (No se pudo enviar el correo: ' . $e->getMessage() . ')';
+            }
+        } else {
+            $msgEmail = ' El cliente no tiene correo registrado.';
+        }
 
-    return redirect()->route('home')
-        ->with('success', 'Orden creada correctamente');
-}}
+        return redirect()->route('ordenes.show', $id)
+            ->with('success', 'Diagnóstico guardado y estado actualizado a En Espera.' . $msgEmail);
+    }
+
+    // ==========================================
+    // PASO 1: CLIENTE
+    // ==========================================
+    public function createPaso1()
+    {
+        $clienteId = session('wizard_cliente_id');
+        $cliente = $clienteId ? Cliente::find($clienteId) : null;
+
+        return view('ordenes.wizard.paso1', compact('cliente'));
+    }
+
+    public function storePaso1(Request $request)
+    {
+        $request->validate([
+            'nombre' => 'required',
+            'apellido_paterno' => 'required',
+            'telefono' => 'required',
+        ]);
+
+        $clienteId = session('wizard_cliente_id');
+
+        if ($clienteId) {
+            $cliente = Cliente::findOrFail($clienteId);
+            $cliente->update($request->all());
+        } else {
+            $cliente = Cliente::create($request->all());
+            session(['wizard_cliente_id' => $cliente->id]);
+        }
+
+        return redirect()->route('ordenes.create_paso2');
+    }
+
+    // ==========================================
+    // PASO 2: EQUIPO
+    // ==========================================
+    public function createPaso2()
+    {
+        if (!session()->has('wizard_cliente_id')) {
+            return redirect()->route('ordenes.create_paso1')->with('error', 'Primero registre el cliente.');
+        }
+
+        $equipoId = session('wizard_equipo_id');
+        $equipo = $equipoId ? Equipo::find($equipoId) : null;
+
+        return view('ordenes.wizard.paso2', compact('equipo'));
+    }
+
+    public function storePaso2(Request $request)
+    {
+        $request->validate([
+            'tipo' => 'required',
+            'marca' => 'required',
+        ]);
+
+        $clienteId = session('wizard_cliente_id');
+        $equipoId = session('wizard_equipo_id');
+
+        $data = $request->all();
+        $data['cliente_id'] = $clienteId;
+
+        if ($equipoId) {
+            $equipo = Equipo::findOrFail($equipoId);
+            $equipo->update($data);
+        } else {
+            $data['numero_serie'] = $data['numero_serie'] ?? uniqid();
+            $data['qr_token'] = uniqid('qr_');
+            $equipo = Equipo::create($data);
+            session(['wizard_equipo_id' => $equipo->id]);
+        }
+
+        return redirect()->route('ordenes.create_paso3');
+    }
+
+    // ==========================================
+    // PASO 3: ORDEN (RESUMEN)
+    // ==========================================
+    public function createPaso3()
+    {
+        if (!session()->has('wizard_cliente_id') || !session()->has('wizard_equipo_id')) {
+            return redirect()->route('ordenes.create_paso1')->with('error', 'Complete los pasos previos.');
+        }
+
+        $cliente = Cliente::findOrFail(session('wizard_cliente_id'));
+        $equipo = Equipo::findOrFail(session('wizard_equipo_id'));
+        $usuarios = User::all();
+
+        return view('ordenes.wizard.paso3', compact('cliente', 'equipo', 'usuarios'));
+    }
+
+    public function storePaso3(Request $request)
+    {
+        $request->validate([
+            'problema_reportado' => 'required',
+            'estado_fisico' => 'required',
+            'id_usuario' => 'required|exists:users,id'
+        ]);
+
+        $clienteId = session('wizard_cliente_id');
+        $equipoId = session('wizard_equipo_id');
+
+        if (!$clienteId || !$equipoId) {
+            return redirect()->route('ordenes.create_paso1')->with('error', 'Faltan datos del cliente o equipo.');
+        }
+
+        $anio = date('Y');
+        $siguienteId = OrdenServicio::max('id') + 1;
+        $folio = 'OS-' . $anio . '-' . str_pad($siguienteId, 4, '0', STR_PAD_LEFT);
+
+        $orden = OrdenServicio::create([
+            'folio' => $folio,
+            'equipo_id' => $equipoId,
+            'user_id' => $request->id_usuario,
+            'falla_reportada' => $request->problema_reportado,
+            'estado_fisico' => $request->estado_fisico,
+            'estado' => 'recibido',
+            'token_rastreo' => uniqid('rastreo_'),
+        ]);
+
+        // Limpiar sesión del wizard
+        session()->forget(['wizard_cliente_id', 'wizard_equipo_id']);
+
+        return redirect()->route('ordenes.recepcion', $orden->id)
+            ->with('success', 'Orden de Servicio creada correctamente');
+    }
+
+    // ==========================================
+    // CIERRE Y RECIBO
+    // ==========================================
+    public function showRecepcion($id)
+    {
+        $orden = OrdenServicio::with('equipo.cliente')->findOrFail($id);
+
+        $qrCode = new \Endroid\QrCode\QrCode(
+            data: $orden->equipo->qr_token,
+            encoding: new Encoding('UTF-8'),
+            size: 200,
+            margin: 10
+        );
+        $writer = new PngWriter();
+        $result = $writer->write($qrCode);
+
+        $qrBase64 = base64_encode($result->getString());
+
+        return view('ordenes.recepcion', compact('orden', 'qrBase64'));
+    }
+
+    public function storeDetalle(Request $request, $id)
+    {
+        $request->validate([
+            'trabajo_finalizado' => 'required|string',
+            'observaciones_internas' => 'nullable|string',
+        ]);
+
+        $orden = OrdenServicio::with('equipo.cliente')->findOrFail($id);
+        
+        DetalleTecnico::updateOrCreate(
+            ['orden_servicio_id' => $orden->id],
+            [
+                'trabajo_finalizado' => $request->trabajo_finalizado,
+                'observaciones_internas' => $request->observaciones_internas,
+            ]
+        );
+
+        // Avanzar estado a LISTO
+        $orden->estado = 'listo';
+        $orden->save();
+
+        // Notificar al cliente
+        $correoCliente = $orden->equipo->cliente->correo ?? null;
+        if ($correoCliente) {
+            try {
+                \Illuminate\Support\Facades\Notification::route('mail', $correoCliente)
+                    ->notify(new ListoNotificacion($orden));
+            } catch (\Exception $e) {
+                // Fail silently or log
+            }
+        }
+
+        return redirect()->route('ordenes.show', $id)
+            ->with('success', 'Reparación finalizada. Estado actualizado a Listo y cliente notificado.');
+    }
+
+    public function update(Request $request, $id)
+    {
+        $orden = OrdenServicio::with('repuestos', 'pagos', 'equipo.cliente')->findOrFail($id);
+
+        if ($request->input('estado') === 'entregado') {
+            $totalPagar = $orden->mano_obra + $orden->repuestos->sum(function($r) {
+                return $r->pivot->cantidad * $r->pivot->precio_fijado;
+            });
+            $totalPagado = $orden->pagos->sum('monto');
+
+            if ($totalPagado < $totalPagar) {
+                return back()->with('error', 'No se puede Entregar. Existe un saldo pendiente de $' . number_format($totalPagar - $totalPagado, 2));
+            }
+            
+            $orden->fecha_entrega_real = now();
+        }
+
+        $estadoAnterior = $orden->estado;
+        $orden->update($request->only('estado', 'fecha_estimada_entrega'));
+
+        // Enviar notificación si el estado cambió a listo
+        if ($estadoAnterior !== $orden->estado && $orden->estado === 'listo') {
+            $correoCliente = $orden->equipo->cliente->correo;
+            if (!empty($correoCliente)) {
+                try {
+                    \Illuminate\Support\Facades\Notification::route('mail', $correoCliente)
+                        ->notify(new \App\Notifications\ListoNotificacion($orden));
+                } catch (\Exception $e) {}
+            }
+        }
+
+        return back()->with('success', 'Estado de la orden actualizado exitosamente.');
+    }
+}
 
