@@ -12,7 +12,7 @@ use App\Http\Controllers\SolicitudCompraController;
 
 Route::redirect('/', '/home');
 
-Auth::routes(['reset' => false]);
+Auth::routes(['reset' => false, 'confirm' => false]);
 
 // ✅ SOLO UNA RUTA HOME
 Route::get('/home', [HomeController::class , 'index'])
