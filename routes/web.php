@@ -10,9 +10,7 @@ use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\EquipoController;
 use App\Http\Controllers\SolicitudCompraController;
 
-Route::get('/', function () {
-    return redirect()->route('home');
-});
+Route::redirect('/', '/home');
 
 Auth::routes();
 
