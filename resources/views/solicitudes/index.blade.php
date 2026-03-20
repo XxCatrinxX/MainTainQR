@@ -46,7 +46,7 @@
                         </td>
                         <td class="text-center">{{ $s->cantidad }}</td>
                         <td>
-                            <i class="fas fa-user-circle mr-1 text-muted"></i> {{ $s->usuario->name ?? 'Sistema' }}
+                            <i class="fas fa-user-circle mr-1 text-muted"></i> {{ $s->usuario->nombre ?? 'Sistema' }}
                         </td>
                         <td class="text-muted" style="font-size: 0.85rem;">
                             {{ $s->created_at->format('d/m/Y H:i') }}
