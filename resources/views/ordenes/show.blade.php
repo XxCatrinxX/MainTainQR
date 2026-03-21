@@ -3,55 +3,8 @@
 @section('title', 'Detalle de Orden — ' . $orden->folio)
 
 @section('css')
-<style>
-    body { background-color: #fafafa !important; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important; }
-    .content-wrapper { background-color: transparent !important; }
-    .content-header h1 { font-weight: 700; font-size: 1.4rem; color: #111827; }
-
-    .card { border: 1px solid #eaeaea !important; border-radius: 12px !important; box-shadow: 0 2px 6px rgba(0,0,0,0.04) !important; background-color: #fff; margin-bottom: 1.5rem; }
-    .card-header { background: transparent !important; border-bottom: 1px solid #f3f4f6 !important; padding: 1rem 1.5rem !important; }
-    .card-title { font-weight: 700 !important; color: #111827 !important; font-size: 1rem !important; }
-
-    .form-control, .custom-select {
-        border-radius: 8px !important; border: 1px solid #d1d5db !important;
-        padding: 0.55rem 1rem !important; height: auto !important; font-size: 0.95rem;
-    }
-    .form-control:focus, .custom-select:focus { border-color: #000 !important; box-shadow: 0 0 0 3px rgba(0,0,0,0.08) !important; }
-    label { font-weight: 500; color: #374151; font-size: 0.88rem; }
-
-    .btn-primary-modern { background: #111827 !important; color: #fff !important; border: none; border-radius: 8px !important; font-weight: 500 !important; padding: 0.55rem 1.25rem; transition: all 0.2s ease; }
-    .btn-primary-modern:hover { background: #374151 !important; transform: translateY(-1px); color: white !important; }
-    .btn-light-modern { background: #fff !important; color: #374151 !important; border: 1px solid #d1d5db !important; border-radius: 8px !important; font-weight: 500 !important; }
-
-    .badge { padding: 0.4em 0.75em !important; border-radius: 9999px !important; font-weight: 600 !important; font-size: 0.78rem; }
-    .badge-secondary { background-color: #f3f4f6 !important; color: #4b5563 !important; }
-    .badge-warning { background-color: #fef3c7 !important; color: #92400e !important; }
-    .badge-info { background-color: #e0f2fe !important; color: #0369a1 !important; }
-    .badge-primary { background-color: #dbeafe !important; color: #1e40af !important; }
-    .badge-success { background-color: #dcfce7 !important; color: #166534 !important; }
-    .badge-dark { background-color: #111827 !important; color: #fff !important; }
-
-    .info-row { display: flex; gap: 0.5rem; margin-bottom: 0.6rem; font-size: 0.9rem; }
-    .info-label { color: #6b7280; font-weight: 500; min-width: 130px; }
-    .info-value { color: #111827; font-weight: 600; }
-
-    .evidence-gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 0.75rem; }
-    .evidence-thumb { border-radius: 8px; overflow: hidden; border: 1px solid #e5e7eb; aspect-ratio: 1; }
-    .evidence-thumb img { width: 100%; height: 100%; object-fit: cover; cursor: pointer; transition: opacity 0.2s; }
-    .evidence-thumb img:hover { opacity: 0.85; }
-
-    .table { margin-bottom: 0 !important; }
-    .table th { border-top: none !important; border-bottom: 1px solid #f3f4f6 !important; background: #fafafa !important; color: #6b7280 !important; font-weight: 600 !important; text-transform: uppercase; font-size: 0.73rem; letter-spacing: 0.04em; padding: 0.75rem 1rem !important; }
-    .table td { vertical-align: middle !important; border-top: 1px solid #f3f4f6 !important; padding: 0.75rem 1rem !important; color: #374151; }
-
-    .status-timeline { display: flex; align-items: center; gap: 0; margin-bottom: 0; }
-    .st-step { flex: 1; text-align: center; font-size: 0.7rem; font-weight: 600; color: #9ca3af; padding: 0.5rem 0.25rem; position: relative; }
-    .st-step::after { content: ''; position: absolute; top: 50%; right: 0; transform: translateY(-4px); border-left: 6px solid #e5e7eb; border-top: 4px solid transparent; border-bottom: 4px solid transparent; }
-    .st-step:last-child::after { display: none; }
-    .st-step.done { color: #111827; }
-    .st-step.active { color: #fff; background: #111827; border-radius: 6px; }
-    .st-step.active::after { border-left-color: #111827; }
-</style>
+{{-- Estilos centralizados en app.css --}}
+@stop
 @stop
 
 @section('content_header')

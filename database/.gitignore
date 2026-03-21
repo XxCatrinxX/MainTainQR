@@ -1,6 +1,2 @@
 *.sqlite*
-/vendor
-/node_modules
-/public/build
-/public/storage
-.env
+database.sqlite

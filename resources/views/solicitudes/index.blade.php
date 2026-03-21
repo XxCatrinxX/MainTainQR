@@ -162,8 +162,5 @@
 @stop
 
 @section('css')
-<style>
-    .table td, .table th { vertical-align: middle; border-top: 1px solid #f3f4f6; }
-    .badge { text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.02em; }
-</style>
+{{-- Estilos centralizados en app.css --}}
 @stop
