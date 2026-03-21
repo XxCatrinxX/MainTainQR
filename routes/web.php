@@ -76,3 +76,4 @@ Route::middleware('auth')->group(function () {
     Route::resource('clientes', ClienteController::class);
     Route::resource('equipos', EquipoController::class);
 });
+#Fix
