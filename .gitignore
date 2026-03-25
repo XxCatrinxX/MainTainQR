@@ -23,10 +23,4 @@ Homestead.json
 Homestead.yaml
 Thumbs.db
 package-lock.json
-database/migrations/2026_03_13_225018_create_personal_access_tokens_table.php
-config/sanctum.php
-composer.lock
-composer.json
-composer.lock
-composer.json
 bootstrap/cache/*
