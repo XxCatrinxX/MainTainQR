@@ -1,14 +1,12 @@
-[variables]
-    PHP_VERSION = '8.2' # O la versión que uses en Xampp
-
 [phases.setup]
-    nixPkgs = ['php82', 'php82Packages.composer', 'nodejs_20']
+nixPkgs = ["php", "nodejs_20", "npm"]
 
 [phases.build]
-    cmds = [
-        'composer install --no-dev --optimize-autoloader',
-        'npm install && npm run build'
-    ]
+cmds = [
+    "composer install --no-dev --optimize-autoloader",
+    "npm install",
+    "npm run build"
+]
 
 [start]
-    cmd = 'php artisan serve --host=0.0.0.0 --port=$PORT'
+cmd = "php artisan serve --host 0.0.0.0 --port $PORT"
