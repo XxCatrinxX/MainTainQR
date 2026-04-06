@@ -23,4 +23,5 @@ Homestead.json
 Homestead.yaml
 Thumbs.db
 package-lock.json
+/public/vendor
 bootstrap/cache/*
