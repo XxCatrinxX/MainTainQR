@@ -49,7 +49,6 @@
             @break
 
             @default
-                <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/overlayscrollbars/1.13.0/css/OverlayScrollbars.min.css">
                 <link rel="stylesheet" href="{{ asset('vendor/adminlte/dist/css/adminlte.min.css') }}">
 
                 @if(config('adminlte.google_fonts.allowed', true))
@@ -117,9 +116,6 @@
             @break
 
             @default
-                <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-                <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
-                <script src="https://cdnjs.cloudflare.com/ajax/libs/overlayscrollbars/1.13.0/js/jquery.overlayScrollbars.min.js"></script>
                 <script src="{{ asset('vendor/adminlte/dist/js/adminlte.min.js') }}"></script>
         @endswitch
     @endif

@@ -7,3 +7,9 @@
 // Bootstrap
 @import 'bootstrap/scss/bootstrap';
 
+// Custom Admin Design System
+@import '../css/admin-custom.css';
+
+// Tailwind 4 (using CSS import syntax)
+@import 'tailwindcss';
+

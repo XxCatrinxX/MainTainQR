@@ -1,4 +1,8 @@
+import jQuery from 'jquery';
+window.jQuery = window.$ = jQuery;
+
 import 'bootstrap';
+import 'admin-lte';
 
 /**
  * We'll load the axios HTTP library which allows us to easily issue requests

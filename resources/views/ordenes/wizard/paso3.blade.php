@@ -3,30 +3,7 @@
 @section('title', 'Nueva Orden - Resumen Final')
 
 @section('css')
-<style>
-    body { background-color: #fafafa !important; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important; }
-    .content-wrapper { background-color: transparent !important; }
-    .content-header h1 { font-weight: 700; font-size: 1.5rem; color: #111827; margin-bottom: 0.5rem; }
-    
-    .card { border: 1px solid #eaeaea !important; border-radius: 12px !important; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05) !important; margin-bottom: 1.5rem; }
-    .card-header { background-color: transparent !important; border-bottom: 1px solid #eaeaea !important; padding: 1.25rem 1.5rem !important; }
-    .card-title { font-weight: 600 !important; color: #111827 !important; }
-    
-    .list-group-item { border: none !important; border-bottom: 1px solid #f3f4f6 !important; padding: 1rem 0 !important; font-size: 0.95rem; }
-    .list-group-item:last-child { border-bottom: none !important; }
-    
-    .form-group label { font-weight: 500; color: #374151; font-size: 0.9rem; margin-bottom: 0.5rem; }
-    .form-control { border-radius: 8px !important; border: 1px solid #d1d5db !important; padding: 0.6rem 1rem !important; font-size: 0.95rem; background-color: #ffffff !important; transition: all 0.2s; }
-    .form-control:focus { border-color: #000000 !important; box-shadow: 0 0 0 3px rgba(0,0,0,0.1) !important; }
-    
-    .btn { border-radius: 8px !important; font-weight: 500 !important; padding: 0.5rem 1.25rem; transition: all 0.2s ease; }
-    .btn-dark-modern { background-color: #000000 !important; color: #ffffff !important; border: none !important; }
-    .btn-dark-modern:hover { background-color: #333333 !important; transform: translateY(-1px); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1) !important; color: white !important; }
-    .btn-light-modern { background-color: #ffffff !important; color: #374151 !important; border: 1px solid #d1d5db !important; }
-    .btn-light-modern:hover { background-color: #f9fafb !important; color: #111827 !important; }
-    .btn-tool { color: #6b7280 !important; border-radius: 6px !important; padding: 0.25rem 0.5rem !important; font-size: 0.85rem !important; }
-    .btn-tool:hover { background-color: #f3f4f6 !important; color: #111827 !important; }
-</style>
+    {{-- Estilos centralizados en admin-custom.css --}}
 @stop
 
 @section('content_header')

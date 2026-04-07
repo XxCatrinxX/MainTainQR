@@ -3,29 +3,7 @@
 @section('title', 'Inventario')
 
 @section('css')
-<style>
-    body { background-color: #fafafa !important; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important; }
-    .content-wrapper { background-color: transparent !important; }
-    .content-header h1 { font-weight: 700; font-size: 1.5rem; color: #111827; margin-bottom: 0.5rem; }
-    
-    .card { border: none !important; border-radius: 12px !important; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05) !important; margin-bottom: 1.5rem; }
-    .table-modern { margin: 0; border-collapse: separate; border-spacing: 0; width: 100%; }
-    .table-modern th { background-color: #f9fafb !important; color: #6b7280; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; border-top: none; border-bottom: 1px solid #f3f4f6; padding: 1rem 1.5rem; font-weight: 600; }
-    .table-modern td { padding: 1rem 1.5rem; vertical-align: middle; border-bottom: 1px solid #f3f4f6; color: #374151; font-size: 0.95rem; }
-    .table-modern tbody tr:last-child td { border-bottom: none; }
-    .table-modern tbody tr:hover { background-color: #f8fafc; }
-    
-    .badge-modern { padding: 0.4em 0.8em; font-size: 0.75rem; font-weight: 600; border-radius: 9999px; }
-    .badge-stock-ok { background-color: #dcfce7; color: #166534; }
-    .badge-stock-low { background-color: #fef08a; color: #854d0e; }
-    .badge-stock-out { background-color: #fee2e2; color: #991b1b; }
-
-    .btn-modern { border-radius: 8px !important; font-weight: 500 !important; padding: 0.5rem 1.25rem; transition: all 0.2s ease; border: none; }
-    .btn-dark-modern { background-color: #000000 !important; color: #ffffff !important; }
-    .btn-dark-modern:hover { background-color: #333333 !important; transform: translateY(-1px); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1) !important; color: white !important; }
-    .btn-action { color: #6b7280; background: transparent; border: none; padding: 0.4rem; border-radius: 6px; transition: all 0.2s; }
-    .btn-action:hover { background-color: #f3f4f6; color: #111827; }
-</style>
+    {{-- Estilos centralizados en admin-custom.css --}}
 @stop
 
 @section('content_header')
