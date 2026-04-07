@@ -5,7 +5,6 @@
 @section('css')
     {{-- Los estilos personalizados ahora están centralizados en admin-custom.css gestionado por Vite --}}
 @stop
-@stop
 
 @section('content_header')
     <div class="d-flex justify-content-between align-items-center">
