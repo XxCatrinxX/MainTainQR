@@ -2,10 +2,10 @@
   "$schema": "https://railway.app/railway.schema.json",
   "build": {
     "builder": "NIXPACKS",
-    "buildCommand": "composer install --no-dev && php artisan adminlte:install --only=main --force && npm install && npm run build"
+    "buildCommand": "composer install --no-dev && npm install && npm run build"
   },
   "deploy": {
-    "startCommand": "php artisan config:clear && php artisan migrate --force && php artisan serve --host 0.0.0.0 --port $PORT",
+    "startCommand": "php artisan adminlte:install --only=main --force && php artisan config:clear && php artisan migrate --force && php artisan serve --host 0.0.0.0 --port $PORT",
     "restartPolicyType": "ON_FAILURE"
   }
 }
