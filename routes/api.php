@@ -29,6 +29,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/solicitudes/{id}/surtir', [SolicitudCompraController::class, 'surtir']);
 
     // Órdenes & Pagos
+    Route::get('/ordenes', [OrdenTecnicoController::class, 'index']);
     Route::get('/ordenes/{qr_token}', [OrdenTecnicoController::class, 'show']);
     Route::post('/ordenes/{id}/diagnostico', [OrdenTecnicoController::class, 'storeDiagnostico']);
     Route::post('/ordenes/{id}/pago', [PagoController::class, 'storeDesdeOrden']);

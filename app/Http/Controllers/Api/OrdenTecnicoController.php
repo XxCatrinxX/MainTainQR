@@ -16,6 +16,22 @@ class OrdenTecnicoController extends Controller
      * @param string $qr_token
      * @return \Illuminate\Http\JsonResponse
      */
+
+    public function index()
+    {
+        $ordenes = OrdenServicio::with(['equipo.cliente', 'user'])
+            ->whereNotIn('estado', ['entregado'])
+            ->latest()
+            ->get();
+
+        return response()->json([
+            'ordenes' => $ordenes,
+        ]);
+    }
+
+
+
+
     public function show($qr_token)
     {
         // Buscamos la orden de servicio activa que pertenezca a un equipo con ese QR_Token.
