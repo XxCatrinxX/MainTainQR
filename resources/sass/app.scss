@@ -1,15 +1,19 @@
 // Fonts
+@import url('https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback');
 @import url('https://fonts.bunny.net/css?family=Nunito');
+
+// Tailwind 4 (Base Resets)
+@import 'tailwindcss';
 
 // Variables
 @import 'variables';
 
-// Bootstrap
+// Bootstrap 4 (Core)
 @import 'bootstrap/scss/bootstrap';
 
-// Custom Admin Design System
-@import '../css/admin-custom.css';
+// AdminLTE 3 (Framework)
+@import 'admin-lte/dist/css/adminlte';
 
-// Tailwind 4 (using CSS import syntax)
-@import 'tailwindcss';
+// Custom Admin Design System (Overrides)
+@import '../css/admin-custom.css';
 
