@@ -283,8 +283,8 @@ return [
      */
 
     'laravel_asset_bundling' => 'vite',
-    'laravel_css_path' => 'css/app.css',
-    'laravel_js_path' => 'js/app.js',
+    'laravel_css_path' => 'resources/sass/app.scss',
+    'laravel_js_path' => 'resources/js/app.js',
 
     /*
      |--------------------------------------------------------------------------
