@@ -90,11 +90,26 @@ class OrdenServicioController extends Controller
         $orden->load(['equipo.cliente', 'evidencias', 'repuestos']);
         $correoCliente = $orden->equipo->cliente->correo ?? null;
         if ($correoCliente) {
+            \Illuminate\Support\Facades\Log::info('DiagnosticoNotificacion: intentando enviar correo', [
+                'orden_id' => $orden->id,
+                'folio'    => $orden->folio,
+                'correo'   => $correoCliente,
+            ]);
             try {
                 Notification::route('mail', $correoCliente)
                     ->notify(new DiagnosticoNotificacion($orden));
+                \Illuminate\Support\Facades\Log::info('DiagnosticoNotificacion: correo enviado exitosamente', [
+                    'orden_id' => $orden->id,
+                    'correo'   => $correoCliente,
+                ]);
                 $msgEmail = ' Se envió el correo de diagnóstico al cliente.';
             } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error('DiagnosticoNotificacion: error al enviar correo', [
+                    'orden_id'  => $orden->id,
+                    'correo'    => $correoCliente,
+                    'error'     => $e->getMessage(),
+                    'exception' => $e,
+                ]);
                 $msgEmail = ' (No se pudo enviar el correo: ' . $e->getMessage() . ')';
             }
         } else {
@@ -275,11 +290,25 @@ class OrdenServicioController extends Controller
         // Notificar al cliente
         $correoCliente = $orden->equipo->cliente->correo ?? null;
         if ($correoCliente) {
+            \Illuminate\Support\Facades\Log::info('ListoNotificacion (storeDetalle): intentando enviar correo', [
+                'orden_id' => $orden->id,
+                'folio'    => $orden->folio,
+                'correo'   => $correoCliente,
+            ]);
             try {
                 \Illuminate\Support\Facades\Notification::route('mail', $correoCliente)
                     ->notify(new ListoNotificacion($orden));
+                \Illuminate\Support\Facades\Log::info('ListoNotificacion (storeDetalle): correo enviado exitosamente', [
+                    'orden_id' => $orden->id,
+                    'correo'   => $correoCliente,
+                ]);
             } catch (\Exception $e) {
-                // Fail silently or log
+                \Illuminate\Support\Facades\Log::error('ListoNotificacion (storeDetalle): error al enviar correo', [
+                    'orden_id'  => $orden->id,
+                    'correo'    => $correoCliente,
+                    'error'     => $e->getMessage(),
+                    'exception' => $e,
+                ]);
             }
         }
 
@@ -311,10 +340,26 @@ class OrdenServicioController extends Controller
         if ($estadoAnterior !== $orden->estado && $orden->estado === 'listo') {
             $correoCliente = $orden->equipo->cliente->correo;
             if (!empty($correoCliente)) {
+                \Illuminate\Support\Facades\Log::info('ListoNotificacion (update): intentando enviar correo', [
+                    'orden_id' => $orden->id,
+                    'folio'    => $orden->folio,
+                    'correo'   => $correoCliente,
+                ]);
                 try {
                     \Illuminate\Support\Facades\Notification::route('mail', $correoCliente)
                         ->notify(new \App\Notifications\ListoNotificacion($orden));
-                } catch (\Exception $e) {}
+                    \Illuminate\Support\Facades\Log::info('ListoNotificacion (update): correo enviado exitosamente', [
+                        'orden_id' => $orden->id,
+                        'correo'   => $correoCliente,
+                    ]);
+                } catch (\Exception $e) {
+                    \Illuminate\Support\Facades\Log::error('ListoNotificacion (update): error al enviar correo', [
+                        'orden_id'  => $orden->id,
+                        'correo'    => $correoCliente,
+                        'error'     => $e->getMessage(),
+                        'exception' => $e,
+                    ]);
+                }
             }
         }
 
