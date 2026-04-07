@@ -26,7 +26,7 @@
                 <p class="text-muted small">Imprime este código y pégalo en el dispositivo del cliente para que el técnico lo escanee.</p>
                 
                 <div class="mb-4">
-                    <img src="data:image/png;base64,{{ $qrBase64 }}" alt="QR Code Equipo" style="border: 1px solid #eee; border-radius: 8px; padding: 10px;">
+                    <img src="data:image/svg+xml;base64,{{ $qrBase64 }}" alt="QR Code Equipo" style="border: 1px solid #eee; border-radius: 8px; padding: 10px;">
                 </div>
 
                 <a href="{{ route('home') }}" class="btn btn-dark" style="border-radius: 8px; font-weight: 500;">

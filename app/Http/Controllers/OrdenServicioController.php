@@ -14,7 +14,7 @@ use App\Models\SolicitudCompra;
 use App\Notifications\DiagnosticoNotificacion;
 use App\Notifications\ListoNotificacion;
 use Illuminate\Support\Facades\Notification;
-use Endroid\QrCode\Writer\PngWriter;
+use Endroid\QrCode\Writer\SvgWriter;
 use Endroid\QrCode\Encoding\Encoding;
 
 class OrdenServicioController extends Controller
@@ -243,7 +243,7 @@ class OrdenServicioController extends Controller
             size: 200,
             margin: 10
         );
-        $writer = new PngWriter();
+        $writer = new SvgWriter();
         $result = $writer->write($qrCode);
 
         $qrBase64 = base64_encode($result->getString());
