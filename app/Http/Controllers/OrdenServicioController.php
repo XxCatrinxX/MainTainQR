@@ -384,5 +384,67 @@ class OrdenServicioController extends Controller
 
         return back()->with('success', 'Estado de la orden actualizado exitosamente.');
     }
+
+    // ==========================================
+    // STATE MACHINE — Explicit Transitions
+    // ==========================================
+
+    /** recibido → diagnostico  (técnico confirma que la recibió) */
+    public function confirmarRecepcion($id)
+    {
+        $orden = OrdenServicio::findOrFail($id);
+        if ($orden->estado !== 'recibido') {
+            return back()->with('error', 'La orden ya no está en estado Recibido.');
+        }
+        $orden->estado = 'diagnostico';
+        $orden->save();
+        return back()->with('success', 'Recepción confirmada. La orden pasó a estado Diagnóstico.');
+    }
+
+    /** aceptado → reparacion  (técnico inicia la reparación) */
+    public function iniciarReparacion($id)
+    {
+        $orden = OrdenServicio::findOrFail($id);
+        if ($orden->estado !== 'aceptado') {
+            return back()->with('error', 'La orden debe estar Aprobada para iniciar reparación.');
+        }
+        $orden->estado = 'reparacion';
+        $orden->save();
+        return back()->with('success', 'Reparación iniciada. La orden pasó a estado En Reparación.');
+    }
+
+    /** rechazado → entregado  (técnico cierra y devuelve el equipo) */
+    public function cerrarRechazada($id)
+    {
+        $orden = OrdenServicio::findOrFail($id);
+        if ($orden->estado !== 'rechazado') {
+            return back()->with('error', 'La orden debe estar en estado Rechazado para cerrarse.');
+        }
+        $orden->estado = 'entregado';
+        $orden->fecha_entrega_real = now();
+        $orden->save();
+        return back()->with('success', 'Equipo devuelto. La orden fue cerrada.');
+    }
+
+    /** listo → entregado  (recepcionista entrega con pago completo) */
+    public function confirmarEntrega($id)
+    {
+        $orden = OrdenServicio::with('repuestos', 'pagos')->findOrFail($id);
+        if ($orden->estado !== 'listo') {
+            return back()->with('error', 'La orden debe estar en estado Listo para confirmar entrega.');
+        }
+
+        $totalDebe  = ($orden->mano_obra ?? 0) + $orden->repuestos->sum(fn($r) => $r->pivot->cantidad * $r->pivot->precio_fijado);
+        $totalPagado = $orden->pagos->sum('monto');
+
+        if ($totalPagado < $totalDebe) {
+            return back()->with('error', 'No se puede entregar. Saldo pendiente: $' . number_format($totalDebe - $totalPagado, 2));
+        }
+
+        $orden->estado = 'entregado';
+        $orden->fecha_entrega_real = now();
+        $orden->save();
+        return back()->with('success', '¡Equipo entregado! La orden ha sido cerrada correctamente.');
+    }
 }
 

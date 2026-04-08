@@ -1,9 +1,9 @@
 @extends('adminlte::page')
 
-@section('title', 'Detalle de Orden — ' . $orden->folio)
+@section('title', 'Orden ' . $orden->folio)
 
 @section('css')
-    {{-- Los estilos personalizados ahora están centralizados en admin-custom.css gestionado por Vite --}}
+    {{-- Estilos centralizados en admin-custom.css --}}
 @stop
 
 @section('content_header')
@@ -14,119 +14,146 @@
                 <i class="fas fa-arrow-left mr-1"></i> Volver a la lista
             </a>
         </div>
-        <div>
-            @php
-                $colores  = ['recibido'=>'secondary','diagnostico'=>'warning','espera'=>'info','aceptado'=>'success','rechazado'=>'danger','reparacion'=>'primary','listo'=>'success','entregado'=>'dark'];
-                $etiquetas = ['recibido'=>'Recibido','diagnostico'=>'Diagnóstico','espera'=>'Esperando Aprobación','aceptado'=>'Aprobado por Cliente','rechazado'=>'Rechazado por Cliente','reparacion'=>'En Reparación','listo'=>'Listo','entregado'=>'Entregado'];
-                $c = $colores[$orden->estado] ?? 'secondary';
-                $e = $etiquetas[$orden->estado] ?? $orden->estado;
-            @endphp
-            <span class="badge badge-{{ $c }}" style="font-size: 0.9rem; padding: 0.5em 1em;">{{ $e }}</span>
-        </div>
+        @php
+            $badgeMap = ['recibido'=>'secondary','diagnostico'=>'warning','espera'=>'info','aceptado'=>'success','rechazado'=>'danger','reparacion'=>'primary','listo'=>'success','entregado'=>'dark'];
+            $labelMap = ['recibido'=>'Recibido','diagnostico'=>'En Diagnóstico','espera'=>'Esperando Aprobación','aceptado'=>'Aprobado','rechazado'=>'Rechazado','reparacion'=>'En Reparación','listo'=>'Listo para Entrega','entregado'=>'Entregado'];
+        @endphp
+        <span class="badge badge-{{ $badgeMap[$orden->estado] ?? 'secondary' }}" style="font-size: 0.9rem; padding: 0.5em 1.2em;">
+            {{ $labelMap[$orden->estado] ?? $orden->estado }}
+        </span>
     </div>
 @stop
 
 @section('content')
 
+{{-- ALERTS --}}
 @if(session('success'))
-    <div class="alert alert-success" style="border-radius: 8px; font-weight: 500; border: none; background: #dcfce7; color: #166534;">
+    <div class="alert alert-success alert-dismissible fade show" style="border-radius:8px;">
         <i class="fas fa-check-circle mr-2"></i>{{ session('success') }}
+        <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
     </div>
 @endif
 @if(session('error'))
-    <div class="alert alert-danger" style="border-radius: 8px; font-weight: 500;">
+    <div class="alert alert-danger alert-dismissible fade show" style="border-radius:8px;">
         <i class="fas fa-exclamation-circle mr-2"></i>{{ session('error') }}
+        <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
     </div>
 @endif
 
-{{-- TIMELINE --}}
-<div class="card">
-    <div class="card-body py-2 px-4">
-        <div class="status-timeline">
-            @foreach(['recibido'=>'Recibido','diagnostico'=>'Diagnóstico','espera'=>'En Espera','aceptado'=>'Aprobado','rechazado'=>'Rechazado','reparacion'=>'Reparación','listo'=>'Listo','entregado'=>'Entregado'] as $s => $label)
+{{-- STEP PROGRESS BAR --}}
+@php
+    $allStates = ['recibido','diagnostico','espera','reparacion','listo','entregado'];
+    $stepLabels = ['recibido'=>'Recibido','diagnostico'=>'Diagnóstico','espera'=>'En Espera','reparacion'=>'Reparación','listo'=>'Listo','entregado'=>'Entregado'];
+    $currentPos = array_search(in_array($orden->estado, ['aceptado','rechazado']) ? ($orden->estado === 'aceptado' ? 'reparacion' : 'entregado') : $orden->estado, $allStates);
+@endphp
+<div class="card mb-4">
+    <div class="card-body py-3 px-4">
+        <div class="d-flex align-items-center" style="gap: 0;">
+            @foreach($allStates as $i => $s)
                 @php
-                    $estados   = ['recibido','diagnostico','espera','aceptado','rechazado','reparacion','listo','entregado'];
-                    $posActual = array_search($orden->estado, $estados);
-                    $posEste   = array_search($s, $estados);
-                    $clase = $s === $orden->estado ? 'active' : ($posEste < $posActual ? 'done' : '');
-                    if ($s === 'rechazado' && $orden->estado === 'aceptado') $clase = '';
-                    if ($s === 'aceptado'  && $orden->estado === 'rechazado') $clase = '';
+                    $pos = array_search($s, $allStates);
+                    $isDone   = $pos < $currentPos;
+                    $isActive = $pos === $currentPos;
                 @endphp
-                <div class="st-step {{ $clase }}">{{ $label }}</div>
+                <div class="d-flex align-items-center" style="flex: 1;">
+                    <div class="d-flex flex-column align-items-center" style="flex: 0;">
+                        <div style="width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.75rem;
+                            background: {{ $isActive ? '#111827' : ($isDone ? '#10b981' : '#e5e7eb') }};
+                            color: {{ ($isActive || $isDone) ? 'white' : '#9ca3af' }};">
+                            @if($isDone) <i class="fas fa-check" style="font-size:0.65rem;"></i>
+                            @else {{ $i + 1 }} @endif
+                        </div>
+                        <div style="font-size:0.65rem; font-weight:{{ $isActive ? '700' : '500' }}; color:{{ $isActive ? '#111827' : ($isDone ? '#10b981' : '#9ca3af') }}; margin-top:4px; text-align:center; white-space:nowrap;">
+                            {{ $stepLabels[$s] }}
+                        </div>
+                    </div>
+                    @if(!$loop->last)
+                        <div style="flex:1; height:2px; background: {{ $isDone ? '#10b981' : '#e5e7eb' }}; margin: 0 4px 20px;"></div>
+                    @endif
+                </div>
             @endforeach
         </div>
+
+        {{-- Special badges for aceptado/rechazado --}}
+        @if($orden->estado === 'aceptado')
+            <div class="text-center mt-2">
+                <span class="badge badge-success" style="font-size:0.8rem; padding: 0.4em 1em;">
+                    <i class="fas fa-check-circle mr-1"></i> Cliente aprobó el presupuesto
+                </span>
+            </div>
+        @elseif($orden->estado === 'rechazado')
+            <div class="text-center mt-2">
+                <span class="badge badge-danger" style="font-size:0.8rem; padding: 0.4em 1em;">
+                    <i class="fas fa-times-circle mr-1"></i> Cliente rechazó el presupuesto
+                </span>
+            </div>
+        @endif
     </div>
 </div>
 
-@if($orden->estado === 'espera')
-<div class="alert" style="border-radius:10px; background:#fffbeb; border:1px solid #fde68a; color:#92400e; font-weight:500; padding: 1rem 1.25rem;">
-    <i class="fas fa-hourglass-half mr-2"></i>
-    <strong>Esperando decisión del cliente.</strong> Se envió un correo con el presupuesto y los botones para Aceptar o Rechazar la reparación.
-</div>
-@endif
-
-@if($orden->estado === 'rechazado')
-<div class="alert" style="border-radius:10px; background:#fef2f2; border:1px solid #fecaca; color:#991b1b; font-weight:500; padding: 1rem 1.25rem;">
-    <i class="fas fa-times-circle mr-2"></i>
-    <strong>El cliente rechazó la reparación.</strong> Por favor coordina la devolución del equipo y cierra la orden.
-</div>
-@endif
-
-@if($orden->estado === 'aceptado')
-<div class="alert" style="border-radius:10px; background:#f0fdf4; border:1px solid #bbf7d0; color:#166534; font-weight:500; padding: 1rem 1.25rem;">
-    <i class="fas fa-check-circle mr-2"></i>
-    <strong>¡El cliente aceptó la reparación!</strong> Puedes avanzar el estado a "En Reparación" para comenzar el trabajo.
-</div>
-@endif
-
 <div class="row">
-    {{-- COLUMNA IZQUIERDA --}}
+    {{-- ===================== COLUMNA IZQUIERDA: Panel de Estado ===================== --}}
     <div class="col-md-8">
 
-        {{-- CAMBIAR ESTADO --}}
-        <div class="card">
-            <div class="card-header"><h5 class="card-title"><i class="fas fa-exchange-alt mr-2 text-primary"></i>Actualizar Estado</h5></div>
+        @if($orden->estado === 'recibido')
+        {{-- ─── PANEL: RECIBIDO ─── --}}
+        <div class="card" style="border-left: 4px solid #6b7280;">
+            <div class="card-header">
+                <h5 class="card-title"><i class="fas fa-inbox mr-2 text-secondary"></i>Paso 1: Confirmar Recepción</h5>
+            </div>
             <div class="card-body">
-                <form method="POST" action="{{ route('ordenes.update', $orden->id) }}" class="d-flex align-items-end gap-2">
-                    @csrf @method('PUT')
-                    <div class="form-group mb-0 mr-3" style="flex: 1;">
-                        <label>Nuevo Estado</label>
-                        <select name="estado" class="custom-select">
-                            @foreach(['recibido'=>'Recibido','diagnostico'=>'Diagnóstico','espera'=>'En Espera','aceptado'=>'Aprobado por Cliente','rechazado'=>'Rechazado por Cliente','reparacion'=>'En Reparación','listo'=>'Listo para Entrega','entregado'=>'Entregado'] as $v => $l)
-                                <option value="{{ $v }}" {{ $orden->estado === $v ? 'selected' : '' }}>{{ $l }}</option>
-                            @endforeach
-                        </select>
+                <p class="text-muted mb-4">La orden ha sido creada. El técnico asignado debe confirmar que recibió el equipo físicamente para continuar con el diagnóstico.</p>
+                <div class="p-3 rounded mb-4" style="background:#f8fafc; border: 1px solid #e5e7eb;">
+                    <div class="row">
+                        <div class="col-md-6"><strong>Falla Reportada:</strong><br><span class="text-muted">{{ $orden->falla_reportada }}</span></div>
+                        <div class="col-md-6"><strong>Estado Físico:</strong><br><span class="text-muted">{{ $orden->estado_fisico }}</span></div>
                     </div>
-                    <button type="submit" class="btn btn-primary-modern mb-0"><i class="fas fa-check mr-1"></i>Aplicar</button>
+                </div>
+                @if(Auth::user()->id === $orden->user_id || Auth::user()->rol === 'admin')
+                <form method="POST" action="{{ route('ordenes.confirmarRecepcion', $orden->id) }}">
+                    @csrf
+                    <button type="submit" class="btn btn-dark-modern btn-block py-3" style="font-size:1rem;"
+                        onclick="return confirm('¿Confirmas que recibiste el equipo físicamente?')">
+                        <i class="fas fa-check-double mr-2"></i> Confirmar Recepción del Equipo
+                    </button>
                 </form>
+                @else
+                <div class="alert alert-warning mb-0" style="border-radius:8px;">
+                    <i class="fas fa-lock mr-2"></i> Solo el técnico asignado (<strong>{{ $orden->user->nombre ?? 'N/A' }}</strong>) puede confirmar la recepción.
+                </div>
+                @endif
             </div>
         </div>
 
-        {{-- DIAGNÓSTICO --}}
-        <div class="card">
-            <div class="card-header"><h5 class="card-title"><i class="fas fa-stethoscope mr-2 text-warning"></i>Diagnóstico Técnico</h5></div>
+        @elseif($orden->estado === 'diagnostico')
+        {{-- ─── PANEL: DIAGNÓSTICO ─── --}}
+        <div class="card" style="border-left: 4px solid #f59e0b;">
+            <div class="card-header">
+                <h5 class="card-title"><i class="fas fa-stethoscope mr-2 text-warning"></i>Paso 2: Diagnóstico Técnico</h5>
+            </div>
             <div class="card-body">
                 <form method="POST" action="{{ route('ordenes.diagnostico', $orden->id) }}" enctype="multipart/form-data">
                     @csrf
                     <div class="form-group mb-3">
                         <label>Solución Propuesta *</label>
-                        <textarea name="solucion_propuesta" class="form-control" rows="3"
+                        <textarea name="solucion_propuesta" class="form-control" rows="4"
                             placeholder="Describe el diagnóstico y la solución propuesta...">{{ old('solucion_propuesta', $orden->solucion_propuesta) }}</textarea>
                     </div>
                     <div class="form-group mb-3">
                         <label>Costo de Mano de Obra *</label>
                         <div class="input-group">
-                            <div class="input-group-prepend"><span class="input-group-text bg-white" style="border: 1px solid #d1d5db; border-right: none; border-radius: 8px 0 0 8px;">$</span></div>
+                            <div class="input-group-prepend"><span class="input-group-text">$</span></div>
                             <input type="number" name="mano_obra" class="form-control" step="0.01" min="0"
-                                value="{{ old('mano_obra', $orden->mano_obra ?? '') }}"
-                                style="border-left: none; border-radius: 0 8px 8px 0 !important;">
+                                value="{{ old('mano_obra', $orden->mano_obra ?? '') }}" placeholder="0.00">
                         </div>
                     </div>
-                    <div class="form-group mb-4">
+
+                    {{-- REPUESTOS --}}
+                    <div class="form-group mb-3">
                         <label>Refacciones Necesarias</label>
                         <div class="row mb-2">
                             <div class="col-md-7">
-                                <select id="select-repuesto" class="custom-select select2">
+                                <select id="select-repuesto" class="custom-select">
                                     <option value="">-- Seleccionar pieza del inventario --</option>
                                     @foreach($inventario as $pieza)
                                         <option value="{{ $pieza->id }}" data-precio="{{ $pieza->precio_venta }}" data-nombre="{{ $pieza->nombre_pieza }}" data-stock="{{ $pieza->stock }}">
@@ -139,82 +166,249 @@
                                 <input type="number" id="cant-repuesto" class="form-control" value="1" min="1" placeholder="Cant.">
                             </div>
                             <div class="col-md-2">
-                                <button type="button" id="btn-add-repuesto" class="btn btn-secondary btn-block">
-                                    <i class="fas fa-plus"></i>
-                                </button>
+                                <button type="button" id="btn-add-repuesto" class="btn btn-secondary btn-block"><i class="fas fa-plus"></i></button>
                             </div>
                         </div>
-
                         <div class="table-responsive">
                             <table class="table table-sm table-bordered" id="tabla-repuestos-diagnosis">
                                 <thead class="bg-light">
-                                    <tr>
-                                        <th>Pieza</th>
-                                        <th width="100">Cant.</th>
-                                        <th width="120">Precio</th>
-                                        <th width="120">Subtotal</th>
-                                        <th width="50"></th>
-                                    </tr>
+                                    <tr><th>Pieza</th><th>Cant.</th><th>Precio</th><th>Subtotal</th><th></th></tr>
                                 </thead>
-                                <tbody>
-                                    {{-- Se llena con JS --}}
-                                </tbody>
-                                <tfoot>
-                                    <tr>
-                                        <th colspan="3" class="text-right">Total Piezas:</th>
-                                        <th id="total-piezas-diag">$0.00</th>
-                                        <th></th>
-                                    </tr>
-                                </tfoot>
+                                <tbody>{{-- JS --}}</tbody>
+                                <tfoot><tr><th colspan="3" class="text-right">Total Piezas:</th><th id="total-piezas-diag">$0.00</th><th></th></tr></tfoot>
                             </table>
                         </div>
-                        <p class="text-xs text-muted mt-1">Si la pieza no está en inventario, usa el formulario de <strong>Solicitud de Compra</strong> abajo.</p>
                     </div>
 
-                    <div class="form-group mb-4">
-                        <label>Evidencia Fotográfica (puede seleccionar múltiples)</label>
-                        <input type="file" name="fotos[]" class="form-control" multiple accept="image/*"
-                            style="padding: 0.4rem; cursor: pointer;">
-                        <small class="text-muted">Formatos: JPG, PNG, GIF. Máx 5 MB c/u.</small>
+                    {{-- EVIDENCIAS --}}
+                    <div class="form-group mb-3">
+                        <label>Evidencia Fotográfica (opcional)</label>
+                        <input type="file" name="fotos[]" class="form-control" multiple accept="image/*" style="padding:0.4rem;">
+                        <small class="text-muted">JPG, PNG, GIF. Máx 5 MB c/u.</small>
                     </div>
 
                     <div id="hidden-inputs-repuestos"></div>
 
-                    <button type="submit" class="btn btn-primary-modern btn-block py-2">
+                    <button type="submit" class="btn btn-warning btn-block py-3" style="color:#fff; font-size:1rem;">
                         <i class="fas fa-paper-plane mr-2"></i> Guardar Diagnóstico y Notificar al Cliente
                     </button>
                 </form>
 
+                {{-- SOLICITUD DE COMPRA --}}
                 <hr class="my-4">
-
-                {{-- FORMULARIO SOLICITUD DE COMPRA --}}
-                <div class="bg-light p-3 rounded" style="border: 1px dashed #ced4da;">
-                    <h6 class="mb-3" style="font-weight: 700; color: #4b5563;"><i class="fas fa-shopping-cart mr-2"></i>¿Falta una pieza? Solicitar Compra</h6>
+                <div class="bg-light p-3 rounded" style="border:1px dashed #ced4da;">
+                    <h6 class="mb-3" style="font-weight:700; color:#4b5563;"><i class="fas fa-shopping-cart mr-2"></i>¿Falta una pieza? Solicitar Compra</h6>
                     <form action="{{ route('solicitudes.store') }}" method="POST">
                         @csrf
                         <input type="hidden" name="orden_servicio_id" value="{{ $orden->id }}">
                         <div class="row">
-                            <div class="col-md-6">
-                                <input type="text" name="nombre_pieza" class="form-control form-control-sm mb-2" placeholder="Nombre de la pieza..." required>
-                            </div>
-                            <div class="col-md-3">
-                                <input type="number" name="cantidad" class="form-control form-control-sm mb-2" value="1" min="1" required>
-                            </div>
-                            <div class="col-md-3">
-                                <button type="submit" class="btn btn-outline-secondary btn-sm btn-block">Solicitar</button>
-                            </div>
-                            <div class="col-12">
-                                <textarea name="descripcion" class="form-control form-control-sm" rows="1" placeholder="Detalles extra (opcional)..."></textarea>
-                            </div>
+                            <div class="col-md-6"><input type="text" name="nombre_pieza" class="form-control form-control-sm mb-2" placeholder="Nombre de la pieza..." required></div>
+                            <div class="col-md-3"><input type="number" name="cantidad" class="form-control form-control-sm mb-2" value="1" min="1" required></div>
+                            <div class="col-md-3"><button type="submit" class="btn btn-outline-secondary btn-sm btn-block">Solicitar</button></div>
+                            <div class="col-12"><textarea name="descripcion" class="form-control form-control-sm" rows="1" placeholder="Detalles extra..."></textarea></div>
                         </div>
                     </form>
                 </div>
             </div>
         </div>
 
-        {{-- GALERÍA DE EVIDENCIAS --}}
+        @elseif($orden->estado === 'espera')
+        {{-- ─── PANEL: EN ESPERA ─── --}}
+        <div class="card" style="border-left: 4px solid #0ea5e9;">
+            <div class="card-header">
+                <h5 class="card-title"><i class="fas fa-hourglass-half mr-2 text-info"></i>Paso 3: Esperando Decisión del Cliente</h5>
+            </div>
+            <div class="card-body">
+                <div class="p-4 rounded mb-4" style="background:#fffbeb; border:1px solid #fde68a;">
+                    <p class="mb-2" style="font-weight:600; color:#92400e;"><i class="fas fa-envelope mr-2"></i>Se ha enviado el presupuesto al cliente.</p>
+                    <p class="mb-0 text-muted" style="font-size:0.9rem;">La reparación no puede iniciar hasta que el cliente acepte o rechace el diagnóstico. El estado cambiará automáticamente cuando el cliente responda desde el enlace enviado.</p>
+                </div>
+                @if($orden->solucion_propuesta)
+                <div class="p-3 rounded mb-3" style="background:#f8fafc; border:1px solid #e5e7eb;">
+                    <strong>Diagnóstico registrado:</strong><br>
+                    <p class="text-muted mt-2 mb-0">{{ $orden->solucion_propuesta }}</p>
+                </div>
+                @endif
+                <div class="d-flex align-items-center p-3 rounded" style="background:#f0f9ff; border:1px solid #bae6fd;">
+                    <i class="fas fa-link mr-3 text-info" style="font-size:1.2rem;"></i>
+                    <div>
+                        <strong style="font-size:0.85rem;">Enlace de rastreo del cliente:</strong><br>
+                        <code style="font-size:0.78rem; color:#0369a1;">{{ url('/seguimiento/' . $orden->token_rastreo) }}</code>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @elseif($orden->estado === 'aceptado')
+        {{-- ─── PANEL: APROBADO ─── --}}
+        <div class="card" style="border-left: 4px solid #10b981;">
+            <div class="card-header" style="background:#f0fdf4;">
+                <h5 class="card-title" style="color:#166534;"><i class="fas fa-thumbs-up mr-2"></i>¡Cliente Aprobó el Presupuesto!</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted mb-4">El cliente aceptó realizar la reparación. Confirma cuando el técnico esté listo para iniciar el trabajo.</p>
+                @if($orden->solucion_propuesta)
+                <div class="p-3 rounded mb-4" style="background:#f8fafc; border:1px solid #e5e7eb;">
+                    <strong>Trabajo a realizar:</strong><br>
+                    <p class="text-muted mt-2 mb-0">{{ $orden->solucion_propuesta }}</p>
+                </div>
+                @endif
+                <form method="POST" action="{{ route('ordenes.iniciarReparacion', $orden->id) }}">
+                    @csrf
+                    <button type="submit" class="btn btn-success btn-block py-3" style="font-size:1rem;"
+                        onclick="return confirm('¿Iniciar la reparación de este equipo?')">
+                        <i class="fas fa-tools mr-2"></i> Iniciar Reparación
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        @elseif($orden->estado === 'rechazado')
+        {{-- ─── PANEL: RECHAZADO ─── --}}
+        <div class="card" style="border-left: 4px solid #ef4444;">
+            <div class="card-header" style="background:#fef2f2;">
+                <h5 class="card-title" style="color:#991b1b;"><i class="fas fa-times-circle mr-2"></i>Cliente Rechazó el Presupuesto</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted mb-4">El cliente ha rechazado la reparación. Coordina la devolución del equipo y confirma el cierre de la orden.</p>
+                <div class="p-3 rounded mb-4" style="background:#fef2f2; border:1px solid #fecaca;">
+                    <i class="fas fa-info-circle mr-2 text-danger"></i>
+                    Al confirmar la devolución, la orden quedará marcada como <strong>Entregada (Sin Reparación)</strong> y se registrará la fecha de salida del equipo.
+                </div>
+                <form method="POST" action="{{ route('ordenes.cerrarRechazada', $orden->id) }}">
+                    @csrf
+                    <button type="submit" class="btn btn-danger btn-block py-3" style="font-size:1rem;"
+                        onclick="return confirm('¿Confirmas que el equipo fue devuelto al cliente?')">
+                        <i class="fas fa-undo mr-2"></i> Confirmar Devolución y Cerrar Orden
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        @elseif($orden->estado === 'reparacion')
+        {{-- ─── PANEL: EN REPARACIÓN ─── --}}
+        <div class="card" style="border-left: 4px solid #3b82f6;">
+            <div class="card-header" style="background:#eff6ff;">
+                <h5 class="card-title" style="color:#1d4ed8;"><i class="fas fa-wrench mr-2"></i>Paso 4: Finalizar Reparación</h5>
+            </div>
+            <div class="card-body">
+                <form action="{{ route('ordenes.detalle', $orden->id) }}" method="POST">
+                    @csrf
+                    <div class="form-group mb-3">
+                        <label>Trabajo Realizado *</label>
+                        <textarea name="trabajo_finalizado" class="form-control" rows="4" required
+                            placeholder="Describe detalladamente qué se le hizo al equipo...">{{ old('trabajo_finalizado', $orden->detallesTecnicos->trabajo_finalizado ?? '') }}</textarea>
+                    </div>
+                    <div class="form-group mb-4">
+                        <label>Observaciones Internas <small class="text-muted">(no visibles para el cliente)</small></label>
+                        <textarea name="observaciones_internas" class="form-control" rows="2"
+                            placeholder="Notas para el equipo técnico...">{{ old('observaciones_internas', $orden->detallesTecnicos->observaciones_internas ?? '') }}</textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block py-3" style="font-size:1rem;"
+                        onclick="return confirm('¿Finalizar la reparación? El equipo pasará a estado LISTO y se notificará al cliente.')">
+                        <i class="fas fa-check-circle mr-2"></i> Finalizar Reparación — Marcar como LISTO
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        @elseif($orden->estado === 'listo')
+        {{-- ─── PANEL: LISTO PARA ENTREGA ─── --}}
+        <div class="card" style="border-left: 4px solid #10b981;">
+            <div class="card-header" style="background:#f0fdf4;">
+                <h5 class="card-title" style="color:#166534;"><i class="fas fa-box-open mr-2"></i>Paso 5: Confirmar Entrega al Cliente</h5>
+            </div>
+            <div class="card-body">
+                @php
+                    $totalDebe   = ($orden->mano_obra ?? 0) + $orden->repuestos->sum(fn($r) => $r->pivot->cantidad * $r->pivot->precio_fijado);
+                    $totalPagado = $orden->pagos->sum('monto');
+                    $saldo       = $totalDebe - $totalPagado;
+                @endphp
+                @if($saldo > 0)
+                <div class="alert alert-warning" style="border-radius:8px;">
+                    <i class="fas fa-exclamation-triangle mr-2"></i>
+                    <strong>Saldo pendiente: ${{ number_format($saldo, 2) }}</strong> — Registra el cobro antes de confirmar la entrega.
+                </div>
+                @else
+                <div class="alert" style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; color:#166534;">
+                    <i class="fas fa-check-circle mr-2"></i> Pago completo. El equipo puede ser entregado.
+                </div>
+                @endif
+
+                {{-- REGISTRO DE COBRO --}}
+                <form method="POST" action="{{ route('ordenes.pago', $orden->id) }}" class="mb-4">
+                    @csrf
+                    <h6 style="font-weight:700; color:#374151;"><i class="fas fa-dollar-sign mr-2 text-success"></i>Registrar Cobro</h6>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <label>Monto</label>
+                            <div class="input-group">
+                                <div class="input-group-prepend"><span class="input-group-text">$</span></div>
+                                <input type="number" name="monto" class="form-control" step="0.01" min="1" placeholder="0.00">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <label>Método</label>
+                            <select name="metodo_pago" class="custom-select">
+                                <option value="efectivo">Efectivo</option>
+                                <option value="tarjeta">Tarjeta</option>
+                                <option value="transferencia">Transferencia</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label>Tipo</label>
+                            <select name="tipo_pago" class="custom-select">
+                                <option value="anticipo">Anticipo</option>
+                                <option value="liquidacion">Liquidación</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-outline-success mt-3">
+                        <i class="fas fa-plus mr-1"></i> Asentar Cobro
+                    </button>
+                </form>
+
+                <form method="POST" action="{{ route('ordenes.confirmarEntrega', $orden->id) }}">
+                    @csrf
+                    <button type="submit" class="btn btn-dark-modern btn-block py-3" style="font-size:1rem;"
+                        onclick="return confirm('¿Confirmar entrega? La orden sera cerrada.')"
+                        {{ $saldo > 0 ? 'disabled' : '' }}>
+                        <i class="fas fa-handshake mr-2"></i> Confirmar Entrega al Cliente
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        @elseif($orden->estado === 'entregado')
+        {{-- ─── PANEL: ENTREGADO / CERRADO ─── --}}
+        <div class="card" style="border-left: 4px solid #111827;">
+            <div class="card-header" style="background:#111827;">
+                <h5 class="card-title text-white"><i class="fas fa-flag-checkered mr-2"></i>Orden Cerrada</h5>
+            </div>
+            <div class="card-body">
+                <div class="text-center py-3">
+                    <i class="fas fa-check-circle" style="font-size:3rem; color:#10b981;"></i>
+                    <h4 class="mt-3" style="font-weight:700;">¡Orden Completada!</h4>
+                    <p class="text-muted">Esta orden ha sido finalizada y el equipo fue entregado al cliente.</p>
+                    @if($orden->fecha_entrega_real)
+                    <p class="text-muted" style="font-size:0.85rem;">
+                        <i class="fas fa-calendar-check mr-1"></i> Entregado el {{ \Carbon\Carbon::parse($orden->fecha_entrega_real)->format('d M, Y — H:i') }}
+                    </p>
+                    @endif
+                </div>
+                @if($orden->detallesTecnicos)
+                <div class="p-3 rounded mt-3" style="background:#f8fafc; border:1px solid #e5e7eb;">
+                    <strong>Trabajo realizado:</strong>
+                    <p class="text-muted mt-2 mb-0">{{ $orden->detallesTecnicos->trabajo_finalizado ?? '—' }}</p>
+                </div>
+                @endif
+            </div>
+        </div>
+        @endif
+
+        {{-- GALERÍA DE EVIDENCIAS (Siempre visible si hay fotos) --}}
         @if($orden->evidencias->count() > 0)
-        <div class="card">
+        <div class="card mt-3">
             <div class="card-header"><h5 class="card-title"><i class="fas fa-images mr-2 text-info"></i>Evidencias ({{ $orden->evidencias->count() }})</h5></div>
             <div class="card-body">
                 <div class="evidence-gallery">
@@ -230,69 +424,35 @@
         </div>
         @endif
 
-        {{-- FORMULARIO DE REPARACIÓN (Solo si está aceptado o en reparación) --}}
-        @if(in_array($orden->estado, ['aceptado', 'reparacion']))
-        <div class="card border-primary">
-            <div class="card-header bg-primary text-white">
-                <h5 class="card-title mb-0"><i class="fas fa-tools mr-2"></i>Finalizar Reparación</h5>
-            </div>
-            <div class="card-body">
-                <form action="{{ route('ordenes.detalle', $orden->id) }}" method="POST">
-                    @csrf
-                    <div class="form-group mb-3">
-                        <label>Trabajo Realizado *</label>
-                        <textarea name="trabajo_finalizado" class="form-control" rows="3" required
-                            placeholder="Describe qué se le hizo al equipo...">{{ old('trabajo_finalizado', $orden->detallesTecnicos->trabajo_finalizado ?? '') }}</textarea>
-                    </div>
-                    <div class="form-group mb-4">
-                        <label>Observaciones Internas (no visibles para el cliente)</label>
-                        <textarea name="observaciones_internas" class="form-control" rows="2"
-                            placeholder="Notas para el equipo técnico...">{{ old('observaciones_internas', $orden->detallesTecnicos->observaciones_internas ?? '') }}</textarea>
-                    </div>
-                    <button type="submit" class="btn btn-success btn-block py-2" onclick="return confirm('¿Seguro que deseas finalizar el trabajo? El equipo pasará a estado LISTO y se notificará al cliente.')">
-                        <i class="fas fa-check-circle mr-2"></i> Registrar Trabajo y Marcar como LISTO
-                    </button>
-                </form>
-            </div>
-        </div>
-        @endif
-
-        {{-- REPUESTOS USADOS --}}
-        <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="card-title mb-0"><i class="fas fa-tools mr-2 text-secondary"></i>Repuestos / Materiales</h5>
-            </div>
-            @if($orden->repuestos->count() > 0)
+        {{-- REPUESTOS USADOS (Siempre visible) --}}
+        @if($orden->repuestos->count() > 0)
+        <div class="card mt-3">
+            <div class="card-header"><h5 class="card-title"><i class="fas fa-tools mr-2 text-secondary"></i>Repuestos / Materiales</h5></div>
             <div class="table-responsive">
                 <table class="table">
-                    <thead><tr><th>SKU / Pieza</th><th>Cantidad</th><th>Precio Unit.</th><th>Subtotal</th></tr></thead>
+                    <thead><tr><th>Pieza</th><th>Cant.</th><th>Precio</th><th>Subtotal</th></tr></thead>
                     <tbody>
-                        @php $totalRepuestos = 0; @endphp
+                        @php $totRep = 0; @endphp
                         @foreach($orden->repuestos as $r)
-                        @php $sub = $r->pivot->cantidad * $r->pivot->precio_fijado; $totalRepuestos += $sub; @endphp
+                        @php $sub = $r->pivot->cantidad * $r->pivot->precio_fijado; $totRep += $sub; @endphp
                         <tr>
-                            <td><span style="font-weight:600;">{{ $r->nombre }}</span><br><small class="text-muted">{{ $r->sku }}</small></td>
+                            <td><strong>{{ $r->nombre }}</strong><br><small class="text-muted">{{ $r->sku }}</small></td>
                             <td>{{ $r->pivot->cantidad }}</td>
                             <td>${{ number_format($r->pivot->precio_fijado, 2) }}</td>
                             <td style="font-weight:700;">${{ number_format($sub, 2) }}</td>
                         </tr>
                         @endforeach
-                        <tr style="background: #f9fafb;">
-                            <td colspan="3" class="text-right" style="font-weight:700; color:#374151;">Total Repuestos:</td>
-                            <td style="font-weight:800; color:#111827;">${{ number_format($totalRepuestos, 2) }}</td>
-                        </tr>
+                        <tr style="background:#f9fafb;"><td colspan="3" class="text-right font-weight-bold">Total:</td><td style="font-weight:800;">${{ number_format($totRep, 2) }}</td></tr>
                     </tbody>
                 </table>
             </div>
-            @else
-            <div class="card-body text-muted">No se han agregado repuestos aún.</div>
-            @endif
         </div>
+        @endif
 
-        {{-- HISTORIAL DE PAGOS --}}
-        <div class="card">
+        {{-- HISTORIAL DE COBROS (Visible si hay pagos) --}}
+        @if($orden->pagos->count() > 0)
+        <div class="card mt-3">
             <div class="card-header"><h5 class="card-title"><i class="fas fa-receipt mr-2 text-success"></i>Historial de Cobros</h5></div>
-            @if($orden->pagos->count() > 0)
             <div class="table-responsive">
                 <table class="table">
                     <thead><tr><th>Monto</th><th>Método</th><th>Tipo</th><th>Fecha</th></tr></thead>
@@ -308,34 +468,73 @@
                     </tbody>
                 </table>
             </div>
-            @else
-            <div class="card-body text-muted">Aún no se registran pagos para esta orden.</div>
-            @endif
         </div>
+        @endif
+
+        {{-- OVERRIDE ADMIN ---}}
+        @if(Auth::user()->rol === 'admin' && $orden->estado !== 'entregado')
+        <div class="card mt-3" style="border: 1px dashed #d1d5db;">
+            <div class="card-header" style="background:#fffbeb;">
+                <h6 class="card-title mb-0" style="color:#92400e;"><i class="fas fa-shield-alt mr-2"></i>Anulación Admin — Cambio de Estado de Emergencia</h6>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ route('ordenes.update', $orden->id) }}" class="d-flex align-items-end gap-2">
+                    @csrf @method('PUT')
+                    <div class="form-group mb-0 mr-3" style="flex:1;">
+                        <select name="estado" class="custom-select">
+                            @foreach(['recibido'=>'Recibido','diagnostico'=>'Diagnóstico','espera'=>'En Espera','aceptado'=>'Aprobado','rechazado'=>'Rechazado','reparacion'=>'En Reparación','listo'=>'Listo','entregado'=>'Entregado'] as $v => $l)
+                                <option value="{{ $v }}" {{ $orden->estado === $v ? 'selected' : '' }}>{{ $l }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-warning mb-0" onclick="return confirm('¿Seguro? Esto anulará el flujo normal.')">
+                        Aplicar Override
+                    </button>
+                </form>
+            </div>
+        </div>
+        @endif
 
     </div>
 
-    {{-- COLUMNA DERECHA --}}
+    {{-- ===================== COLUMNA DERECHA: Datos persistentes ===================== --}}
     <div class="col-md-4">
 
-        {{-- INFO CLIENTE/EQUIPO --}}
+        {{-- DATOS DEL CLIENTE --}}
         <div class="card">
-            <div class="card-header"><h5 class="card-title"><i class="fas fa-user mr-2 text-primary"></i>Datos del Cliente</h5></div>
+            <div class="card-header"><h5 class="card-title"><i class="fas fa-user mr-2 text-primary"></i>Cliente</h5></div>
             <div class="card-body">
                 <div class="info-row"><span class="info-label">Nombre</span><span class="info-value">{{ $orden->equipo->cliente->nombre ?? '' }} {{ $orden->equipo->cliente->apellido_paterno ?? '' }}</span></div>
                 <div class="info-row"><span class="info-label">Teléfono</span><span class="info-value">{{ $orden->equipo->cliente->telefono ?? 'N/A' }}</span></div>
-                <div class="info-row"><span class="info-label">Correo</span><span class="info-value">{{ $orden->equipo->cliente->correo ?? 'N/A' }}</span></div>
+                <div class="info-row"><span class="info-label">Correo</span><span class="info-value" style="font-size:0.82rem; word-break:break-word;">{{ $orden->equipo->cliente->correo ?? 'N/A' }}</span></div>
             </div>
         </div>
 
+        {{-- DATOS DEL EQUIPO --}}
         <div class="card">
-            <div class="card-header"><h5 class="card-title"><i class="fas fa-desktop mr-2 text-secondary"></i>Datos del Equipo</h5></div>
+            <div class="card-header"><h5 class="card-title"><i class="fas fa-desktop mr-2 text-secondary"></i>Equipo</h5></div>
             <div class="card-body">
                 <div class="info-row"><span class="info-label">Tipo</span><span class="info-value text-capitalize">{{ $orden->equipo->tipo ?? 'N/A' }}</span></div>
                 <div class="info-row"><span class="info-label">Marca / Modelo</span><span class="info-value">{{ $orden->equipo->marca ?? '' }} {{ $orden->equipo->modelo ?? '' }}</span></div>
-                <div class="info-row"><span class="info-label">N° Serie</span><span class="info-value" style="font-family:monospace; font-size:0.85rem;">{{ $orden->equipo->numero_serie ?? 'N/A' }}</span></div>
+                <div class="info-row"><span class="info-label">N° Serie</span><span class="info-value" style="font-family:monospace; font-size:0.82rem;">{{ $orden->equipo->numero_serie ?? 'N/A' }}</span></div>
                 <div class="info-row"><span class="info-label">Estado Físico</span><span class="info-value">{{ $orden->estado_fisico }}</span></div>
-                <div class="info-row"><span class="info-label">Falla Reportada</span><span class="info-value">{{ $orden->falla_reportada }}</span></div>
+                <div class="info-row"><span class="info-label">Falla</span><span class="info-value">{{ $orden->falla_reportada }}</span></div>
+            </div>
+        </div>
+
+        {{-- TÉCNICO ASIGNADO --}}
+        <div class="card">
+            <div class="card-header"><h5 class="card-title"><i class="fas fa-user-cog mr-2 text-info"></i>Técnico Asignado</h5></div>
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="mr-3" style="width:40px; height:40px; background:#111827; border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; font-weight:700; flex-shrink:0;">
+                        {{ strtoupper(substr($orden->user->nombre ?? 'T', 0, 1)) }}
+                    </div>
+                    <div>
+                        <div style="font-weight:600;">{{ $orden->user->nombre ?? 'Sin asignar' }} {{ $orden->user->apellido ?? '' }}</div>
+                        <div style="font-size:0.8rem; color:#6b7280;">{{ $orden->user->email ?? '' }}</div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -344,63 +543,26 @@
             <div class="card-header"><h5 class="card-title"><i class="fas fa-calculator mr-2"></i>Resumen Financiero</h5></div>
             <div class="card-body">
                 @php
-                    $manoObra = $orden->mano_obra ?? 0;
+                    $manoObra    = $orden->mano_obra ?? 0;
                     $totalPiezas = $orden->repuestos->sum(fn($r) => $r->pivot->cantidad * $r->pivot->precio_fijado);
-                    $totalDebe = $manoObra + $totalPiezas;
+                    $totalDebe   = $manoObra + $totalPiezas;
                     $totalPagado = $orden->pagos->sum('monto');
-                    $saldo = $totalDebe - $totalPagado;
+                    $saldo       = $totalDebe - $totalPagado;
                 @endphp
                 <div class="info-row"><span class="info-label">Mano de Obra</span><span class="info-value">${{ number_format($manoObra, 2) }}</span></div>
                 <div class="info-row"><span class="info-label">Repuestos</span><span class="info-value">${{ number_format($totalPiezas, 2) }}</span></div>
-                <div class="info-row" style="border-top: 1px solid #f3f4f6; padding-top: 0.5rem; margin-top: 0.5rem;">
+                <div class="info-row" style="border-top:1px solid #f3f4f6; padding-top:0.5rem; margin-top:0.5rem;">
                     <span class="info-label">Total a Cobrar</span>
-                    <span class="info-value" style="font-size: 1.2rem;">${{ number_format($totalDebe, 2) }}</span>
+                    <span class="info-value" style="font-size:1.1rem;">${{ number_format($totalDebe, 2) }}</span>
                 </div>
-                <div class="info-row"><span class="info-label">Total Cobrado</span><span class="info-value text-success">${{ number_format($totalPagado, 2) }}</span></div>
+                <div class="info-row"><span class="info-label">Cobrado</span><span class="info-value text-success">${{ number_format($totalPagado, 2) }}</span></div>
                 <div class="info-row">
                     <span class="info-label">Saldo</span>
-                    <span class="info-value {{ $saldo > 0 ? 'text-danger' : 'text-success' }}" style="font-size: 1.1rem; font-weight: 800;">
+                    <span class="info-value {{ $saldo > 0 ? 'text-danger' : 'text-success' }}" style="font-size:1.1rem; font-weight:800;">
                         {{ $saldo > 0 ? '-' : '' }}${{ number_format(abs($saldo), 2) }}
                         @if($saldo <= 0) <i class="fas fa-check-circle ml-1"></i> @endif
                     </span>
                 </div>
-            </div>
-        </div>
-
-        {{-- COBRO RÁPIDO --}}
-        <div class="card">
-            <div class="card-header"><h5 class="card-title"><i class="fas fa-dollar-sign mr-2 text-success"></i>Registrar Cobro</h5></div>
-            <div class="card-body">
-                <form method="POST" action="{{ route('ordenes.pago', $orden->id) }}">
-                    @csrf
-                    <div class="form-group mb-3">
-                        <label>Monto Recibido</label>
-                        <div class="input-group">
-                            <div class="input-group-prepend"><span class="input-group-text bg-white" style="border: 1px solid #d1d5db; border-right: none; border-radius: 8px 0 0 8px;">$</span></div>
-                            <input type="number" name="monto" class="form-control" step="0.01" min="1"
-                                style="border-left: none; border-radius: 0 8px 8px 0 !important;"
-                                placeholder="0.00">
-                        </div>
-                    </div>
-                    <div class="form-group mb-3">
-                        <label>Método de Pago</label>
-                        <select name="metodo_pago" class="custom-select">
-                            <option value="efectivo">Efectivo</option>
-                            <option value="tarjeta">Tarjeta (POS)</option>
-                            <option value="transferencia">Transferencia</option>
-                        </select>
-                    </div>
-                    <div class="form-group mb-4">
-                        <label>Tipo</label>
-                        <select name="tipo_pago" class="custom-select">
-                            <option value="anticipo">Anticipo</option>
-                            <option value="liquidacion">Liquidación Final</option>
-                        </select>
-                    </div>
-                    <button type="submit" class="btn btn-primary-modern btn-block">
-                        <i class="fas fa-check-circle mr-1"></i> Asentar Cobro
-                    </button>
-                </form>
             </div>
         </div>
 
@@ -411,90 +573,50 @@
 @section('js')
 <script>
     $(document).ready(function() {
-        // Inicializar Select2 si está disponible
-        if ($.fn.select2) {
-            $('.select2').select2({
-                theme: 'bootstrap4',
-                width: '100%'
-            });
-        }
-
         let repuestosSeleccionados = [];
 
         $('#btn-add-repuesto').click(function() {
             let select = $('#select-repuesto');
-            let selectedOption = select.find('option:selected');
+            let opt = select.find('option:selected');
             let id = select.val();
             if (!id) return;
-            
-            let nombre = selectedOption.data('nombre');
-            let precio = parseFloat(selectedOption.data('precio'));
-            let stock = parseInt(selectedOption.data('stock'));
-            let cant = parseInt($('#cant-repuesto').val());
+
+            let nombre = opt.data('nombre');
+            let precio = parseFloat(opt.data('precio'));
+            let stock  = parseInt(opt.data('stock'));
+            let cant   = parseInt($('#cant-repuesto').val());
 
             if (cant < 1) return;
+            if (cant > stock) { alert('La cantidad excede el stock (' + stock + ').'); return; }
 
-            if (cant > stock) {
-                alert('La cantidad excede el stock disponible (' + stock + ').');
-                return;
-            }
-
-            // Verificar si ya existe en la lista
-            let index = repuestosSeleccionados.findIndex(r => r.id === id);
-            if (index !== -1) {
-                if (repuestosSeleccionados[index].cant + cant > stock) {
-                    alert('La cantidad total acumulada excede el stock disponible.');
-                    return;
-                }
-                repuestosSeleccionados[index].cant += cant;
+            let idx = repuestosSeleccionados.findIndex(r => r.id === id);
+            if (idx !== -1) {
+                if (repuestosSeleccionados[idx].cant + cant > stock) { alert('Cantidad acumulada excede el stock.'); return; }
+                repuestosSeleccionados[idx].cant += cant;
             } else {
                 repuestosSeleccionados.push({ id, nombre, cant, precio });
             }
 
-            renderTablaDiagnosis();
-            select.val('').trigger('change');
+            renderTabla();
+            select.val('');
             $('#cant-repuesto').val(1);
         });
 
         $(document).on('click', '.btn-remove-diag', function() {
-            let index = $(this).data('index');
-            repuestosSeleccionados.splice(index, 1);
-            renderTablaDiagnosis();
+            repuestosSeleccionados.splice($(this).data('index'), 1);
+            renderTabla();
         });
 
-        function renderTablaDiagnosis() {
+        function renderTabla() {
             let tbody = $('#tabla-repuestos-diagnosis tbody');
             let container = $('#hidden-inputs-repuestos');
-            tbody.empty();
-            container.empty();
-
+            tbody.empty(); container.empty();
             let total = 0;
-
             repuestosSeleccionados.forEach((r, i) => {
-                let subtotal = r.cant * r.precio;
-                total += subtotal;
-
-                tbody.append(`
-                    <tr>
-                        <td style="font-size: 0.9rem;">${r.nombre}</td>
-                        <td class="text-center">${r.cant}</td>
-                        <td>$${r.precio.toFixed(2)}</td>
-                        <td style="font-weight: 700;">$${subtotal.toFixed(2)}</td>
-                        <td class="text-center">
-                            <button type="button" class="btn btn-xs btn-outline-danger btn-remove-diag" data-index="${i}">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </td>
-                    </tr>
-                `);
-
-                container.append(`
-                    <input type="hidden" name="repuestos[${i}][id]" value="${r.id}">
-                    <input type="hidden" name="repuestos[${i}][cantidad]" value="${r.cant}">
-                    <input type="hidden" name="repuestos[${i}][precio]" value="${r.precio}">
-                `);
+                let sub = r.cant * r.precio; total += sub;
+                tbody.append(`<tr><td>${r.nombre}</td><td>${r.cant}</td><td>$${r.precio.toFixed(2)}</td><td><b>$${sub.toFixed(2)}</b></td><td><button type="button" class="btn btn-xs btn-outline-danger btn-remove-diag" data-index="${i}"><i class="fas fa-trash"></i></button></td></tr>`);
+                container.append(`<input type="hidden" name="repuestos[${i}][id]" value="${r.id}"><input type="hidden" name="repuestos[${i}][cantidad]" value="${r.cant}"><input type="hidden" name="repuestos[${i}][precio]" value="${r.precio}">`);
             });
-
             $('#total-piezas-diag').text('$' + total.toFixed(2));
         }
     });

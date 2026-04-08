@@ -40,8 +40,11 @@ Route::middleware('auth')->group(function () {
     Route::post('/ordenes/{id}/pago', [OrdenServicioController::class , 'storePago'])->name('ordenes.pago');
     Route::post('/ordenes/{id}/detalle', [OrdenServicioController::class , 'storeDetalle'])->name('ordenes.detalle');
 
-
-
+    // State-machine transitions (explicit confirmation buttons)
+    Route::post('/ordenes/{id}/confirmar-recepcion', [OrdenServicioController::class, 'confirmarRecepcion'])->name('ordenes.confirmarRecepcion');
+    Route::post('/ordenes/{id}/iniciar-reparacion', [OrdenServicioController::class, 'iniciarReparacion'])->name('ordenes.iniciarReparacion');
+    Route::post('/ordenes/{id}/cerrar-rechazada', [OrdenServicioController::class, 'cerrarRechazada'])->name('ordenes.cerrarRechazada');
+    Route::post('/ordenes/{id}/confirmar-entrega', [OrdenServicioController::class, 'confirmarEntrega'])->name('ordenes.confirmarEntrega');
 });
 
 // SOLICITUDES DE COMPRA
