@@ -103,7 +103,7 @@ class OrdenTecnicoController extends Controller
     public function aceptarOrden($id)
 {
     $orden = OrdenServicio::where('id', $id)
-        ->where('estado', 'recibido')
+        ->whereIn('estado', ['recibido'])
         ->firstOrFail();
 
     // 🔒 evitar que otro técnico la tome
@@ -128,7 +128,7 @@ public function rechazarOrden($id)
         ->where('estado', 'recibido')
         ->firstOrFail();
 
-    $orden->estado = 'cancelada';
+    $orden->estado = 'cancelado';
     $orden->save();
 
     return response()->json([
