@@ -37,7 +37,14 @@ class OrdenServicioController extends Controller
 
     public function show($id)
     {
-        $orden = OrdenServicio::with(['equipo.cliente', 'user', 'evidencias', 'repuestos', 'pagos'])->findOrFail($id);
+        $orden = OrdenServicio::with(['equipo.cliente', 'user', 'evidencias', 'repuestos', 'pagos', 'detallesTecnicos'])->findOrFail($id);
+
+        $user = \Illuminate\Support\Facades\Auth::user();
+        // Technicians can only see their own assigned orders
+        if ($user->rol === 'tecnico' && $orden->user_id !== $user->id) {
+            abort(403, 'No tienes acceso a esta orden de servicio.');
+        }
+
         $inventario = Inventario::where('stock', '>', 0)->get();
         return view('ordenes.show', compact('orden', 'inventario'));
     }

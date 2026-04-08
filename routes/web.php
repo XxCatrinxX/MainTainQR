@@ -37,8 +37,9 @@ Route::put('/ordenes/{id}', [OrdenServicioController::class , 'update'])->name('
 // DETALLE TÉCNICO (Protegido)
 Route::middleware('auth')->group(function () {
     Route::get('/ordenes/{id}', [OrdenServicioController::class , 'show'])->name('ordenes.show');
-    Route::post('/ordenes/{id}/pago', [OrdenServicioController::class , 'storePago'])->name('ordenes.pago');
+    Route::post('/ordenes/{id}/pago', [PagoController::class, 'storeDesdeOrden'])->name('ordenes.pago');
     Route::post('/ordenes/{id}/detalle', [OrdenServicioController::class , 'storeDetalle'])->name('ordenes.detalle');
+    Route::post('/ordenes/{id}/diagnostico', [OrdenServicioController::class , 'storeDiagnostico'])->name('ordenes.diagnostico');
 
     // State-machine transitions (explicit confirmation buttons)
     Route::post('/ordenes/{id}/confirmar-recepcion', [OrdenServicioController::class, 'confirmarRecepcion'])->name('ordenes.confirmarRecepcion');
@@ -47,13 +48,11 @@ Route::middleware('auth')->group(function () {
     Route::post('/ordenes/{id}/confirmar-entrega', [OrdenServicioController::class, 'confirmarEntrega'])->name('ordenes.confirmarEntrega');
 });
 
-// SOLICITUDES DE COMPRA
+// SOLICITUDES DE COMPRA (Solo admin y almacenista)
 Route::middleware(['auth', 'role:admin,almacenista'])->group(function () {
     Route::post('/solicitudes', [SolicitudCompraController::class , 'store'])->name('solicitudes.store');
     Route::get('/solicitudes', [SolicitudCompraController::class , 'index'])->name('solicitudes.index');
     Route::post('/solicitudes/{id}/surtir', [SolicitudCompraController::class , 'surtir'])->name('solicitudes.surtir');
-    Route::post('/ordenes/{id}/diagnostico', [OrdenServicioController::class , 'storeDiagnostico'])->name('ordenes.diagnostico');
-    Route::post('/ordenes/{id}/pago', [PagoController::class , 'storeDesdeOrden'])->name('ordenes.pago');
 });
 
 // SEGUIMIENTO PÚBLICO
