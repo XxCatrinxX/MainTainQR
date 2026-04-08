@@ -76,3 +76,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('clientes', ClienteController::class);
     Route::resource('equipos', EquipoController::class);
 });
+
+// USUARIOS (index para todos los autenticados; edicion solo admin via controller)
+use App\Http\Controllers\UsuarioController;
+Route::middleware('auth')->resource('usuarios', UsuarioController::class);

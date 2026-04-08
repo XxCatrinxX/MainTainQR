@@ -301,12 +301,12 @@ return [
     'menu' => [
         // Navbar items:
         [
-            'type' => 'navbar-search',
-            'text' => 'search',
+            'type'         => 'navbar-search',
+            'text'         => 'search',
             'topnav_right' => true,
         ],
         [
-            'type' => 'fullscreen-widget',
+            'type'         => 'fullscreen-widget',
             'topnav_right' => true,
         ],
 
@@ -315,79 +315,49 @@ return [
             'type' => 'sidebar-menu-search',
             'text' => 'search',
         ],
-        [
-            'text' => 'blog',
-            'url' => 'admin/blog',
-            'can' => 'manage-blog',
-        ],
+
         ['header' => 'MENÚ PRINCIPAL'],
         [
             'text' => 'Inicio',
-            'url' => 'home',
+            'url'  => 'home',
             'icon' => 'fas fa-home',
         ],
         [
             'text' => 'Órdenes de Trabajo',
-            'url' => 'ordenes',
+            'url'  => 'ordenes',
             'icon' => 'fas fa-clipboard-list',
         ],
         [
             'text' => 'Equipos',
-            'url' => 'equipos',
+            'url'  => 'equipos',
             'icon' => 'fas fa-desktop',
         ],
         [
             'text' => 'Clientes',
-            'url' => 'clientes',
-            'icon' => 'fas fa-users',
+            'url'  => 'clientes',
+            'icon' => 'fas fa-address-book',
         ],
         [
             'text' => 'Inventario / Stock',
-            'url' => 'inventario',
+            'url'  => 'inventario',
             'icon' => 'fas fa-boxes',
         ],
         [
             'text' => 'Solicitudes de Compra',
-            'url' => 'solicitudes',
-            'icon' => 'fas fa-boxes',
+            'url'  => 'solicitudes',
+            'icon' => 'fas fa-shopping-cart',
         ],
         [
             'text' => 'Ingresos y Pagos',
-            'url' => 'pagos',
+            'url'  => 'pagos',
             'icon' => 'fas fa-wallet',
         ],
+
+        ['header' => 'ADMINISTRACIÓN'],
         [
-            'text' => 'Solicitudes de Compra',
-            'url' => 'solicitudes',
-            'icon' => 'fas fa-shopping-cart',
-            'can' => ['admin', 'almacenista'],
-        ],
-        ['header' => 'account_settings'],
-        [
-            'text' => 'profile',
-            'url' => 'admin/settings',
-            'icon' => 'fas fa-fw fa-user',
-        ],
-        [
-            'text' => 'change_password',
-            'url' => 'admin/settings',
-            'icon' => 'fas fa-fw fa-lock',
-        ],
-        ['header' => 'labels'],
-        [
-            'text' => 'important',
-            'icon_color' => 'red',
-            'url' => '#',
-        ],
-        [
-            'text' => 'warning',
-            'icon_color' => 'yellow',
-            'url' => '#',
-        ],
-        [
-            'text' => 'information',
-            'icon_color' => 'cyan',
-            'url' => '#',
+            'text' => 'Usuarios del Sistema',
+            'url'  => 'usuarios',
+            'icon' => 'fas fa-users-cog',
         ],
     ],
 

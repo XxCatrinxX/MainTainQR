@@ -134,18 +134,37 @@ class OrdenServicioController extends Controller
     public function storePaso1(Request $request)
     {
         $request->validate([
-            'nombre' => 'required',
-            'apellido_paterno' => 'required',
-            'telefono' => 'required',
+            'nombre'           => 'required|string|max:100',
+            'apellido_paterno' => 'required|string|max:100',
+            'apellido_materno' => 'nullable|string|max:100',
+            'telefono'         => 'required|string|max:20',
+            'correo'           => 'nullable|email|max:255',
+            'direccion'        => 'nullable|string|max:255',
         ]);
 
         $clienteId = session('wizard_cliente_id');
 
-        if ($clienteId) {
+        if ($clienteId && Cliente::where('id', $clienteId)->exists()) {
+            // Editing an existing client already in the session — update it
             $cliente = Cliente::findOrFail($clienteId);
-            $cliente->update($request->all());
+            $cliente->update($request->only([
+                'nombre', 'apellido_paterno', 'apellido_materno',
+                'telefono', 'correo', 'direccion'
+            ]));
         } else {
-            $cliente = Cliente::create($request->all());
+            // Find by email (unique key) or phone, update if found, create if not
+            $searchKey = $request->filled('correo')
+                ? ['correo' => $request->correo]
+                : ['telefono' => $request->telefono];
+
+            $cliente = Cliente::updateOrCreate(
+                $searchKey,
+                $request->only([
+                    'nombre', 'apellido_paterno', 'apellido_materno',
+                    'telefono', 'correo', 'direccion'
+                ])
+            );
+
             session(['wizard_cliente_id' => $cliente->id]);
         }
 
