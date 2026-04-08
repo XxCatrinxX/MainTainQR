@@ -18,19 +18,17 @@ class OrdenTecnicoController extends Controller
      */
 
     public function index()
-    {
-        $user = auth()->user();
+{
+    $ordenes = OrdenServicio::with(['equipo.cliente', 'user'])
+        ->where('user_id', auth()->id())
+        ->where('estado', 'espera') // 👈 SOLO LAS QUE ACEPTÓ
+        ->latest()
+        ->get();
 
-        $ordenes = OrdenServicio::with(['equipo.cliente', 'user'])
-            ->where('user_id', $user->id)
-            ->whereNotIn('estado', ['entregado'])
-            ->latest()
-            ->get();
-
-        return response()->json([
-            'ordenes' => $ordenes,
-        ]);
-    }
+    return response()->json([
+        'ordenes' => $ordenes,
+    ]);
+}
 
 
 
@@ -80,6 +78,63 @@ class OrdenTecnicoController extends Controller
         'refacciones' => $refacciones,
     ]);
     }
+
+    public function showByQr($qr_token)
+    {
+        $orden = OrdenServicio::with(['equipo.cliente'])
+            ->whereHas('equipo', function ($q) use ($qr_token) {
+                $q->where('qr_token', $qr_token);
+            })
+            ->where('estado', 'recibido')
+            ->first();
+
+        if(!$orden) {
+            return response()->json([
+                'message' => "Orden no disponible o ya fue tomada"
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'orden' => $orden
+        ]);
+    }
+
+    public function aceptarOrden($id)
+{
+    $orden = OrdenServicio::where('id', $id)
+        ->where('estado', 'recibido')
+        ->firstOrFail();
+
+    // 🔒 evitar que otro técnico la tome
+    if ($orden->user_id !== null) {
+        return response()->json([
+            'message' => 'Esta orden ya fue asignada'
+        ], 409);
+    }
+
+    $orden->user_id = auth()->id();
+    $orden->estado = 'espera';
+    $orden->save();
+
+    return response()->json([
+        'message' => 'Orden aceptada'
+    ]);
+}
+
+public function rechazarOrden($id)
+{
+    $orden = OrdenServicio::where('id', $id)
+        ->where('estado', 'recibido')
+        ->firstOrFail();
+
+    $orden->estado = 'cancelada';
+    $orden->save();
+
+    return response()->json([
+        'message' => 'Orden rechazada'
+    ]);
+}
 
     /**
      * Guarda el diagnóstico realizado por el técnico con mano de obra y fotos.
