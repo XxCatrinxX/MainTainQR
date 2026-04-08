@@ -80,25 +80,25 @@ class OrdenTecnicoController extends Controller
     }
 
     public function showByQr($qr_token)
-    {
-        $orden = OrdenServicio::with(['equipo.cliente'])
-            ->whereHas('equipo', function ($q) use ($qr_token) {
-                $q->where('qr_token', $qr_token);
-            })
-            ->where('estado', 'recibido')
-            ->first();
+{
+    $orden = OrdenServicio::whereHas('equipo', function ($q) use ($qr_token) {
+        $q->where('qr_token', $qr_token);
+    })
+    ->whereNotIn('estado', ['cancelado', 'entregado'])
+    ->first();
 
-        if(!$orden) {
-            return response()->json([
-                'message' => "Orden no disponible o ya fue tomada"
-            ], 404);
-        }
-
+    if (!$orden) {
         return response()->json([
-            'success' => true,
-            'orden' => $orden
-        ]);
+            'success' => false,
+            'message' => 'Orden no disponible'
+        ], 404);
     }
+
+    return response()->json([
+        'success' => true,
+        'orden' => $orden
+    ]);
+}
 
     public function aceptarOrden($id)
 {
