@@ -7,7 +7,6 @@ use App\Http\Controllers\Api\EquipoController;
 use App\Http\Controllers\Api\InventarioController;
 use App\Http\Controllers\Api\SolicitudCompraController;
 use App\Http\Controllers\Api\PagoController;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/login', [AuthController::class, 'login']);
@@ -28,21 +27,15 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/solicitudes', [SolicitudCompraController::class, 'store']);
     Route::post('/solicitudes/{id}/surtir', [SolicitudCompraController::class, 'surtir']);
 
-    // Órdenes & Pagos
-    // 🔥 QR primero
+    // Órdenes
     Route::get('/ordenes/qr/{qr_token}', [OrdenTecnicoController::class, 'showByQr']);
-
-    // 🔥 Órdenes del técnico
     Route::get('/ordenes', [OrdenTecnicoController::class, 'index']);
     Route::get('/ordenes/{id}', [OrdenTecnicoController::class, 'show']);
-
-    // 🔥 Acciones
     Route::post('/ordenes/{id}/aceptar', [OrdenTecnicoController::class, 'aceptarOrden']);
     Route::post('/ordenes/{id}/rechazar', [OrdenTecnicoController::class, 'rechazarOrden']);
     Route::post('/ordenes/{id}/diagnostico', [OrdenTecnicoController::class, 'storeDiagnostico']);
-
     Route::post('/ordenes/{id}/pago', [PagoController::class, 'storeDesdeOrden']);
-    Route::apiResource('pagos', PagoController::class);
+
+    // Pagos
     Route::apiResource('pagos', PagoController::class);
 });
-// | Aquí es donde puedes registrar las rutas API para tu aplicación. Estas rutas son cargadas por el RouteServiceProvider dentro de un grupo que
