@@ -35,28 +35,50 @@ class OrdenTecnicoController extends Controller
 
 
 
-    public function show($qr_token)
+    public function show($id)
     {
-        // Buscamos la orden de servicio activa que pertenezca a un equipo con ese QR_Token.
-        $orden = OrdenServicio::with(['equipo.cliente', 'user', 'evidencias', 'repuestos'])
-            ->whereHas('equipo', function ($query) use ($qr_token) {
-                $query->where('qr_token', $qr_token);
-            })
-            ->whereNotIn('estado', ['entregado'])
-            ->latest()
-            ->first();
+       $orden = OrdenServicio::with([
+        'equipo.cliente',
+        'user',
+        'evidencias',
+        'repuestos'
+       ])
+       ->where('id', $id)
+       ->where('user_id', auth()->id())
+       ->firstOrFail();
 
-        if (!$orden) {
-            return response()->json(['message' => 'No se encontró una orden activa para este equipo.'], 404);
-        }
+       // 🔥 HISTORIAL (puedes ajustarlo después)
+    $historial = $orden->evidencias->map(function ($evidencia) use ($orden) {
+        return [
+            'id' => $evidencia->id,
+            'accion' => ucfirst($evidencia->momento),
+            'descripcion' => 'Registro de evidencia',
+            'tecnico' => $orden->user->name ?? 'Técnico',
+            'fecha' => $evidencia->created_at->format('Y-m-d H:i'),
+            'evidencias' => [
+                [
+                    'imageUri' => asset('storage/' . $evidencia->url_foto)
+                ]
+            ],
+            'refacciones' => []
+        ];
+    });
 
-        /** @var \App\Models\OrdenServicio $orden */
-        
-        return response()->json([
-            'orden' => $orden,
-            'equipo' => $orden->equipo,
-            'cliente' => $orden->equipo->cliente,
-        ]);
+    // 🔥 REFACCIONES
+    $refacciones = $orden->repuestos->map(function ($rep) {
+        return [
+            'id' => $rep->id,
+            'nombre' => $rep->nombre,
+            'cantidad' => $rep->pivot->cantidad ?? 1
+        ];
+    });
+
+    return response()->json([
+        'success' => true,
+        'orden' => $orden,
+        'historial' => $historial,
+        'refacciones' => $refacciones,
+    ]);
     }
 
     /**
