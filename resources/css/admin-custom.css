@@ -319,69 +319,74 @@ body {
 /* =============================================
    Sidebar Search Bar Fix
    ============================================= */
+.sidebar-search-results {
+    position: relative !important;
+    top: 0 !important;
+    width: 100% !important;
+}
+
 .form-control-sidebar {
     border-radius: 6px !important;
-    background: rgba(255,255,255,0.1) !important;
-    border: 1px solid rgba(255,255,255,0.2) !important;
-    color: #fff !important;
+    background: #f4f6f9 !important;
+    border: 1px solid #ced4da !important;
+    color: #495057 !important;
     padding: 0.35rem 0.75rem !important;
     font-size: 0.85rem !important;
-    height: 34px !important;
+    height: calc(2.25rem + 2px) !important;
     width: 100% !important;
-    max-width: 100% !important;
     box-sizing: border-box !important;
 }
 
-.form-control-sidebar::placeholder { color: rgba(255,255,255,0.5) !important; }
-
 .form-control-sidebar:focus {
-    background: rgba(255,255,255,0.18) !important;
-    border-color: rgba(255,255,255,0.4) !important;
-    box-shadow: none !important;
-    color: #fff !important;
-    outline: none !important;
+    border-color: #80bdff !important;
+    background: #fff !important;
 }
 
 /* =============================================
    Navbar Logout / User Dropdown Fix
    ============================================= */
 
-/* Make nav icons visible on dark navbar */
+/* Ensure the navbar links and icons are visible (Black/Dark for light navbar) */
 .main-header.navbar .nav-link,
 .main-header.navbar .nav-link i {
-    color: rgba(255,255,255,0.85) !important;
+    color: #4b5563 !important; /* Dark Gray */
+    opacity: 1 !important;
+    visibility: visible !important;
 }
 
 .main-header.navbar .nav-link:hover,
 .main-header.navbar .nav-link:hover i {
-    color: #ffffff !important;
+    color: #111827 !important; /* Black */
 }
 
-/* Dropdown arrow (the right-side caret) */
-.main-header .nav-link .right,
-.main-header .nav-link .fa-angle-left,
-.main-header .navbar-nav .nav-link > .right {
+/* Force the dropdown caret (arrow) to be visible and dark */
+.main-header .nav-item.dropdown .nav-link::after {
     display: inline-block !important;
-    visibility: visible !important;
-    color: rgba(255,255,255,0.85) !important;
+    margin-left: .255em;
+    vertical-align: .255em;
+    content: "" !important;
+    border-top: .3em solid !important;
+    border-right: .3em solid transparent !important;
+    border-bottom: 0 !important;
+    border-left: .3em solid transparent !important;
+    color: #4b5563 !important;
 }
 
-/* Dropdown panel */
+/* User dropdown panel styling */
 .main-header .dropdown-menu {
     border-radius: 10px !important;
     border: 1px solid #e5e7eb !important;
     box-shadow: 0 10px 25px rgba(0,0,0,0.1) !important;
     padding: 0.5rem 0 !important;
-    min-width: 160px;
+    min-width: 180px;
 }
 
 .main-header .dropdown-item {
     font-size: 0.9rem !important;
     color: #374151 !important;
-    padding: 0.55rem 1rem !important;
+    padding: 0.6rem 1rem !important;
 }
 
 .main-header .dropdown-item:hover {
     background-color: #f3f4f6 !important;
-    color: #111827 !important;
 }
