@@ -19,7 +19,10 @@ class OrdenTecnicoController extends Controller
 
     public function index()
     {
+        $user = auth()->user();
+
         $ordenes = OrdenServicio::with(['equipo.cliente', 'user'])
+            ->where('user_id', $user->id)
             ->whereNotIn('estado', ['entregado'])
             ->latest()
             ->get();
