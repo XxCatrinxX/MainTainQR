@@ -123,10 +123,22 @@
                         </td>
 
                         <td class="text-right">
-                            <a href="{{ route('ordenes.show', $orden->id) }}" class="btn btn-action" title="Ver Detalle">
-                                <i class="fas fa-eye"></i>
-                            </a>
-                        </td>
+
+    <!-- Ver detalle -->
+    <a href="{{ route('ordenes.show', $orden->id) }}" 
+       class="btn btn-action" 
+       title="Ver Detalle">
+        <i class="fas fa-eye"></i>
+    </a>
+
+    <!-- Ver QR -->
+    <a href="{{ route('ordenes.qr', $orden->id) }}" 
+       class="btn btn-action" 
+       title="Ver QR">
+        <i class="fas fa-qrcode"></i>
+    </a>
+
+</td>
                     </tr>
 
                 @empty
