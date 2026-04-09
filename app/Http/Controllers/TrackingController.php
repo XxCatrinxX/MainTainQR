@@ -14,7 +14,8 @@ class TrackingController extends Controller
      */
     public function show($token_rastreo)
     {
-        $orden = OrdenServicio::with(['equipo.cliente', 'evidencias', 'repuestos', 'pagos', 'mecanico'])
+        // El modelo OrdenServicio tiene la relación 'user', no 'mecanico'
+        $orden = OrdenServicio::with(['equipo.cliente', 'evidencias', 'repuestos', 'pagos', 'user'])
             ->where('token_rastreo', $token_rastreo)
             ->firstOrFail();
 
