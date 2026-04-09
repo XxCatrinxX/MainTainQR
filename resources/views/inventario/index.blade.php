@@ -10,7 +10,7 @@
     <div class="d-flex justify-content-between align-items-center">
         <h1>Stock e Inventario</h1>
         <div class="d-flex gap-2">
-            @if(auth()->user()->role == 'admin' || auth()->user()->role == 'almacenista')
+            @if(auth()->user()->rol == 'admin' || auth()->user()->rol == 'almacenista')
             <a href="{{ route('solicitudes.index') }}" class="btn btn-modern btn-outline-secondary mr-2">
                 <i class="fas fa-shopping-cart mr-1"></i> Ver Solicitudes
             </a>
