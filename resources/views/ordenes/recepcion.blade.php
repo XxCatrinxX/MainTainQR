@@ -13,6 +13,12 @@
     font-size: 12px;
     text-align: center;
 }
+
+#ticket img {
+    display: block;
+    margin: 15px auto;
+    width: 140px;
+}
 </style>
 @endsection
 
