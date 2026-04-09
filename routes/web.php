@@ -59,6 +59,7 @@ Route::middleware(['auth', 'role:admin,almacenista'])->group(function () {
 // SEGUIMIENTO PÚBLICO
 Route::get('/seguimiento/{token_rastreo}', [TrackingController::class , 'show'])->name('seguimiento.show');
 Route::post('/seguimiento/{token_rastreo}/aceptar', [TrackingController::class , 'aceptarPresupuesto'])->name('seguimiento.aceptar');
+Route::post('/seguimiento/{token_rastreo}/rechazar', [TrackingController::class , 'rechazarPresupuesto'])->name('seguimiento.rechazar');
 
 // DECISIÓN DEL CLIENTE (sin login, vía link de correo)
 Route::get('/aprobar/{token}', [TrackingController::class , 'aceptar'])->name('orden.aceptar');

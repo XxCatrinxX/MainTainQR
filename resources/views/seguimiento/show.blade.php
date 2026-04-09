@@ -268,12 +268,24 @@
                         <strong style="font-size: 1.2rem; color: #111827;">${{ number_format($total, 2) }}</strong>
                     </div>
 
-                    <form action="{{ route('seguimiento.aceptar', $orden->token_rastreo) }}" method="POST">
-                        @csrf
-                        <button type="submit" class="btn btn-modern btn-black w-100" style="max-width: 300px;">
-                            <i class="fas fa-check-circle mr-1"></i> Autorizar Reparación
-                        </button>
-                    </form>
+                    <div class="row justify-content-center">
+                        <div class="col-md-6 mb-2">
+                            <form action="{{ route('seguimiento.aceptar', $orden->token_rastreo) }}" method="POST">
+                                @csrf
+                                <button type="submit" class="btn btn-modern btn-black w-100">
+                                    <i class="fas fa-check-circle mr-1"></i> Autorizar Reparación
+                                </button>
+                            </form>
+                        </div>
+                        <div class="col-md-6">
+                            <form action="{{ route('seguimiento.rechazar', $orden->token_rastreo) }}" method="POST">
+                                @csrf
+                                <button type="submit" class="btn btn-modern btn-outline-danger w-100" onclick="return confirm('¿Estás seguro de que deseas rechazar la reparación?')">
+                                    <i class="fas fa-times-circle mr-1"></i> Rechazar
+                                </button>
+                            </form>
+                        </div>
+                    </div>
                     <p class="text-muted small mt-3">Al autorizar, confirmas tu conformidad con el total estimado.</p>
                 </div>
             @endif

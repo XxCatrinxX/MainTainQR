@@ -63,6 +63,24 @@ class TrackingController extends Controller
     }
 
     /**
+     * Acción del cliente para rechazar su presupuesto.
+     */
+    public function rechazarPresupuesto(Request $request, $token_rastreo)
+    {
+        $orden = OrdenServicio::where('token_rastreo', $token_rastreo)->firstOrFail();
+
+        if ($orden->decision_cliente === 'rechaza') {
+            return back()->with('error', 'El presupuesto ya había sido rechazado.');
+        }
+
+        $orden->decision_cliente = 'rechaza';
+        $orden->estado = 'rechazado';
+        $orden->save();
+
+        return back()->with('warning', 'Has rechazado el presupuesto. Por favor acércate al taller para recoger tu equipo.');
+    }
+
+    /**
      * El cliente acepta el diagnóstico via el link del correo (GET, sin login).
      */
     public function aceptar($token)
