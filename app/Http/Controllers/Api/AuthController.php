@@ -57,6 +57,21 @@ class AuthController extends Controller
         $request->user()->tokens()->delete();
         return response()->json(['message' => 'Logout OK']);
     }
+
+    public function saveFcmToken(\Illuminate\Http\Request $request)
+{
+    $request->validate([
+        'fcm_token' => 'required|string'
+    ]);
+
+    $user = $request->user();
+    $user->fcm_token = $request->fcm_token;
+    $user->save();
+
+    return response()->json([
+        'message' => 'Token FCM guardado correctamente'
+    ], 200);
+}
 }
 // Este controlador maneja la autenticación de usuarios para la API. Permite a los usuarios iniciar sesión, obtener su información y cerrar sesión.
 // de momento solo toma los daros de usuario y contraseña, faltan agregar los demas datos para que la app jale todo
