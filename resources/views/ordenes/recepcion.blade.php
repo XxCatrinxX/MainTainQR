@@ -2,6 +2,15 @@
 
 @section('title', 'Orden Recibida - QR')
 
+<style>
+#ticket {
+    width: 250px;
+    margin: auto;
+    border: 1px dashed #000;
+    padding: 10px;
+}
+</style>
+
 @section('content')
 <div class="row justify-content-center mt-5">
     <div class="col-md-6">
@@ -29,6 +38,21 @@
                     <img src="data:image/svg+xml;base64,{{ $qrBase64 }}" alt="QR Code Equipo" style="border: 1px solid #eee; border-radius: 8px; padding: 10px;">
                 </div>
 
+                <div id="ticket" style="text-align: center">
+                    <h4>Orden #{{ $orden->id}}</h4>
+
+                    <p><strong>Cliente:</strong> {{ $orden->equipo->cliente->nombre }} {{ $orden->equipo->cliente->nombre }}</p>
+                    <p><strong>Equipo:</strong> {{ $orden->equipo->tipo }} - {{ $orden->equipo->marca }}</p>
+
+                    <img src="data:image/svg+xml;base64,{{ $qrBase64 }}" width="150">
+                    
+                    <p>Escanea para seguimiento</p>
+                </div>
+
+                <button onclick="imprimirTicket()" class="btn btn-dark">
+                    🖨️ Imprimir Ticket
+                </button>
+
                 <a href="{{ route('home') }}" class="btn btn-dark" style="border-radius: 8px; font-weight: 500;">
                     <i class="fas fa-arrow-left mr-1"></i> Volver al Inicio
                 </a>
@@ -36,4 +60,37 @@
         </div>
     </div>
 </div>
+
+<script>
+function imprimirTicket() {
+    let contenido = document.getElementById('ticket').innerHTML;
+
+    let ventana = window.open('', '', 'width=300,height=600');
+
+    ventana.document.write(`
+        <html>
+        <head>
+            <title>Ticket</title>
+            <style>
+                body {
+                    font-family: monospace;
+                    text-align: center;
+                    font-size: 12px;
+                }
+                img {
+                    margin-top: 10px;
+                }
+            </style>
+        </head>
+        <body>
+            ${contenido}
+        </body>
+        </html>
+    `);
+
+    ventana.document.close();
+    ventana.print();
+    ventana.close();
+}
+</script>
 @endsection
