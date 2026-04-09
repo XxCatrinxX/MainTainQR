@@ -2,14 +2,11 @@
 
 namespace App\Notifications;
 
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Notification;
 use Illuminate\Notifications\Messages\MailMessage;
 
-class ListoNotificacion extends Notification implements ShouldQueue
+class ListoNotificacion extends Notification
 {
-    use Queueable;
 
     protected $orden;
 
