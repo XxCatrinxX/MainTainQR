@@ -16,7 +16,8 @@ class RoleMiddleware
     public function handle(Request $request, Closure $next, ...$roles): Response
     {
         if (!$request->user() || !in_array($request->user()->rol, $roles)) {
-            abort(403, 'Acceso no autorizado para tu rol de usuario.');
+            return redirect()->route('home')
+                ->with('error', 'No tienes permiso para realizar esa acción. Rol requerido: ' . implode(' o ', $roles) . '.');
         }
 
         return $next($request);

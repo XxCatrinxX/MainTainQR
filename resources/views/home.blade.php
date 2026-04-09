@@ -13,6 +13,19 @@
 
 @section('content')
 
+@if(session('error'))
+    <div class="alert alert-danger alert-dismissible fade show" style="border-radius:8px; border-left:4px solid #dc3545;">
+        <i class="fas fa-exclamation-circle mr-2"></i>{{ session('error') }}
+        <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
+    </div>
+@endif
+@if(session('success'))
+    <div class="alert alert-success alert-dismissible fade show" style="border-radius:8px;">
+        <i class="fas fa-check-circle mr-2"></i>{{ session('success') }}
+        <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
+    </div>
+@endif
+
 <div class="row">
     <!-- COLUMNA PRINCIPAL (ampliada) -->
     <div class="col-md-8">
