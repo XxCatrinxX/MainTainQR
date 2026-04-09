@@ -5,8 +5,7 @@
 @section('css')
 <style>
 #ticket {
-    width: 100%;
-    max-width: 300px;
+    width: 250px;
     margin: auto;
     border: 1px dashed #000;
     padding: 10px;
@@ -17,17 +16,16 @@
 
 #ticket img {
     display: block;
-    margin: 15px auto;
-    width: 140px;
+    margin: 10px auto;
 }
 </style>
 @endsection
 
 @section('content')
 <div class="row justify-content-center mt-5">
-    <div class="col-12 col-lg-10 offset-lg-1">
+    <div class="col-md-6">
         <div class="card text-center" style="border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
-            <div class="card-body p-5 text-center">
+            <div class="card-body p-5">
 
                 <i class="fas fa-check-circle text-success" style="font-size: 4rem; opacity: 0.8;"></i>
 
