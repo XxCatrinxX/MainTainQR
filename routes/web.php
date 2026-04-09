@@ -33,6 +33,7 @@ Route::get('/ordenes/nueva/paso-3', [OrdenServicioController::class , 'createPas
 Route::post('/ordenes/nueva/paso-3', [OrdenServicioController::class , 'storePaso3'])->name('ordenes.store_paso3');
 Route::get('/ordenes/{id}/recepcion', [OrdenServicioController::class , 'showRecepcion'])->name('ordenes.recepcion');
 Route::put('/ordenes/{id}', [OrdenServicioController::class , 'update'])->name('ordenes.update');
+Route::get('/ordenes/{id}/qr', [OrdenServicioController::class, 'verQR'])->name('ordenes.qr');
 
 // DETALLE TÉCNICO (Protegido)
 Route::middleware('auth')->group(function () {

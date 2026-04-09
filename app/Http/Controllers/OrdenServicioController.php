@@ -453,5 +453,24 @@ class OrdenServicioController extends Controller
         $orden->save();
         return back()->with('success', '¡Equipo entregado! La orden ha sido cerrada correctamente.');
     }
+
+    public function verQR($id)
+{
+    $orden = OrdenServicio::with('equipo.cliente')->findOrFail($id);
+
+    $qrCode = new \Endroid\QrCode\QrCode(
+        data: $orden->equipo->qr_token,
+        encoding: new \Endroid\QrCode\Encoding\Encoding('UTF-8'),
+        size: 200,
+        margin: 10
+    );
+
+    $writer = new \Endroid\QrCode\Writer\SvgWriter();
+    $result = $writer->write($qrCode);
+
+    $qrBase64 = base64_encode($result->getString());
+
+    return view('ordenes.qr', compact('orden', 'qrBase64'));
+}
 }
 
