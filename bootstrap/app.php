@@ -18,7 +18,11 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        $exceptions->render(function (\Symfony\Component\HttpKernel\Exception\HttpException $e, \Illuminate\Http\Request $request) {
+            if ($e->getStatusCode() === 403 && !$request->expectsJson()) {
+                return redirect()->route('home')->with('error', $e->getMessage() ?: 'No tienes los permisos necesarios para acceder a este módulo.');
+            }
+        });
     })->create();
 //esto es el archivo de arranque de la aplicacion, aqui se configura la aplicacion, se definen las rutas, los middleware y las excepciones.
 //la nueva ruta

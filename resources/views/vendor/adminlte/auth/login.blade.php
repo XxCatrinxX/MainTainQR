@@ -132,6 +132,7 @@ autofocus
 <div class="input-group mb-3">
 
 <input
+id="password"
 type="password"
 name="password"
 class="form-control @error('password') is-invalid @enderror"
@@ -139,8 +140,8 @@ placeholder="Contraseña"
 >
 
 <div class="input-group-append">
-<div class="input-group-text">
-<span class="fas fa-lock"></span>
+<div class="input-group-text" style="cursor: pointer;" onclick="togglePassword()">
+<span class="fas fa-eye" id="togglePasswordIcon"></span>
 </div>
 </div>
 
@@ -152,6 +153,21 @@ placeholder="Contraseña"
 
 </div>
 
+<script>
+function togglePassword() {
+    var x = document.getElementById("password");
+    var icon = document.getElementById("togglePasswordIcon");
+    if (x.type === "password") {
+        x.type = "text";
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+    } else {
+        x.type = "password";
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+    }
+}
+</script>
 
 <div class="row">
 
