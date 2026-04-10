@@ -7,8 +7,14 @@ use App\Http\Controllers\Api\EquipoController;
 use App\Http\Controllers\Api\InventarioController;
 use App\Http\Controllers\Api\SolicitudCompraController;
 use App\Http\Controllers\Api\PagoController;
+use App\Http\Controllers\Api\OrderAuditController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+
+// Rutas públicas (sin autenticación)
+Route::get('/orders/{token_rastreo}/audits', [OrderAuditController::class, 'index']);
+Route::get('/orders/{token_rastreo}/audits/recent', [OrderAuditController::class, 'recent']);
+Route::get('/orders/{token_rastreo}/audits/stream', [OrderAuditController::class, 'stream']);
 
 Route::post('/login', [AuthController::class, 'login']);
 

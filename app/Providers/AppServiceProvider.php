@@ -3,6 +3,8 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use App\Models\OrdenServicio;
+use App\Observers\OrdenServicioObserver;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -22,5 +24,8 @@ class AppServiceProvider extends ServiceProvider
         if (config('app.env') === 'production') {
             \Illuminate\Support\Facades\URL::forceScheme('https');
         }
+
+        // Registrar el Observer para rastrear cambios en OrdenServicio
+        OrdenServicio::observe(OrdenServicioObserver::class);
     }
 }
