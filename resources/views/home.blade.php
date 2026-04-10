@@ -22,6 +22,32 @@
 
 @section('content')
 
+@if(session('error'))
+    <div class="alert alert-danger alert-dismissible fade show shadow-sm" style="border-radius:12px; border-left: 5px solid #dc3545; background-color: #fff; color: #1f2937;">
+        <div class="d-flex align-items-center">
+            <i class="fas fa-exclamation-circle mr-3" style="font-size: 1.5rem; color: #dc3545;"></i>
+            <div>
+                <strong class="d-block">Acceso Denegado</strong>
+                <span>{{ session('error') }}</span>
+            </div>
+        </div>
+        <button type="button" class="close" data-dismiss="alert" style="top: 10px;"><span>&times;</span></button>
+    </div>
+@endif
+
+@if(session('success'))
+    <div class="alert alert-success alert-dismissible fade show shadow-sm" style="border-radius:12px; border-left: 5px solid #10b981; background-color: #fff; color: #1f2937;">
+        <div class="d-flex align-items-center">
+            <i class="fas fa-check-circle mr-3" style="font-size: 1.5rem; color: #10b981;"></i>
+            <div>
+                <strong class="d-block">Éxito</strong>
+                <span>{{ session('success') }}</span>
+            </div>
+        </div>
+        <button type="button" class="close" data-dismiss="alert" style="top: 10px;"><span>&times;</span></button>
+    </div>
+@endif
+
 {{-- TARJETAS KPI --}}
 <div class="row">
     <div class="col-lg-3 col-6">

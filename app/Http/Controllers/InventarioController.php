@@ -20,7 +20,6 @@ class InventarioController extends Controller
 
     public function store(Request $request)
     {
-        dd('Llegó al store', $request->all());
         $data = $request->validate([
             'nombre_pieza' => 'required|string|max:150',
             'sku' => 'required|string|unique:inventario,sku',
