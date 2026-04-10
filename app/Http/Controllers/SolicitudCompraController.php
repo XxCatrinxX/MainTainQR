@@ -41,6 +41,7 @@ class SolicitudCompraController extends Controller
 
     public function surtir(Request $request, $id)
     {
+        dd('¡LLEGAMOS AL SURTIR!', $request->all(), $id);
         $request->validate([
             'cantidad_recibida' => 'required|integer|min:1',
             'precio_venta' => 'required|numeric|min:0',

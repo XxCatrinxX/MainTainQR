@@ -11,11 +11,6 @@ class RoleMiddleware
 {
     public function handle(Request $request, Closure $next, ...$roles)
     {
-        dd('RoleMiddleware hit', [
-            'user' => $request->user()->email ?? 'None',
-            'role' => $request->user()->rol ?? 'None',
-            'required' => $roles
-        ]);
         if (!$request->user() || !in_array($request->user()->rol, $roles)) {
             \Illuminate\Support\Facades\Log::warning('RoleMiddleware Access Denied', [
                 'user_id' => $request->user()->id ?? 'Guest',
