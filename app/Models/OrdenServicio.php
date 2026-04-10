@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use App\Models\Cliente;
 
 class OrdenServicio extends Model
 {
@@ -61,6 +63,11 @@ class OrdenServicio extends Model
         return $this->belongsToMany(Inventario::class, 'orden_repuestos', 'orden_servicio_id', 'inventario_id')
                     ->withPivot('cantidad', 'precio_fijado')
                     ->withTimestamps();
+    }
+
+    public function cliente()
+    {
+        return $this->belongsTo(Cliente::class, 'cliente_id', 'id');
     }
 }
 

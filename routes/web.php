@@ -9,6 +9,8 @@ use App\Http\Controllers\PagoController;
 use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\EquipoController;
 use App\Http\Controllers\SolicitudCompraController;
+use Illuminate\Support\Facades\Auth;
+
 
 Route::redirect('/', '/home');
 
@@ -84,3 +86,4 @@ Route::middleware('auth')->group(function () {
 // USUARIOS (index para todos los autenticados; edicion solo admin via controller)
 use App\Http\Controllers\UsuarioController;
 Route::middleware('auth')->resource('usuarios', UsuarioController::class);
+
