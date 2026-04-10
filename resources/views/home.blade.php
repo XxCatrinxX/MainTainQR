@@ -17,7 +17,6 @@
 @section('content_header')
     <div class="px-2">
         <h1 class="m-0 text-dark" style="font-weight: 800;">Vista General</h1>
-        <p class="text-muted">Estado actual de las operaciones al {{ now()->format('d/m/Y') }}</p>
     </div>
 @stop
 
