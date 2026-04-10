@@ -14,7 +14,6 @@ class TrackingController extends Controller
      */
     public function show($token_rastreo)
     {
-        // El modelo OrdenServicio tiene la relación 'user', no 'mecanico'
         $orden = OrdenServicio::with(['equipo.cliente', 'evidencias', 'repuestos', 'pagos', 'user'])
             ->where('token_rastreo', $token_rastreo)
             ->firstOrFail();
@@ -29,8 +28,6 @@ class TrackingController extends Controller
     {
         $orden = OrdenServicio::where('token_rastreo', $token_rastreo)->firstOrFail();
 
-        // Podría estar en un estado 'presupuestado' o como dicta la BD 'espera' (por revisión).
-        // Adaptemos para asegurar la coherencia:
         if ($orden->decision_cliente === 'acepta') {
             return back()->with('error', 'El presupuesto ya había sido aceptado.');
         }
@@ -38,10 +35,16 @@ class TrackingController extends Controller
         DB::beginTransaction();
         try {
             $orden->decision_cliente = 'acepta';
-            $orden->estado = 'reparacion'; // Automáticamente empieza su reparación (?)
+            $orden->estado = 'reparacion';
             $orden->save();
 
-            // Descontar inventario físico asociado a la orden (Pivot)
+            app(\App\Services\FirebaseNotificationService::class)->enviar(
+                $orden->user?->fcm_token ?? '',
+                'Presupuesto Aceptado',
+                'El cliente aceptó el presupuesto',
+                ['orden_id' => (string)$orden->id, 'token_rastreo' => $orden->token_rastreo]
+            );
+
             foreach ($orden->repuestos as $repuesto) {
                 $pieza = Inventario::lockForUpdate()->find($repuesto->id);
                 if ($pieza && $pieza->stock >= $repuesto->pivot->cantidad) {
@@ -53,31 +56,11 @@ class TrackingController extends Controller
 
             DB::commit();
 
-            // Aquí se enviaría la Notificación Al Técnico informando que el Cliente aceptó.
-
             return back()->with('success', '¡Presupuesto aceptado! Comenzaremos con la reparación de tu equipo.');
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->with('error', 'Ocurrió un error al procesar la aceptación: ' . $e->getMessage());
         }
-    }
-
-    /**
-     * Acción del cliente para rechazar su presupuesto.
-     */
-    public function rechazarPresupuesto(Request $request, $token_rastreo)
-    {
-        $orden = OrdenServicio::where('token_rastreo', $token_rastreo)->firstOrFail();
-
-        if ($orden->decision_cliente === 'rechaza') {
-            return back()->with('error', 'El presupuesto ya había sido rechazado.');
-        }
-
-        $orden->decision_cliente = 'rechaza';
-        $orden->estado = 'rechazado';
-        $orden->save();
-
-        return back()->with('warning', 'Has rechazado el presupuesto. Por favor acércate al taller para recoger tu equipo.');
     }
 
     /**
@@ -100,7 +83,6 @@ class TrackingController extends Controller
 
         DB::beginTransaction();
         try {
-            // Descontar inventario
             foreach ($orden->repuestos as $repuesto) {
                 $pieza = Inventario::lockForUpdate()->find($repuesto->id);
                 if ($pieza && $pieza->stock >= $repuesto->pivot->cantidad) {
@@ -113,6 +95,13 @@ class TrackingController extends Controller
             $orden->estado           = 'aceptado';
             $orden->decision_cliente = 'acepta';
             $orden->save();
+
+            app(\App\Services\FirebaseNotificationService::class)->enviar(
+                $orden->user?->fcm_token ?? '',
+                'Orden Aprobada',
+                'El cliente aprobó la reparación',
+                ['orden_id' => (string)$orden->id, 'token_rastreo' => $orden->token_rastreo]
+            );
 
             DB::commit();
 
@@ -156,6 +145,13 @@ class TrackingController extends Controller
         $orden->estado           = 'rechazado';
         $orden->decision_cliente = 'rechaza';
         $orden->save();
+
+        app(\App\Services\FirebaseNotificationService::class)->enviar(
+            $orden->user?->fcm_token ?? '',
+            'Orden Rechazada',
+            'El cliente rechazó la reparación',
+            ['orden_id' => (string)$orden->id, 'token_rastreo' => $orden->token_rastreo]
+        );
 
         return view('seguimiento.respuesta', [
             'titulo'  => 'Reparación Rechazada',
