@@ -10,7 +10,7 @@ use App\Http\Controllers\Api\PagoController;
 use App\Http\Controllers\Api\OrderAuditController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-
+use App\Http\Controllers\OrdenServicioController;
 
 // Rutas públicas (sin autenticación)
 Route::get('/orders/{token_rastreo}/audits', [OrderAuditController::class, 'index']);
@@ -51,6 +51,10 @@ Route::middleware('auth:sanctum')->group(function () {
         
         // Diagnóstico: Reutiliza lógica web, retorna JSON
       Route::middleware('auth:sanctum')->post('/ordenes/{id}/diagnostico', [OrdenServicioController::class, 'storeDiagnosticoApi']);
+      
+
+Route::get('/inventario/disponible', [OrdenServicioController::class, 'inventarioDisponibleApi']);
+Route::post('/ordenes/{id}/diagnostico', [OrdenServicioController::class, 'storeDiagnosticoApi']);
 
             
     });

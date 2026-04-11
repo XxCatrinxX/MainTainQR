@@ -155,80 +155,101 @@ class OrdenServicioController extends Controller
 
 
     public function storeDiagnosticoApi(Request $request, $id)
-    {
-        $request->validate([
-            'solucion_propuesta' => 'required|string',
-            'mano_obra' => 'required|numeric|min:0',
-            'fotos' => 'nullable|array',
-            'fotos.*' => 'image|mimes:jpeg,png,jpg,gif|max:5120',
-        ]);
+{
+    $request->validate([
+        'solucion_propuesta'   => 'required|string',
+        'mano_obra'            => 'required|numeric|min:0',
 
-        $orden = OrdenServicio::findOrFail($id);
-        $orden->solucion_propuesta = $request->solucion_propuesta;
-        $orden->mano_obra = $request->mano_obra;
+        'repuestos'            => 'nullable|array',
+        'repuestos.*.id'       => 'required_with:repuestos|exists:inventario,id',
+        'repuestos.*.cantidad' => 'required_with:repuestos|integer|min:1',
+        'repuestos.*.precio'   => 'required_with:repuestos|numeric|min:0',
 
-        if (in_array($orden->estado, ['recibido', 'diagnostico'])) {
-            $orden->estado = 'espera';
-            $orden->fecha_diagnostico = now();
-        }
+        'fotos'                => 'nullable|array',
+        'fotos.*'              => 'image|mimes:jpeg,png,jpg,gif|max:5120',
+    ]);
 
-        $orden->save();
+    $orden = OrdenServicio::findOrFail($id);
+    $orden->solucion_propuesta = $request->solucion_propuesta;
+    $orden->mano_obra = $request->mano_obra;
 
-        DetalleTecnico::updateOrCreate(
-            ['orden_servicio_id' => $orden->id],
-            ['solucion_propuesta' => $request->solucion_propuesta]
-        );
-
-        if ($request->has('repuestos')) {
-            $repuestosData = [];
-            foreach ($request->repuestos as $r) {
-                $repuestosData[$r['id']] = [
-                    'cantidad' => $r['cantidad'],
-                    'precio_fijado' => $r['precio']
-                ];
-            }
-            $orden->repuestos()->sync($repuestosData);
-        } else {
-            $orden->repuestos()->detach();
-        }
-
-        if ($request->hasFile('fotos')) {
-            foreach ($request->file('fotos') as $foto) {
-                $path = $foto->store('evidencias', 'public');
-                Evidencia::create([
-                    'orden_servicio_id' => $orden->id,
-                    'url_foto' => $path,
-                    'momento' => 'diagnostico'
-                ]);
-            }
-        }
-
-        $orden->load(['equipo.cliente', 'evidencias', 'repuestos']);
-
-        $correoCliente = $orden->equipo->cliente->correo ?? null;
-        $correoEnviado = false;
-        $errorCorreo = null;
-
-        if ($correoCliente) {
-            try {
-                Notification::route('mail', $correoCliente)
-                    ->notify(new DiagnosticoNotificacion($orden));
-                $correoEnviado = true;
-            } catch (\Exception $e) {
-                $errorCorreo = $e->getMessage();
-            }
-        }
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Diagnóstico guardado correctamente',
-            'orden_id' => $orden->id,
-            'folio' => $orden->folio,
-            'estado' => $orden->estado,
-            'correo_enviado' => $correoEnviado,
-            'error_correo' => $errorCorreo,
-        ], 200);
+    if (in_array($orden->estado, ['recibido', 'diagnostico'])) {
+        $orden->estado = 'espera';
+        $orden->fecha_diagnostico = now();
     }
+
+    $orden->save();
+
+    DetalleTecnico::updateOrCreate(
+        ['orden_servicio_id' => $orden->id],
+        ['solucion_propuesta' => $request->solucion_propuesta]
+    );
+
+    if ($request->has('repuestos')) {
+        $repuestosData = [];
+
+        foreach ($request->repuestos as $r) {
+            $repuestosData[$r['id']] = [
+                'cantidad' => $r['cantidad'],
+                'precio_fijado' => $r['precio']
+            ];
+        }
+
+        $orden->repuestos()->sync($repuestosData);
+    } else {
+        $orden->repuestos()->detach();
+    }
+
+    if ($request->hasFile('fotos')) {
+        foreach ($request->file('fotos') as $foto) {
+            $path = $foto->store('evidencias', 'public');
+
+            Evidencia::create([
+                'orden_servicio_id' => $orden->id,
+                'url_foto' => $path,
+                'momento' => 'diagnostico'
+            ]);
+        }
+    }
+
+    $orden->load(['equipo.cliente', 'evidencias', 'repuestos']);
+
+    $correoCliente = $orden->equipo->cliente->correo ?? null;
+    $correoEnviado = false;
+    $errorCorreo = null;
+
+    if ($correoCliente) {
+        try {
+            Notification::route('mail', $correoCliente)
+                ->notify(new DiagnosticoNotificacion($orden));
+            $correoEnviado = true;
+        } catch (\Exception $e) {
+            $errorCorreo = $e->getMessage();
+        }
+    }
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Diagnóstico guardado correctamente',
+        'orden_id' => $orden->id,
+        'folio' => $orden->folio,
+        'estado' => $orden->estado,
+        'correo_enviado' => $correoEnviado,
+        'error_correo' => $errorCorreo,
+    ], 200);
+}
+
+public function inventarioDisponibleApi()
+{
+    $inventario = Inventario::where('stock', '>', 0)
+        ->select('id', 'nombre_pieza', 'precio_venta', 'stock')
+        ->get();
+
+    return response()->json([
+        'success' => true,
+        'data' => $inventario
+    ], 200);
+}
 
     // ==========================================
     // PASO 1: CLIENTE
