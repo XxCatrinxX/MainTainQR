@@ -18,9 +18,10 @@ class InventarioController extends Controller
         return view('inventario.create');
     }
 
+
+
     public function store(Request $request)
     {
-        dd('¡LLEGAMOS AL CONTROLLER STORE!', $request->all());
         $data = $request->validate([
             'nombre_pieza' => 'required|string|max:150',
             'sku' => 'required|string|unique:inventario,sku',

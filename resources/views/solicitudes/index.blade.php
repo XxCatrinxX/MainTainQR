@@ -147,7 +147,7 @@
 @section('js')
 <script>
     $(document).ready(function() {
-        $('.btn-surtir-modal').click(function() {
+        $(document).on('click', '.btn-surtir-modal', function() {
             let id = $(this).data('id');
             let nombre = $(this).data('nombre');
             let cantidad = $(this).data('cantidad');
