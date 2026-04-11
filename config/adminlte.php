@@ -334,7 +334,7 @@ return [
         ],
         [
             'text' => 'Inventario / Stock',
-            'url'  => 'inventario',
+            'route'  => 'web.inventario.index',
             'icon' => 'fas fa-boxes',
         ],
         [
