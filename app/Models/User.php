@@ -6,6 +6,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Testing\Fluent\Concerns\Has;
 use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
@@ -27,7 +28,8 @@ class User extends Authenticatable
         'email',
         'password',
         'rol',
-        'estado'
+        'estado',
+        'fcm_token'
     ];
 
     /**
@@ -51,6 +53,13 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    // ESTA ES LA CLAVE: Creamos el método que Laravel te pide
+    public function hasRole($rolNombre): bool
+    {
+        // Compara el texto de tu columna 'rol' con lo que le pidas
+        return $this->rol === $rolNombre;
     }
 
     public function getNameAtrribute(): string
