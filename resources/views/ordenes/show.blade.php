@@ -96,36 +96,34 @@
     <div class="col-md-8">
 
         @if($orden->estado === 'recibido')
-{{-- ─── PANEL: RECIBIDO ─── --}}
-<div class="card" style="border-left: 4px solid #6b7280;">
-    <div class="card-header">
-        <h5 class="card-title"><i class="fas fa-inbox mr-2 text-secondary"></i>Paso 1: Recepción del Equipo</h5>
-    </div>
-    <div class="card-body">
-        <p class="text-muted mb-4">La orden ha sido creada y está lista para ser procesada.</p>
-        
-        <div class="p-3 rounded mb-4" style="background:#f8fafc; border: 1px solid #e5e7eb;">
-            <div class="row">
-                <div class="col-md-6"><strong>Falla Reportada:</strong><br><span class="text-muted">{{ $orden->falla_reportada }}</span></div>
-                <div class="col-md-6"><strong>Estado Físico:</strong><br><span class="text-muted">{{ $orden->estado_fisico }}</span></div>
-            </div>
-        </div>
+                {{-- ─── PANEL: RECIBIDO ─── --}}
+                <div class="card" style="border-left: 4px solid #6b7280;">
+                    <div class="card-header">
+                        <h5 class="card-title"><i class="fas fa-inbox mr-2 text-secondary"></i>Paso 1: Recepción del Equipo</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted mb-4">La orden ha sido creada y está lista para ser procesada.</p>
+                        
+                        <div class="p-3 rounded mb-4" style="background:#f8fafc; border: 1px solid #e5e7eb;">
+                            <div class="row">
+                                <div class="col-md-6"><strong>Falla Reportada:</strong><br><span class="text-muted">{{ $orden->falla_reportada }}</span></div>
+                                <div class="col-md-6"><strong>Estado Físico:</strong><br><span class="text-muted">{{ $orden->estado_fisico }}</span></div>
+                            </div>
+                        </div>
 
-        {{-- REEMPLAZO DEL BOTÓN POR MENSAJE DE ESPERA --}}
-        <div class="text-center p-4 rounded" style="background: #fffbeb; border: 1px dashed #f59e0b;">
-            <div class="mb-3">
-                <i class="fas fa-mobile-alt fa-2x text-warning mb-2"></i>
-                <div class="spinner-grow spinner-grow-sm text-warning" role="status"></div>
-            </div>
-            <h6 class="font-weight-bold text-warning mb-1">Esperando respuesta del técnico</h6>
-            <p class="small text-muted mb-0">
-                El técnico <strong>{{ $orden->user->nombre ?? 'asignado' }}</strong> debe confirmar la recepción física desde la aplicación móvil para habilitar el diagnóstico.
-            </p>
-        </div>
-
-    </div>
-</div>
-@endif
+                        {{-- REEMPLAZO DEL BOTÓN POR MENSAJE DE ESPERA --}}
+                        <div class="text-center p-4 rounded" style="background: #fffbeb; border: 1px dashed #f59e0b;">
+                            <div class="mb-3">
+                                <i class="fas fa-mobile-alt fa-2x text-warning mb-2"></i>
+                                <div class="spinner-grow spinner-grow-sm text-warning" role="status"></div>
+                            </div>
+                            <h6 class="font-weight-bold text-warning mb-1">Esperando respuesta del técnico</h6>
+                            <p class="small text-muted mb-0">
+                                El técnico <strong>{{ $orden->user->nombre ?? 'asignado' }}</strong> debe confirmar la recepción física desde la aplicación móvil para habilitar el diagnóstico.
+                            </p>
+                        </div>
+                    </div>
+                </div>
 
         @elseif($orden->estado === 'diagnostico')
         {{-- ─── PANEL: DIAGNÓSTICO ─── --}}
