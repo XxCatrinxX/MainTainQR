@@ -572,52 +572,79 @@
 
 @section('js')
 <script>
-    $(document).ready(function() {
+    document.addEventListener('DOMContentLoaded', function () {
         let repuestosSeleccionados = [];
 
-        $('#btn-add-repuesto').click(function() {
-            let select = $('#select-repuesto');
-            let opt = select.find('option:selected');
-            let id = select.val();
-            if (!id) return;
+        document.addEventListener('click', function(e) {
+            // Manejar clic en botón "Añadir"
+            if (e.target.closest('#btn-add-repuesto')) {
+                let select = document.getElementById('select-repuesto');
+                let opt = select.options[select.selectedIndex];
+                let id = select.value;
+                if (!id) return;
 
-            let nombre = opt.data('nombre');
-            let precio = parseFloat(opt.data('precio'));
-            let stock  = parseInt(opt.data('stock'));
-            let cant   = parseInt($('#cant-repuesto').val());
+                let nombre = opt.getAttribute('data-nombre');
+                let precio = parseFloat(opt.getAttribute('data-precio'));
+                let stock  = parseInt(opt.getAttribute('data-stock'));
+                let cantInput = document.getElementById('cant-repuesto');
+                let cant   = parseInt(cantInput.value);
 
-            if (cant < 1) return;
-            if (cant > stock) { alert('La cantidad excede el stock (' + stock + ').'); return; }
+                if (cant < 1) return;
+                if (cant > stock) { alert('La cantidad excede el stock (' + stock + ').'); return; }
 
-            let idx = repuestosSeleccionados.findIndex(r => r.id === id);
-            if (idx !== -1) {
-                if (repuestosSeleccionados[idx].cant + cant > stock) { alert('Cantidad acumulada excede el stock.'); return; }
-                repuestosSeleccionados[idx].cant += cant;
-            } else {
-                repuestosSeleccionados.push({ id, nombre, cant, precio });
+                let idx = repuestosSeleccionados.findIndex(r => r.id === id);
+                if (idx !== -1) {
+                    if (repuestosSeleccionados[idx].cant + cant > stock) { alert('Cantidad acumulada excede el stock.'); return; }
+                    repuestosSeleccionados[idx].cant += cant;
+                } else {
+                    repuestosSeleccionados.push({ id, nombre, cant, precio });
+                }
+
+                renderTabla();
+                select.value = '';
+                cantInput.value = 1;
             }
 
-            renderTabla();
-            select.val('');
-            $('#cant-repuesto').val(1);
-        });
-
-        $(document).on('click', '.btn-remove-diag', function() {
-            repuestosSeleccionados.splice($(this).data('index'), 1);
-            renderTabla();
+            // Manejar clic en botón "Eliminar" (Delegación)
+            let removeBtn = e.target.closest('.btn-remove-diag');
+            if (removeBtn) {
+                let index = parseInt(removeBtn.getAttribute('data-index'));
+                repuestosSeleccionados.splice(index, 1);
+                renderTabla();
+            }
         });
 
         function renderTabla() {
-            let tbody = $('#tabla-repuestos-diagnosis tbody');
-            let container = $('#hidden-inputs-repuestos');
-            tbody.empty(); container.empty();
+            let tbody = document.querySelector('#tabla-repuestos-diagnosis tbody');
+            let container = document.getElementById('hidden-inputs-repuestos');
+            tbody.innerHTML = ''; 
+            container.innerHTML = '';
             let total = 0;
+
             repuestosSeleccionados.forEach((r, i) => {
-                let sub = r.cant * r.precio; total += sub;
-                tbody.append(`<tr><td>${r.nombre}</td><td>${r.cant}</td><td>$${r.precio.toFixed(2)}</td><td><b>$${sub.toFixed(2)}</b></td><td><button type="button" class="btn btn-xs btn-outline-danger btn-remove-diag" data-index="${i}"><i class="fas fa-trash"></i></button></td></tr>`);
-                container.append(`<input type="hidden" name="repuestos[${i}][id]" value="${r.id}"><input type="hidden" name="repuestos[${i}][cantidad]" value="${r.cant}"><input type="hidden" name="repuestos[${i}][precio]" value="${r.precio}">`);
+                let sub = r.cant * r.precio; 
+                total += sub;
+
+                let row = `<tr>
+                    <td>${r.nombre}</td>
+                    <td>${r.cant}</td>
+                    <td>$${r.precio.toLocaleString('es-MX', {minimumFractionDigits: 2})}</td>
+                    <td><b>$${sub.toLocaleString('es-MX', {minimumFractionDigits: 2})}</b></td>
+                    <td>
+                        <button type="button" class="btn btn-xs btn-outline-danger btn-remove-diag" data-index="${i}">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>`;
+                tbody.insertAdjacentHTML('beforeend', row);
+
+                container.insertAdjacentHTML('beforeend', `
+                    <input type="hidden" name="repuestos[${i}][id]" value="${r.id}">
+                    <input type="hidden" name="repuestos[${i}][cantidad]" value="${r.cant}">
+                    <input type="hidden" name="repuestos[${i}][precio]" value="${r.precio}">
+                `);
             });
-            $('#total-piezas-diag').text('$' + total.toFixed(2));
+            document.getElementById('total-piezas-diag').textContent = '$' + total.toLocaleString('es-MX', {minimumFractionDigits: 2});
         }
     });
 </script>

@@ -24,15 +24,15 @@ Route::get('/home', [HomeController::class , 'index'])
 // ÓRDENES
 Route::get('/ordenes', [OrdenServicioController::class , 'index'])->name('ordenes.index');
 
-// WIZARD
-Route::get('/ordenes/nueva/paso-1', [OrdenServicioController::class , 'createPaso1'])->name('ordenes.create_paso1');
-Route::post('/ordenes/nueva/paso-1', [OrdenServicioController::class , 'storePaso1'])->name('ordenes.store_paso1');
-
-Route::get('/ordenes/nueva/paso-2', [OrdenServicioController::class , 'createPaso2'])->name('ordenes.create_paso2');
-Route::post('/ordenes/nueva/paso-2', [OrdenServicioController::class , 'storePaso2'])->name('ordenes.store_paso2');
-
-Route::get('/ordenes/nueva/paso-3', [OrdenServicioController::class , 'createPaso3'])->name('ordenes.create_paso3');
-Route::post('/ordenes/nueva/paso-3', [OrdenServicioController::class , 'storePaso3'])->name('ordenes.store_paso3');
+// WIZARD (Solo admin y recepcionista pueden crear)
+Route::middleware(['auth', 'role:admin,recepcionista'])->group(function () {
+    Route::get('/ordenes/nueva/paso-1', [OrdenServicioController::class , 'createPaso1'])->name('ordenes.create_paso1');
+    Route::post('/ordenes/nueva/paso-1', [OrdenServicioController::class , 'storePaso1'])->name('ordenes.store_paso1');
+    Route::get('/ordenes/nueva/paso-2', [OrdenServicioController::class , 'createPaso2'])->name('ordenes.create_paso2');
+    Route::post('/ordenes/nueva/paso-2', [OrdenServicioController::class , 'storePaso2'])->name('ordenes.store_paso2');
+    Route::get('/ordenes/nueva/paso-3', [OrdenServicioController::class , 'createPaso3'])->name('ordenes.create_paso3');
+    Route::post('/ordenes/nueva/paso-3', [OrdenServicioController::class , 'storePaso3'])->name('ordenes.store_paso3');
+});
 Route::get('/ordenes/{id}/recepcion', [OrdenServicioController::class , 'showRecepcion'])->name('ordenes.recepcion');
 Route::put('/ordenes/{id}', [OrdenServicioController::class , 'update'])->name('ordenes.update');
 Route::get('/ordenes/{id}/qr', [OrdenServicioController::class, 'verQR'])->name('ordenes.qr');

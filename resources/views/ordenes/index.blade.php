@@ -12,11 +12,13 @@
             <h1>Órdenes de Servicio</h1>
             <p class="text-muted mb-0" style="font-size: 0.9rem;">Gestiona y da seguimiento a los equipos ingresados.</p>
         </div>
+        @if(Auth::user()->rol !== 'tecnico')
         <div>
             <a href="{{ route('ordenes.create_paso1') }}" class="btn btn-dark-modern shadow-sm">
                 <i class="fas fa-plus mr-1"></i> Nueva Orden
             </a>
         </div>
+        @endif
     </div>
 @stop
 
