@@ -46,7 +46,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // 🔥 Acciones
     Route::middleware('auth:sanctum')->group(function () {
-        Route::post('/ordenes/{id}/confirmar-recepcion', [OrdenTecnicoController::class, 'confirmarRecepcion'])->name('ordenes.confirmarRecepcion');
+        Route::put('/ordenes/{id}/confirmar-recepcion', [OrdenTecnicoController::class, 'confirmarRecepcion'])->name('ordenes.confirmarRecepcion');
         Route::post('/ordenes/{id}/rechazar', [OrdenTecnicoController::class, 'rechazarOrden']);
         Route::post('/ordenes/{id}/diagnostico', [OrdenTecnicoController::class, 'storeDiagnostico']);
     });
