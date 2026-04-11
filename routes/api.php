@@ -48,11 +48,15 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('auth:sanctum')->group(function () {
         Route::put('/ordenes/{id}/confirmar-recepcion', [OrdenTecnicoController::class, 'confirmarRecepcion'])->name('ordenes.confirmarRecepcion');
         Route::post('/ordenes/{id}/rechazar', [OrdenTecnicoController::class, 'rechazarOrden']);
-        Route::post('/ordenes/{id}/diagnostico', [OrdenTecnicoController::class, 'storeDiagnostico']);
+        
+        // Diagnóstico: Reutiliza lógica web, retorna JSON
+      Route::middleware('auth:sanctum')->post('/ordenes/{id}/diagnostico', [OrdenServicioController::class, 'storeDiagnosticoApi']);
+
+            
     });
 
     Route::post('/ordenes/{id}/pago', [PagoController::class, 'storeDesdeOrden']);
     Route::apiResource('pagos', PagoController::class);
-    Route::apiResource('pagos', PagoController::class);
+    
 });
 // | Aquí es donde puedes registrar las rutas API para tu aplicación. Estas rutas son cargadas por el RouteServiceProvider dentro de un grupo que
