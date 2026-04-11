@@ -21,8 +21,11 @@ class OrdenServicio extends Model
         'decision_cliente',
         'token_rastreo',
         'fecha_recepcion',
+        'fecha_diagnostico',
+        'fecha_aprobacion',
         'fecha_estimada_entrega',
         'fecha_reparacion',
+        'fecha_listo',
         'fecha_entrega_real',
         'mano_obra',
         'solucion_propuesta'

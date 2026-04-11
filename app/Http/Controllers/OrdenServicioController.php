@@ -57,6 +57,12 @@ class OrdenServicioController extends Controller
         $orden = OrdenServicio::with(['equipo.cliente', 'user', 'evidencias', 'repuestos', 'pagos', 'detallesTecnicos'])->findOrFail($id);
 
         $user = \Illuminate\Support\Facades\Auth::user();
+        
+        // El almacenista no puede entrar al detalle
+        if ($user->rol === 'almacenista') {
+            abort(403, 'El almacenista no tiene permiso para ver detalles de órdenes.');
+        }
+
         // Technicians can only see their own assigned orders
         if ($user->rol === 'tecnico' && $orden->user_id !== $user->id) {
             abort(403, 'No tienes acceso a esta orden de servicio.');
@@ -80,6 +86,7 @@ class OrdenServicioController extends Controller
         $orden->mano_obra = $request->mano_obra;
         if (in_array($orden->estado, ['recibido', 'diagnostico'])) {
             $orden->estado = 'espera';
+            $orden->fecha_diagnostico = now();
         }
         $orden->save();
 
@@ -355,6 +362,7 @@ if ($tecnico && $tecnico->fcm_token) {
 
         // Avanzar estado a LISTO
         $orden->estado = 'listo';
+        $orden->fecha_listo = now();
         $orden->save();
 
         // Notificar al cliente
@@ -447,6 +455,12 @@ if ($tecnico && $tecnico->fcm_token) {
         if ($orden->estado !== 'recibido') {
             return back()->with('error', 'La orden ya no está en estado Recibido.');
         }
+        
+        // Solo admin y técnicos pueden confirmar recepción técnica
+        if (!in_array(auth()->user()->rol, ['admin', 'tecnico'])) {
+            abort(403, 'No tienes permiso para confirmar recepción.');
+        }
+
         $orden->estado = 'diagnostico';
         $orden->save();
         return back()->with('success', 'Recepción confirmada. La orden pasó a estado Diagnóstico.');
@@ -459,7 +473,14 @@ if ($tecnico && $tecnico->fcm_token) {
         if ($orden->estado !== 'aceptado') {
             return back()->with('error', 'La orden debe estar Aprobada para iniciar reparación.');
         }
+
+        // Solo admin y técnicos pueden iniciar reparación
+        if (!in_array(auth()->user()->rol, ['admin', 'tecnico'])) {
+            abort(403, 'No tienes permiso para iniciar la reparación.');
+        }
+
         $orden->estado = 'reparacion';
+        $orden->fecha_reparacion = now();
         $orden->save();
         return back()->with('success', 'Reparación iniciada. La orden pasó a estado En Reparación.');
     }

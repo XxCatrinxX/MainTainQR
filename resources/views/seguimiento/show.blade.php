@@ -193,7 +193,7 @@
                     <div class="timeline-content">
                         <h5>Diagnóstico Técnico</h5>
                         @if($currentIndex >= 1)
-                            <p>El técnico está evaluando el equipo y determinando fallas.</p>
+                            <p>Evaluado el {{ $orden->fecha_diagnostico ? \Carbon\Carbon::parse($orden->fecha_diagnostico)->format('d M Y, h:i A') : 'recientemente' }}</p>
                             @if($orden->solucion_propuesta)
                                 <div class="mt-2 p-3" style="background: #f8fafc; border-radius: 8px;">
                                     <strong>Solución propuesta:</strong><br>
@@ -213,8 +213,8 @@
                         <h5>Aprobación de Presupuesto</h5>
                         @if($orden->estado === 'espera')
                             <p class="text-danger font-weight-bold">Requiere tu aprobación para proceder.</p>
-                        @elseif($currentIndex > 2)
-                            <p>Presupuesto aceptado por el cliente.</p>
+                        @elseif($currentIndex > 2 || $orden->fecha_aprobacion)
+                            <p>Aprobado el {{ $orden->fecha_aprobacion ? \Carbon\Carbon::parse($orden->fecha_aprobacion)->format('d M Y, h:i A') : '' }}</p>
                         @else
                             <p>Cotización en elaboración.</p>
                         @endif
@@ -226,7 +226,12 @@
                     <div class="timeline-icon {{ $currentIndex >= 3 ? 'active' : '' }}"></div>
                     <div class="timeline-content">
                         <h5>En Reparación</h5>
-                        <p>{{ $currentIndex >= 3 ? 'Nuestros técnicos están trabajando en tu equipo.' : 'Pendiente.' }}</p>
+                        @if($currentIndex >= 3)
+                            <p>Iniciado el {{ $orden->fecha_reparacion ? \Carbon\Carbon::parse($orden->fecha_reparacion)->format('d M Y, h:i A') : '' }}</p>
+                            <p>Nuestros técnicos están trabajando en tu equipo.</p>
+                        @else
+                            <p>Pendiente.</p>
+                        @endif
                     </div>
                 </li>
 
@@ -235,7 +240,12 @@
                     <div class="timeline-icon {{ $currentIndex >= 4 ? 'active' : '' }}"></div>
                     <div class="timeline-content">
                         <h5>Listo para Entrega</h5>
-                        <p>{{ $currentIndex >= 4 ? 'Tu equipo ha sido reparado y está listo en sucursal.' : 'Pendiente.' }}</p>
+                        @if($currentIndex >= 4)
+                            <p>Finalizado el {{ $orden->fecha_listo ? \Carbon\Carbon::parse($orden->fecha_listo)->format('d M Y, h:i A') : '' }}</p>
+                            <p>Tu equipo ha sido reparado y está listo en sucursal.</p>
+                        @else
+                            <p>Pendiente.</p>
+                        @endif
                     </div>
                 </li>
             </ul>
@@ -255,13 +265,22 @@
                         $total = $orden->mano_obra + $subtotalRepuestos;
                     @endphp
                     
-                    <div class="d-flex justify-content-between mx-auto mb-3" style="max-width: 300px; text-align: left;">
-                        <span>Mano de Obra:</span>
-                        <strong>${{ number_format($orden->mano_obra, 2) }}</strong>
-                    </div>
-                    <div class="d-flex justify-content-between mx-auto mb-3" style="max-width: 300px; text-align: left;">
-                        <span>Repuestos/Piezas:</span>
-                        <strong>${{ number_format($subtotalRepuestos, 2) }}</strong>
+                    <div class="mb-4 text-left mx-auto" style="max-width: 400px;">
+                        <span class="text-muted small font-weight-bold text-uppercase">Desglose de Presupuesto:</span>
+                        <table class="table table-sm mt-2 mb-0" style="font-size: 0.9rem;">
+                            <tbody>
+                                <tr>
+                                    <td>Mano de Obra</td>
+                                    <td class="text-right">${{ number_format($orden->mano_obra, 2) }}</td>
+                                </tr>
+                                @foreach($orden->repuestos as $repuesto)
+                                <tr>
+                                    <td>{{ $repuesto->nombre_pieza }} (x{{ $repuesto->pivot->cantidad }})</td>
+                                    <td class="text-right">${{ number_format($repuesto->pivot->cantidad * $repuesto->pivot->precio_fijado, 2) }}</td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
                     </div>
                     <div class="d-flex justify-content-between mx-auto mb-4 border-top pt-2" style="max-width: 300px; text-align: left;">
                         <span style="font-size: 1.1rem;">Total Estimado:</span>

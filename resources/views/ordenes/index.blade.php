@@ -137,11 +137,13 @@
                         <td class="text-right">
 
     <!-- Ver detalle -->
+    @if(Auth::user()->rol !== 'almacenista')
     <a href="{{ route('ordenes.show', $orden->id) }}" 
        class="btn btn-action" 
        title="Ver Detalle">
         <i class="fas fa-eye"></i>
     </a>
+    @endif
 
     <!-- Ver QR -->
     <a href="{{ route('ordenes.qr', $orden->id) }}" 

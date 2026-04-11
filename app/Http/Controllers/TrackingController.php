@@ -38,6 +38,8 @@ class TrackingController extends Controller
         try {
             $orden->decision_cliente = 'acepta';
             $orden->estado = 'reparacion';
+            $orden->fecha_aprobacion = now();
+            $orden->fecha_reparacion = now();
             $orden->save();
 
             //Descontar inventario
@@ -88,6 +90,7 @@ class TrackingController extends Controller
 
             $orden->estado = 'aceptado';
             $orden->decision_cliente = 'acepta';
+            $orden->fecha_aprobacion = now();
             $orden->save();
 
             // Notificar al técnico
