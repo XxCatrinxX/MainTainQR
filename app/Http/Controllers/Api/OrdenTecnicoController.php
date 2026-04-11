@@ -7,6 +7,8 @@ use App\Models\OrdenServicio;
 use App\Models\Evidencia;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class OrdenTecnicoController extends Controller
 {
@@ -17,10 +19,11 @@ class OrdenTecnicoController extends Controller
      * @return \Illuminate\Http\JsonResponse
      */
 
+
     public function index()
 {
     $ordenes = OrdenServicio::with(['equipo.cliente', 'user'])
-        ->where('user_id', auth()->id())
+        ->where('user_id', Auth::id())
         ->where('estado', 'espera') // 👈 SOLO LAS QUE ACEPTÓ
         ->latest()
         ->get();
@@ -42,7 +45,7 @@ class OrdenTecnicoController extends Controller
         'repuestos'
        ])
        ->where('id', $id)
-       ->where('user_id', auth()->id())
+       ->where('user_id', Auth::id())
        ->firstOrFail();
 
        // 🔥 HISTORIAL (puedes ajustarlo después)
@@ -100,41 +103,28 @@ class OrdenTecnicoController extends Controller
     ]);
 }
 
-    public function aceptarOrden($id)
-{
-    $orden = OrdenServicio::where('id', $id)
-        ->whereIn('estado', ['recibido'])
-        ->firstOrFail();
+    public function confirmarRecepcion($id)
+    {
+        $orden = OrdenServicio::where('id', $id)
+            ->where('user_id', Auth::id())
+            ->firstOrFail();
 
-    // 🔒 evitar que otro técnico la tome
-    if ($orden->user_id !== null) {
+        if ($orden->estado !== 'recibido') {
+            return response()->json([
+                'success' => false,
+                'message' => 'La orden ya no está en estado Recibido.'
+            ], 400);
+        }
+
+        $orden->estado = 'diagnostico';
+        $orden->save();
+
         return response()->json([
-            'message' => 'Esta orden ya fue asignada'
-        ], 409);
+            'success' => true,
+            'message' => 'Recepción física confirmada. Estado actualizado a Diagnóstico.',
+            'estado' => $orden->estado
+        ]);
     }
-
-    $orden->user_id = auth()->id();
-    $orden->estado = 'espera';
-    $orden->save();
-
-    return response()->json([
-        'message' => 'Orden aceptada'
-    ]);
-}
-
-public function rechazarOrden($id)
-{
-    $orden = OrdenServicio::where('id', $id)
-        ->where('estado', 'recibido')
-        ->firstOrFail();
-
-    $orden->estado = 'cancelado';
-    $orden->save();
-
-    return response()->json([
-        'message' => 'Orden rechazada'
-    ]);
-}
 
     /**
      * Guarda el diagnóstico realizado por el técnico con mano de obra y fotos.
@@ -149,36 +139,49 @@ public function rechazarOrden($id)
             'solucion_propuesta' => 'required|string',
             'mano_obra' => 'required|numeric|min:0',
             'fotos' => 'nullable|array',
-            'fotos.*' => 'image|mimes:jpeg,png,jpg,gif|max:5120', // máximo 5MB
+            'fotos.*' => 'image|mimes:jpeg,png,jpg,gif|max:5120',
         ]);
 
-        $orden = OrdenServicio::findOrFail($id);
+        $orden = OrdenServicio::where('id', $id)
+            ->where('user_id', Auth::id())
+            ->firstOrFail();
 
-        $orden->solucion_propuesta = $request->input('solucion_propuesta');
-        $orden->mano_obra = $request->input('mano_obra');
-        
-        // Cambiamos el estado, asumiendo que el flujo natural tras diagnosticar es la presupuestación
-        if ($orden->estado === 'recibido') {
-             $orden->estado = 'diagnostico'; // o a presupuesto dependiendo la lógica de front
-        }
-        
-        $orden->save();
+        DB::beginTransaction();
+        try {
+            $orden->solucion_propuesta = $request->solucion_propuesta;
+            $orden->mano_obra = $request->mano_obra;
+            
+            // Si el técnico envía el diagnóstico, la orden pasa a "espera" 
+            // (que es el estado donde el cliente recibe el link para aceptar/rechazar)
+            $orden->estado = 'espera'; 
+            $orden->save();
 
-        if ($request->hasFile('fotos')) {
-            foreach ($request->file('fotos') as $foto) {
-                $path = $foto->store('evidencias', 'public');
-
-                Evidencia::create([
-                    'orden_servicio_id' => $orden->id,
-                    'url_foto' => $path,
-                    'momento' => in_array($orden->estado, ['recepcion','diagnostico','reparacion','finalizado']) ? $orden->estado : 'diagnostico',
-                ]);
+            // Guardar fotos de evidencia
+            if ($request->hasFile('fotos')) {
+                foreach ($request->file('fotos') as $foto) {
+                    $path = $foto->store('evidencias', 'public');
+                    Evidencia::create([
+                        'orden_servicio_id' => $orden->id,
+                        'url_foto' => $path,
+                        'momento' => 'diagnostico',
+                    ]);
+                }
             }
-        }
 
-        return response()->json([
-            'message' => 'Diagnóstico guardado exitosamente.',
-            'orden' => $orden->fresh(['evidencias'])
-        ]);
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Diagnóstico guardado. La orden ahora espera respuesta del cliente.',
+                'orden' => $orden->fresh(['evidencias'])
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al guardar diagnóstico: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }

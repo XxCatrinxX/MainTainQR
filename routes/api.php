@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\OrderAuditController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
+
 // Rutas públicas (sin autenticación)
 Route::get('/orders/{token_rastreo}/audits', [OrderAuditController::class, 'index']);
 Route::get('/orders/{token_rastreo}/audits/recent', [OrderAuditController::class, 'recent']);
@@ -44,9 +45,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/ordenes/{id}', [OrdenTecnicoController::class, 'show']);
 
     // 🔥 Acciones
-    Route::post('/ordenes/{id}/aceptar', [OrdenTecnicoController::class, 'aceptarOrden']);
-    Route::post('/ordenes/{id}/rechazar', [OrdenTecnicoController::class, 'rechazarOrden']);
-    Route::post('/ordenes/{id}/diagnostico', [OrdenTecnicoController::class, 'storeDiagnostico']);
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::post('/ordenes/{id}/confirmar-recepcion', [OrdenTecnicoController::class, 'confirmarRecepcion'])->name('ordenes.confirmarRecepcion');
+        Route::post('/ordenes/{id}/rechazar', [OrdenTecnicoController::class, 'rechazarOrden']);
+        Route::post('/ordenes/{id}/diagnostico', [OrdenTecnicoController::class, 'storeDiagnostico']);
+    });
 
     Route::post('/ordenes/{id}/pago', [PagoController::class, 'storeDesdeOrden']);
     Route::apiResource('pagos', PagoController::class);
