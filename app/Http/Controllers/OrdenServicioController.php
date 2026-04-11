@@ -16,6 +16,8 @@ use App\Notifications\ListoNotificacion;
 use Illuminate\Support\Facades\Notification;
 use Endroid\QrCode\Writer\SvgWriter;
 use Endroid\QrCode\Encoding\Encoding;
+use Kreait\Firebase\Messaging\CloudMessage;
+use Kreait\Firebase\Messaging\Notification as FCMNotification;
 
 class OrdenServicioController extends Controller
 {
@@ -264,6 +266,33 @@ class OrdenServicioController extends Controller
             'token_rastreo' => uniqid('rastreo_'),
         ]);
 
+       
+        $tecnico = User::find($request->id_usuario);
+
+if ($tecnico && $tecnico->fcm_token) {
+    try {
+        $messaging = app('firebase.messaging');
+        
+        // Usamos el alias para la notificación "Push"
+        $fcmNotification = FCMNotification::create(
+            'Nueva Orden Asignada', 
+            "Folio: {$orden->folio}. Tienes un nuevo equipo para revisar."
+        );
+
+        $message = CloudMessage::withTarget('token', $tecnico->fcm_token)
+            ->withNotification($fcmNotification)
+            ->withData([
+                'id_orden' => (string)$orden->id,
+                'click_action' => 'FLUTTER_NOTIFICATION_CLICK' // Útil si usas Flutter/Android
+            ]);
+
+        $messaging->send($message);
+        
+    } catch (\Exception $e) {
+        \Illuminate\Support\Facades\Log::error("Error FCM: " . $e->getMessage());
+    }
+}
+
         // Limpiar sesión del wizard
         session()->forget(['wizard_cliente_id', 'wizard_equipo_id']);
 
@@ -472,5 +501,7 @@ class OrdenServicioController extends Controller
 
     return view('ordenes.qr', compact('orden', 'qrBase64'));
 }
+
+
 }
 
