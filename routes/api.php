@@ -53,9 +53,10 @@ Route::middleware('auth:sanctum')->group(function () {
       Route::middleware('auth:sanctum')->post('/ordenes/{id}/diagnostico', [OrdenServicioController::class, 'storeDiagnosticoApi']);
       
 
-Route::get('/inventario/disponible', [OrdenServicioController::class, 'inventarioDisponibleApi']);
-Route::post('/ordenes/{id}/diagnostico', [OrdenServicioController::class, 'storeDiagnosticoApi']);
 
+
+Route::get('/inventario/disponible', [OrdenServicioController::class, 'inventarioDisponibleApi']);
+Route::get('/inventario/{inventario}', [InventarioController::class, 'show']);
             
     });
 
