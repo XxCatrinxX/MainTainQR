@@ -23,16 +23,31 @@ class OrdenServicioController extends Controller
 {
     public function index()
     {
-        $ordenes = OrdenServicio::with(['equipo.cliente'])->latest()->get();
+        $user = auth()->user();
+        $query = OrdenServicio::with(['equipo.cliente', 'user']);
+
+        // Si es técnico, solo ve lo asignado a él
+        if ($user->rol === 'tecnico') {
+            $query->where('user_id', $user->id);
+        }
+
+        $ordenes = $query->latest()->get();
+
+        // Para los contadores de métricas también aplicamos el filtro si es técnico
+        $baseMetricas = OrdenServicio::query();
+        if ($user->rol === 'tecnico') {
+            $baseMetricas->where('user_id', $user->id);
+        }
+
         return view('ordenes.index', [
             'ordenes'         => $ordenes,
-            'totalRecibidas'  => OrdenServicio::where('estado', 'recibido')->count(),
-            'totalPendientes' => OrdenServicio::whereIn('estado', ['diagnostico', 'espera'])->count(),
-            'totalProceso'    => OrdenServicio::where('estado', 'reparacion')->count(),
-            'totalCerradas'   => OrdenServicio::whereIn('estado', ['listo', 'entregado'])->count(),
+            'totalRecibidas'  => (clone $baseMetricas)->where('estado', 'recibido')->count(),
+            'totalPendientes' => (clone $baseMetricas)->whereIn('estado', ['diagnostico', 'espera'])->count(),
+            'totalProceso'    => (clone $baseMetricas)->where('estado', 'reparacion')->count(),
+            'totalCerradas'   => (clone $baseMetricas)->whereIn('estado', ['listo', 'entregado'])->count(),
             'chartData' => [
-                'abiertas' => OrdenServicio::whereIn('estado', ['recibido', 'diagnostico', 'espera', 'reparacion'])->count(),
-                'cerradas' => OrdenServicio::whereIn('estado', ['listo', 'entregado'])->count(),
+                'abiertas' => (clone $baseMetricas)->whereIn('estado', ['recibido', 'diagnostico', 'espera', 'reparacion'])->count(),
+                'cerradas' => (clone $baseMetricas)->whereIn('estado', ['listo', 'entregado'])->count(),
             ]
         ]);
     }

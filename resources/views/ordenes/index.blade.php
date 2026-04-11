@@ -77,6 +77,7 @@
                     <th>Equipo</th>
                     <th>Falla Reportada</th>
                     <th>Estado</th>
+                    <th>Asignado a</th>
                     <th>Fecha Inicio</th>
                     <th class="text-right">Acciones</th>
                 </tr>
@@ -116,6 +117,15 @@
                             @elseif($orden->estado == 'entregado')
                                 <span class="badge badge-dark">Entregado</span>
                             @endif
+                        </td>
+                        
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="bg-light rounded-circle d-flex align-items-center justify-content-center mr-2" style="width: 32px; height: 32px; font-size: 0.8rem; font-weight: bold; color: #6b7280;">
+                                    {{ strtoupper(substr($orden->user->nombre ?? 'U', 0, 1)) }}
+                                </div>
+                                <span style="font-weight: 500; color: #4b5563;">{{ $orden->user->nombre ?? 'Sin asignar' }}</span>
+                            </div>
                         </td>
 
                         <td style="color: #6b7280; font-size: 0.9rem;">

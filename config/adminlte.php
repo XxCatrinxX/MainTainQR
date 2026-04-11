@@ -318,7 +318,7 @@ return [
             'icon' => 'fas fa-home',
         ],
         [
-            'text' => 'Órdenes de Trabajo',
+            'text' => 'Órdenes de Servicio',
             'url'  => 'ordenes',
             'icon' => 'fas fa-clipboard-list',
         ],
