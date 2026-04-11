@@ -162,24 +162,37 @@ class TrackingController extends Controller
      * Centraliza el envío de notificaciones al técnico asignado.
      */
     private function notificarTecnico($orden, $titulo, $mensaje)
-    {
-        if ($orden->user && $orden->user->fcm_token) {
-            try {
-                app(FirebaseNotificationService::class)->enviar(
-                    $orden->user->fcm_token,
-                    $titulo,
-                    $mensaje,
-                    [
-                        'orden_id' => (string)$orden->id, 
-                        'token_rastreo' => $orden->token_rastreo,
-                        'tipo' => 'status_update'
-                    ]
-                );
-            } catch (\Exception $e) {
-                Log::error("FCM Error en TrackingController: " . $e->getMessage());
-            }
+{
+    // 1. Verificamos que la orden tenga un técnico asignado y que este tenga token
+    $tecnico = $orden->user; 
+
+    if ($tecnico && $tecnico->fcm_token) {
+        try {
+            // Usamos el mismo método que en el Paso 3
+            $messaging = app('firebase.messaging');
+            
+            // Creamos el objeto de notificación visual (lo que hace que vibre el cel)
+            $fcmNotification = \Kreait\Firebase\Messaging\Notification::create($titulo, $mensaje);
+
+            $message = \Kreait\Firebase\Messaging\CloudMessage::withTarget('token', $tecnico->fcm_token)
+                ->withNotification($fcmNotification)
+                ->withData([
+                    'id_orden' => (string)$orden->id,
+                    'token_rastreo' => $orden->token_rastreo,
+                    'click_action' => 'FLUTTER_NOTIFICATION_CLICK' // Esto es vital
+                ]);
+
+            $messaging->send($message);
+            
+            \Illuminate\Support\Facades\Log::info("FCM Enviado desde Tracking: " . $orden->folio);
+            
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error("Error FCM en Tracking: " . $e->getMessage());
         }
+    } else {
+        \Illuminate\Support\Facades\Log::warning("No se pudo notificar: Técnico no asignado o sin token para la orden " . $orden->folio);
     }
+}
 
     /**
      * Procesa la baja de stock en inventario.
