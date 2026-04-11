@@ -6,6 +6,9 @@ use App\Models\OrdenServicio;
 use App\Models\Inventario;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Services\FirebaseNotificationService;
+use Illuminate\Support\Facades\Log;
+
 
 class TrackingController extends Controller
 {
@@ -26,8 +29,7 @@ class TrackingController extends Controller
      */
     public function aceptarPresupuesto(Request $request, $token_rastreo)
     {
-        $orden = OrdenServicio::where('token_rastreo', $token_rastreo)->firstOrFail();
-
+        $orden = OrdenServicio::with('user')->where('token_rastreo', $token_rastreo)->firstOrFail();
         if ($orden->decision_cliente === 'acepta') {
             return back()->with('error', 'El presupuesto ya había sido aceptado.');
         }
@@ -38,11 +40,14 @@ class TrackingController extends Controller
             $orden->estado = 'reparacion';
             $orden->save();
 
-            app(\App\Services\FirebaseNotificationService::class)->enviar(
-                $orden->user?->fcm_token ?? '',
-                'Presupuesto Aceptado',
-                'El cliente aceptó el presupuesto',
-                ['orden_id' => (string)$orden->id, 'token_rastreo' => $orden->token_rastreo]
+            //Descontar inventario
+            $this->procesarInventario($orden);
+
+            //Notificar al técnico
+            $this->notificarTecnico(
+                $orden,
+                '✅ Presupuesto Aceptado', 
+                "El cliente aceptó la reparación del equipo folio: {$orden->folio}"
             );
 
             foreach ($orden->repuestos as $repuesto) {
@@ -55,7 +60,6 @@ class TrackingController extends Controller
             }
 
             DB::commit();
-
             return back()->with('success', '¡Presupuesto aceptado! Comenzaremos con la reparación de tu equipo.');
         } catch (\Exception $e) {
             DB::rollBack();
@@ -68,39 +72,29 @@ class TrackingController extends Controller
      */
     public function aceptar($token)
     {
-        $orden = OrdenServicio::with(['equipo.cliente', 'repuestos'])
+        $orden = OrdenServicio::with(['equipo.cliente', 'repuestos', 'user'])
             ->where('token_rastreo', $token)
             ->firstOrFail();
 
         if (!in_array($orden->estado, ['espera', 'diagnostico'])) {
-            return view('seguimiento.respuesta', [
-                'titulo'  => 'Ya procesado',
-                'mensaje' => 'Esta orden ya fue procesada anteriormente. No se realizaron cambios.',
-                'icono'   => 'info-circle',
-                'color'   => 'info',
-            ]);
+            return $this->retornarVistaProcesada();
         }
 
         DB::beginTransaction();
         try {
-            foreach ($orden->repuestos as $repuesto) {
-                $pieza = Inventario::lockForUpdate()->find($repuesto->id);
-                if ($pieza && $pieza->stock >= $repuesto->pivot->cantidad) {
-                    $pieza->decrement('stock', $repuesto->pivot->cantidad);
-                } else {
-                    throw new \Exception('Stock insuficiente para la pieza: ' . ($repuesto->nombre_pieza ?? 'ID '.$repuesto->id));
-                }
-            }
+            
+        // Descontar inventario
+            $this->procesarInventario($orden);
 
-            $orden->estado           = 'aceptado';
+            $orden->estado = 'aceptado';
             $orden->decision_cliente = 'acepta';
             $orden->save();
 
-            app(\App\Services\FirebaseNotificationService::class)->enviar(
-                $orden->user?->fcm_token ?? '',
-                'Orden Aprobada',
-                'El cliente aprobó la reparación',
-                ['orden_id' => (string)$orden->id, 'token_rastreo' => $orden->token_rastreo]
+            // Notificar al técnico
+            $this->notificarTecnico(
+                $orden, 
+                '🛠️ ¡Orden lista para reparar!', 
+                "El cliente aprobó el presupuesto del folio {$orden->folio}."
             );
 
             DB::commit();
@@ -159,6 +153,59 @@ class TrackingController extends Controller
             'icono'   => 'times-circle',
             'color'   => 'danger',
             'orden'   => $orden,
+        ]);
+    }
+
+    // --- MÉTODOS PRIVADOS DE APOYO ---
+
+    /**
+     * Centraliza el envío de notificaciones al técnico asignado.
+     */
+    private function notificarTecnico($orden, $titulo, $mensaje)
+    {
+        if ($orden->user && $orden->user->fcm_token) {
+            try {
+                app(FirebaseNotificationService::class)->enviar(
+                    $orden->user->fcm_token,
+                    $titulo,
+                    $mensaje,
+                    [
+                        'orden_id' => (string)$orden->id, 
+                        'token_rastreo' => $orden->token_rastreo,
+                        'tipo' => 'status_update'
+                    ]
+                );
+            } catch (\Exception $e) {
+                Log::error("FCM Error en TrackingController: " . $e->getMessage());
+            }
+        }
+    }
+
+    /**
+     * Procesa la baja de stock en inventario.
+     */
+    private function procesarInventario($orden)
+    {
+        foreach ($orden->repuestos as $repuesto) {
+            $pieza = Inventario::lockForUpdate()->find($repuesto->id);
+            if ($pieza && $pieza->stock >= $repuesto->pivot->cantidad) {
+                $pieza->decrement('stock', $repuesto->pivot->cantidad);
+            } else {
+                throw new \Exception('Stock insuficiente para la pieza: ' . ($repuesto->nombre_pieza ?? 'ID '.$repuesto->id));
+            }
+        }
+    }
+
+    /**
+     * Retorna la vista estándar cuando una orden ya fue aceptada/rechazada.
+     */
+    private function retornarVistaProcesada()
+    {
+        return view('seguimiento.respuesta', [
+            'titulo'  => 'Ya procesado',
+            'mensaje' => 'Esta orden ya fue procesada anteriormente. No se realizaron cambios.',
+            'icono'   => 'info-circle',
+            'color'   => 'info',
         ]);
     }
 }
