@@ -28,6 +28,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('clientes', ClienteController::class);
     Route::apiResource('equipos', EquipoController::class);
 
+    //InventarioApiResource
+    Route::get('/inventario/disponible', [OrdenServicioController::class, 'inventarioDisponibleApi']);
     // Inventario
     Route::apiResource('inventario', InventarioController::class);
 
