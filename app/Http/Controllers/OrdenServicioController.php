@@ -254,7 +254,7 @@ class OrdenServicioController extends Controller
 
         $cliente = Cliente::findOrFail(session('wizard_cliente_id'));
         $equipo = Equipo::findOrFail(session('wizard_equipo_id'));
-        $usuarios = User::all();
+        $usuarios = User::where('rol', 'tecnico')->get();
 
         return view('ordenes.wizard.paso3', compact('cliente', 'equipo', 'usuarios'));
     }
