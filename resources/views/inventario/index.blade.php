@@ -15,7 +15,7 @@
                 <i class="fas fa-shopping-cart mr-1"></i> Ver Solicitudes
             </a>
             @endif
-            <a href="{{ route('inventario.create') }}" class="btn btn-modern btn-dark-modern">
+            <a href="{{ route('web.inventario.create') }}" class="btn btn-modern btn-dark-modern">
                 <i class="fas fa-plus mr-1"></i> Nueva Pieza
             </a>
         </div>
@@ -63,10 +63,10 @@
                         </td>
                         <td style="font-weight: 600;">${{ number_format($pieza->precio_venta, 2) }}</td>
                         <td class="text-right">
-                            <a href="{{ route('inventario.edit', $pieza->id) }}" class="btn btn-action" title="Editar">
+                            <a href="{{ route('web.inventario.edit', $pieza->id) }}" class="btn btn-action" title="Editar">
                                 <i class="fas fa-pen"></i>
                             </a>
-                            <form action="{{ route('inventario.destroy', $pieza->id) }}" method="POST" class="d-inline" onsubmit="return confirm('¿Eliminar pieza de forma permanente?');">
+                            <form action="{{ route('web.inventario.destroy', $pieza->id) }}" method="POST" class="d-inline" onsubmit="return confirm('¿Eliminar pieza de forma permanente?');">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="btn btn-action text-danger" title="Eliminar">

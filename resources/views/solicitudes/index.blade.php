@@ -146,16 +146,25 @@
 
 @section('js')
 <script>
-    $(document).ready(function() {
-        $(document).on('click', '.btn-surtir-modal', function() {
-            let id = $(this).data('id');
-            let nombre = $(this).data('nombre');
-            let cantidad = $(this).data('cantidad');
+    document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('click', function (e) {
+            let btn = e.target.closest('.btn-surtir-modal');
+            if (btn) {
+                let id = btn.getAttribute('data-id');
+                let nombre = btn.getAttribute('data-nombre');
+                let cantidad = btn.getAttribute('data-cantidad');
 
-            $('#span-nombre-pieza').text(nombre);
-            $('#input-cantidad').val(cantidad);
-            $('#form-surtir').attr('action', `/solicitudes/${id}/surtir`);
-            $('#modalSurtir').modal('show');
+                document.getElementById('span-nombre-pieza').textContent = nombre;
+                document.getElementById('input-cantidad').value = cantidad;
+                document.getElementById('form-surtir').setAttribute('action', `/solicitudes/${id}/surtir`);
+                
+                // Trigger Bootstrap modal manually if jQuery is available
+                if (window.jQuery) {
+                    window.jQuery('#modalSurtir').modal('show');
+                } else {
+                    console.error('jQuery no cargó a tiempo para abrir el modal.');
+                }
+            }
         });
     });
 </script>

@@ -29,7 +29,7 @@
 <div class="row">
     <div class="col-md-8">
         <div class="card p-4">
-            <form action="{{ route('inventario.store') }}" method="POST">
+            <form action="{{ route('web.inventario.store') }}" method="POST">
                 @csrf
                 
                 <div class="row">
@@ -77,7 +77,7 @@
                 </div>
 
                 <div class="d-flex justify-content-end mt-4 pt-4 border-top">
-                    <a href="{{ route('inventario.index') }}" class="btn btn-modern btn-light-modern mr-2">Cancelar</a>
+                    <a href="{{ route('web.inventario.index') }}" class="btn btn-modern btn-light-modern mr-2">Cancelar</a>
                     <button type="submit" class="btn btn-modern btn-dark-modern">
                         <i class="fas fa-save mr-1"></i> Guardar Pieza
                     </button>

@@ -32,7 +32,7 @@ class InventarioController extends Controller
 
         Inventario::create($data);
 
-        return redirect()->route('inventario.index')->with('success', 'Pieza registrada en inventario correctamente.');
+        return redirect()->route('web.inventario.index')->with('success', 'Pieza registrada en inventario correctamente.');
     }
 
     public function edit(Inventario $inventario)
@@ -52,12 +52,12 @@ class InventarioController extends Controller
 
         $inventario->update($data);
 
-        return redirect()->route('inventario.index')->with('success', 'Pieza actualizada exitosamente.');
+        return redirect()->route('web.inventario.index')->with('success', 'Pieza actualizada exitosamente.');
     }
 
     public function destroy(Inventario $inventario)
     {
         $inventario->delete();
-        return redirect()->route('inventario.index')->with('success', 'Pieza eliminada.');
+        return redirect()->route('web.inventario.index')->with('success', 'Pieza eliminada.');
     }
 }

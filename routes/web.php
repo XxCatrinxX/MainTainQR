@@ -69,12 +69,12 @@ Route::get('/rechazar/{token}', [TrackingController::class , 'rechazar'])->name(
 
 // INVENTARIO (Protegido con URL explícita para evitar conflictos)
 Route::middleware(['auth', 'role:admin,almacenista'])->group(function () {
-    Route::get('/control-inventario', [InventarioController::class, 'index'])->name('inventario.index');
-    Route::get('/control-inventario/create', [InventarioController::class, 'create'])->name('inventario.create');
-    Route::post('/control-inventario', [InventarioController::class, 'store'])->name('inventario.store');
-    Route::get('/control-inventario/{inventario}/edit', [InventarioController::class, 'edit'])->name('inventario.edit');
-    Route::put('/control-inventario/{inventario}', [InventarioController::class, 'update'])->name('inventario.update');
-    Route::delete('/control-inventario/{inventario}', [InventarioController::class, 'destroy'])->name('inventario.destroy');
+    Route::get('/control-inventario', [InventarioController::class, 'index'])->name('web.inventario.index');
+    Route::get('/control-inventario/create', [InventarioController::class, 'create'])->name('web.inventario.create');
+    Route::post('/control-inventario', [InventarioController::class, 'store'])->name('web.inventario.store');
+    Route::get('/control-inventario/{inventario}/edit', [InventarioController::class, 'edit'])->name('web.inventario.edit');
+    Route::put('/control-inventario/{inventario}', [InventarioController::class, 'update'])->name('web.inventario.update');
+    Route::delete('/control-inventario/{inventario}', [InventarioController::class, 'destroy'])->name('web.inventario.destroy');
 });
 
 // PAGOS (Protegido)
