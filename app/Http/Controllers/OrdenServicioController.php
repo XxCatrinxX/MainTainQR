@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use App\Models\OrdenServicio;
 use App\Models\Equipo;
 use App\Models\Cliente;
@@ -17,6 +16,7 @@ use App\Notifications\ListoNotificacion;
 use Illuminate\Support\Facades\Notification;
 use Endroid\QrCode\Writer\SvgWriter;
 use Endroid\QrCode\Encoding\Encoding;
+use Illuminate\Support\Facades\Auth;
 use Kreait\Firebase\Messaging\CloudMessage;
 use Kreait\Firebase\Messaging\Notification as FCMNotification;
 
@@ -25,11 +25,6 @@ class OrdenServicioController extends Controller
     public function index()
     {
         $user = Auth::user();
-
-        // Si por algún motivo el middleware falló y no hay usuario:
-        if (!$user) return redirect()->route('login');
-
-
         $query = OrdenServicio::with(['equipo.cliente', 'user']);
 
         // Si es técnico, solo ve lo asignado a él
@@ -456,26 +451,20 @@ if ($tecnico && $tecnico->fcm_token) {
 
     /** recibido → diagnostico  (técnico confirma que la recibió) */
     public function confirmarRecepcion($id)
-{
-    $orden = OrdenServicio::findOrFail($id);
-    
-    // CORRECCIÓN: Usar Auth::user() o auth()->user() sin paréntesis en 'rol'
-    $user = Auth::user();
+    {
+        $orden = OrdenServicio::findOrFail($id);
+        if ($orden->estado !== 'recibido') {
+            return back()->with('error', 'La orden ya no está en estado Recibido.');
+        }
+        
+        // Solo admin y técnicos pueden confirmar recepción técnica
+        if (!in_array(Auth::user()->rol, ['admin', 'tecnico'])) {
+            abort(403, 'No tienes permiso para confirmar recepción.');
+        }
 
-    if ($orden->estado !== 'recibido') {
-        return back()->with('error', 'La orden ya no está en estado Recibido.');
-    }
-    
-    // Si decides mantener el botón por alguna emergencia, usa esta validación:
-    if ($user->rol !== 'admin' && $user->rol !== 'tecnico') {
-        abort(403, 'No tienes permiso para confirmar recepción.');
-    }
-
-    // ELIMINAR O COMENTAR: Ya que la móvil se encarga de esto ahora.
-    // $orden->estado = 'diagnostico';
-    // $orden->save();
-
-    return back()->with('info', 'Esta acción ahora debe realizarse desde la aplicación móvil.');
+        $orden->estado = 'diagnostico';
+        $orden->save();
+        return back()->with('success', 'Recepción confirmada. La orden pasó a estado Diagnóstico.');
     }
 
     /** aceptado → reparacion  (técnico inicia la reparación) */
@@ -487,7 +476,7 @@ if ($tecnico && $tecnico->fcm_token) {
         }
 
         // Solo admin y técnicos pueden iniciar reparación
-        if (!in_array($user = Auth::user(), ['admin', 'tecnico'])) {
+        if (!in_array(Auth::user()->rol, ['admin', 'tecnico'])) {
             abort(403, 'No tienes permiso para iniciar la reparación.');
         }
 
