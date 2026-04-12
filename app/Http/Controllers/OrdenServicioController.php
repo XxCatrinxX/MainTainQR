@@ -75,103 +75,45 @@ class OrdenServicioController extends Controller
     }
 
     public function storeDiagnostico(Request $request, $id)
-    {
-        $request->validate([
-            'solucion_propuesta' => 'required|string',
-            'mano_obra'          => 'required|numeric|min:0',
-            'fotos'              => 'nullable|array',
-            'fotos.*'            => 'image|mimes:jpeg,png,jpg,gif|max:5120',
+{
+    if ($request->has('es_reparable')) {
+        $request->merge([
+            'es_reparable' => filter_var(
+                $request->input('es_reparable'),
+                FILTER_VALIDATE_BOOLEAN,
+                FILTER_NULL_ON_FAILURE
+            ),
         ]);
-
-        $orden = OrdenServicio::findOrFail($id);
-        $orden->solucion_propuesta = $request->solucion_propuesta;
-        $orden->mano_obra = $request->mano_obra;
-        if (in_array($orden->estado, ['recibido', 'diagnostico'])) {
-            $orden->estado = 'espera';
-            $orden->fecha_diagnostico = now();
-        }
-        $orden->save();
-
-        // Guardar/Actualizar en detalles_tecnicos
-        DetalleTecnico::updateOrCreate(
-            ['orden_servicio_id' => $orden->id],
-            ['solucion_propuesta' => $request->solucion_propuesta]
-        );
-
-        // Sincronizar Repuestos (Pivot orden_repuestos)
-        if ($request->has('repuestos')) {
-            $repuestosData = [];
-            foreach ($request->repuestos as $r) {
-                $repuestosData[$r['id']] = [
-                    'cantidad' => $r['cantidad'],
-                    'precio_fijado' => $r['precio']
-                ];
-            }
-            $orden->repuestos()->sync($repuestosData);
-        } else {
-            $orden->repuestos()->detach();
-        }
-
-        if ($request->hasFile('fotos')) {
-            foreach ($request->file('fotos') as $foto) {
-                $path = $foto->store('evidencias', 'public');
-                Evidencia::create(['orden_servicio_id' => $orden->id, 'url_foto' => $path, 'momento' => 'diagnostico']);
-            }
-        }
-
-        // Enviar correo de diagnóstico al cliente (si tiene correo registrado)
-        $orden->load(['equipo.cliente', 'evidencias', 'repuestos']);
-        $correoCliente = $orden->equipo->cliente->correo ?? null;
-        if ($correoCliente) {
-            \Illuminate\Support\Facades\Log::info('DiagnosticoNotificacion: intentando enviar correo', [
-                'orden_id' => $orden->id,
-                'folio'    => $orden->folio,
-                'correo'   => $correoCliente,
-            ]);
-            try {
-                Notification::route('mail', $correoCliente)
-                    ->notify(new DiagnosticoNotificacion($orden));
-                \Illuminate\Support\Facades\Log::info('DiagnosticoNotificacion: correo enviado exitosamente', [
-                    'orden_id' => $orden->id,
-                    'correo'   => $correoCliente,
-                ]);
-                $msgEmail = ' Se envió el correo de diagnóstico al cliente.';
-            } catch (\Exception $e) {
-                \Illuminate\Support\Facades\Log::error('DiagnosticoNotificacion: error al enviar correo', [
-                    'orden_id'  => $orden->id,
-                    'correo'    => $correoCliente,
-                    'error'     => $e->getMessage(),
-                    'exception' => $e,
-                ]);
-                $msgEmail = ' (No se pudo enviar el correo: ' . $e->getMessage() . ')';
-            }
-        } else {
-            $msgEmail = ' El cliente no tiene correo registrado.';
-        }
-
-        return redirect()->route('ordenes.show', $id)
-            ->with('success', 'Diagnóstico guardado y estado actualizado a En Espera.' . $msgEmail);
     }
 
-
-    public function storeDiagnosticoApi(Request $request, $id)
-{
     $request->validate([
         'solucion_propuesta'   => 'required|string',
+        'es_reparable'         => 'required|boolean',
         'mano_obra'            => 'required|numeric|min:0',
+        'monto_compra_piezas'  => 'nullable|numeric|min:0',
+        'fotos'                => 'nullable|array',
+        'fotos.*'              => 'image|mimes:jpeg,png,jpg,gif|max:5120',
 
         'repuestos'            => 'nullable|array',
         'repuestos.*.id'       => 'required_with:repuestos|exists:inventario,id',
         'repuestos.*.cantidad' => 'required_with:repuestos|integer|min:1',
         'repuestos.*.precio'   => 'required_with:repuestos|numeric|min:0',
-
-        'fotos'                => 'nullable|array',
-        'fotos.*'              => 'image|mimes:jpeg,png,jpg,gif|max:5120',
     ]);
 
+    if ($request->boolean('es_reparable') === false && !$request->filled('monto_compra_piezas')) {
+        return back()
+            ->withErrors(['monto_compra_piezas' => 'Debes capturar el monto de compra para piezas.'])
+            ->withInput();
+    }
+
     $orden = OrdenServicio::findOrFail($id);
+
     $orden->solucion_propuesta = $request->solucion_propuesta;
-    $orden->mano_obra = $request->mano_obra;
+    $orden->es_reparable = $request->boolean('es_reparable');
+    $orden->mano_obra = $request->boolean('es_reparable') ? $request->mano_obra : 0;
+    $orden->monto_compra_piezas = $request->boolean('es_reparable')
+        ? null
+        : $request->monto_compra_piezas;
 
     if (in_array($orden->estado, ['recibido', 'diagnostico'])) {
         $orden->estado = 'espera';
@@ -185,17 +127,124 @@ class OrdenServicioController extends Controller
         ['solucion_propuesta' => $request->solucion_propuesta]
     );
 
-    if ($request->has('repuestos')) {
-        $repuestosData = [];
-
-        foreach ($request->repuestos as $r) {
-            $repuestosData[$r['id']] = [
-                'cantidad' => $r['cantidad'],
-                'precio_fijado' => $r['precio']
-            ];
+    if ($request->boolean('es_reparable')) {
+        if ($request->has('repuestos')) {
+            $repuestosData = [];
+            foreach ($request->repuestos as $r) {
+                $repuestosData[$r['id']] = [
+                    'cantidad' => $r['cantidad'],
+                    'precio_fijado' => $r['precio']
+                ];
+            }
+            $orden->repuestos()->sync($repuestosData);
+        } else {
+            $orden->repuestos()->detach();
         }
+    } else {
+        $orden->repuestos()->detach();
+    }
 
-        $orden->repuestos()->sync($repuestosData);
+    if ($request->hasFile('fotos')) {
+        foreach ($request->file('fotos') as $foto) {
+            $path = $foto->store('evidencias', 'public');
+            Evidencia::create([
+                'orden_servicio_id' => $orden->id,
+                'url_foto' => $path,
+                'momento' => 'diagnostico'
+            ]);
+        }
+    }
+
+    $orden->load(['equipo.cliente', 'evidencias', 'repuestos']);
+
+    $correoCliente = $orden->equipo->cliente->correo ?? null;
+    if ($correoCliente) {
+        try {
+            Notification::route('mail', $correoCliente)
+                ->notify(new DiagnosticoNotificacion($orden));
+            $msgEmail = ' Se envió el correo de diagnóstico al cliente.';
+        } catch (\Exception $e) {
+            $msgEmail = ' (No se pudo enviar el correo: ' . $e->getMessage() . ')';
+        }
+    } else {
+        $msgEmail = ' El cliente no tiene correo registrado.';
+    }
+
+    return redirect()->route('ordenes.show', $id)
+        ->with('success', 'Diagnóstico guardado y estado actualizado a En Espera.' . $msgEmail);
+}
+
+
+    public function storeDiagnosticoApi(Request $request, $id)
+{
+    if ($request->has('es_reparable')) {
+        $request->merge([
+            'es_reparable' => filter_var(
+                $request->input('es_reparable'),
+                FILTER_VALIDATE_BOOLEAN,
+                FILTER_NULL_ON_FAILURE
+            ),
+        ]);
+    }
+
+    $request->validate([
+        'solucion_propuesta'   => 'required|string',
+        'es_reparable'         => 'required|boolean',
+        'mano_obra'            => 'required|numeric|min:0',
+        'monto_compra_piezas'  => 'nullable|numeric|min:0',
+
+        'repuestos'            => 'nullable|array',
+        'repuestos.*.id'       => 'required_with:repuestos|exists:inventario,id',
+        'repuestos.*.cantidad' => 'required_with:repuestos|integer|min:1',
+        'repuestos.*.precio'   => 'required_with:repuestos|numeric|min:0',
+
+        'fotos'                => 'nullable|array',
+        'fotos.*'              => 'image|mimes:jpeg,png,jpg,gif|max:5120',
+    ]);
+
+    if ($request->boolean('es_reparable') === false && !$request->filled('monto_compra_piezas')) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Debes capturar el monto de compra para piezas.'
+        ], 422);
+    }
+
+    $orden = OrdenServicio::findOrFail($id);
+
+    $orden->solucion_propuesta = $request->solucion_propuesta;
+    $orden->es_reparable = $request->boolean('es_reparable');
+    $orden->mano_obra = $request->boolean('es_reparable') ? $request->mano_obra : 0;
+    $orden->monto_compra_piezas = $request->boolean('es_reparable')
+        ? null
+        : $request->monto_compra_piezas;
+
+    if (in_array($orden->estado, ['recibido', 'diagnostico'])) {
+        $orden->estado = 'espera';
+        $orden->fecha_diagnostico = now();
+    }
+
+    $orden->save();
+
+    DetalleTecnico::updateOrCreate(
+        ['orden_servicio_id' => $orden->id],
+        ['solucion_propuesta' => $request->solucion_propuesta]
+    );
+
+    if ($request->boolean('es_reparable')) {
+        if ($request->has('repuestos')) {
+            $repuestosData = [];
+
+            foreach ($request->repuestos as $r) {
+                $repuestosData[$r['id']] = [
+                    'cantidad' => $r['cantidad'],
+                    'precio_fijado' => $r['precio']
+                ];
+            }
+
+            $orden->repuestos()->sync($repuestosData);
+        } else {
+            $orden->repuestos()->detach();
+        }
     } else {
         $orden->repuestos()->detach();
     }
@@ -234,6 +283,8 @@ class OrdenServicioController extends Controller
         'orden_id' => $orden->id,
         'folio' => $orden->folio,
         'estado' => $orden->estado,
+        'es_reparable' => $orden->es_reparable,
+        'monto_compra_piezas' => $orden->monto_compra_piezas,
         'correo_enviado' => $correoEnviado,
         'error_correo' => $errorCorreo,
     ], 200);
