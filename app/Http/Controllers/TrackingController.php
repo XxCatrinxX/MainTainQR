@@ -28,137 +28,180 @@ class TrackingController extends Controller
      * Acción del cliente para aceptar su presupuesto.
      */
     public function aceptarPresupuesto(Request $request, $token_rastreo)
-    {
-        $orden = OrdenServicio::with('user')->where('token_rastreo', $token_rastreo)->firstOrFail();
-        if ($orden->decision_cliente === 'acepta') {
-            return back()->with('error', 'El presupuesto ya había sido aceptado.');
-        }
+{
+    $orden = OrdenServicio::with(['equipo.cliente', 'repuestos', 'user'])
+        ->where('token_rastreo', $token_rastreo)
+        ->firstOrFail();
 
-        DB::beginTransaction();
-        try {
-            $orden->decision_cliente = 'acepta';
-            $orden->estado = 'reparacion';
-            $orden->fecha_aprobacion = now();
-            $orden->fecha_reparacion = now();
-            $orden->save();
+    if (!in_array($orden->estado, ['espera', 'diagnostico'])) {
+        return back()->with('error', 'Esta orden ya fue procesada anteriormente.');
+    }
 
-            //Descontar inventario
+    if ($orden->decision_cliente === 'acepta' || in_array($orden->estado, ['reparacion', 'para_pzas'])) {
+        return back()->with('error', 'Esta orden ya fue aceptada anteriormente.');
+    }
+
+    DB::beginTransaction();
+
+    try {
+        $esReparable = (bool) $orden->es_reparable;
+
+        $orden->decision_cliente = 'acepta';
+        $orden->fecha_aprobacion = now();
+
+        if ($esReparable) {
             $this->procesarInventario($orden);
 
-            //Notificar al técnico
+            $orden->estado = 'reparacion';
+            $orden->fecha_reparacion = now();
+
             $this->notificarTecnico(
                 $orden,
-                '✅ Presupuesto Aceptado', 
+                '✅ Presupuesto Aceptado',
                 "El cliente aceptó la reparación del equipo folio: {$orden->folio}"
             );
 
-            foreach ($orden->repuestos as $repuesto) {
-                $pieza = Inventario::lockForUpdate()->find($repuesto->id);
-                if ($pieza && $pieza->stock >= $repuesto->pivot->cantidad) {
-                    $pieza->decrement('stock', $repuesto->pivot->cantidad);
-                } else {
-                    throw new \Exception('Stock insuficiente para la pieza: ' . $repuesto->nombre_pieza);
-                }
-            }
+            $mensaje = '¡Presupuesto aceptado! Comenzaremos con la reparación de tu equipo.';
+        } else {
+            $orden->estado = 'para_pzas';
 
-            DB::commit();
-            return back()->with('success', '¡Presupuesto aceptado! Comenzaremos con la reparación de tu equipo.');
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return back()->with('error', 'Ocurrió un error al procesar la aceptación: ' . $e->getMessage());
+            $this->notificarTecnico(
+                $orden,
+                '✅ Oferta por piezas aceptada',
+                "El cliente aceptó la propuesta por piezas del equipo folio: {$orden->folio}"
+            );
+
+            $mensaje = '¡Propuesta aceptada! El equipo pasará al proceso para piezas.';
         }
+
+        $orden->save();
+
+        DB::commit();
+        return back()->with('success', $mensaje);
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return back()->with('error', 'Ocurrió un error al procesar la aceptación: ' . $e->getMessage());
     }
+}
 
     /**
      * El cliente acepta el diagnóstico via el link del correo (GET, sin login).
      */
-    public function aceptar($token)
-    {
-        $orden = OrdenServicio::with(['equipo.cliente', 'repuestos', 'user'])
-            ->where('token_rastreo', $token)
-            ->firstOrFail();
+   public function aceptar($token)
+{
+    $orden = OrdenServicio::with(['equipo.cliente', 'repuestos', 'user'])
+        ->where('token_rastreo', $token)
+        ->firstOrFail();
 
-        if (!in_array($orden->estado, ['espera', 'diagnostico'])) {
-            return $this->retornarVistaProcesada();
-        }
+    if (!in_array($orden->estado, ['espera', 'diagnostico'])) {
+        return $this->retornarVistaProcesada();
+    }
 
-        DB::beginTransaction();
-        try {
-            
-        // Descontar inventario
+    if ($orden->decision_cliente === 'acepta' || in_array($orden->estado, ['reparacion', 'para_pzas'])) {
+        return $this->retornarVistaProcesada();
+    }
+
+    DB::beginTransaction();
+
+    try {
+        $esReparable = (bool) $orden->es_reparable;
+
+        $orden->decision_cliente = 'acepta';
+        $orden->fecha_aprobacion = now();
+
+        if ($esReparable) {
             $this->procesarInventario($orden);
 
-            $orden->estado = 'aceptado';
-            $orden->decision_cliente = 'acepta';
-            $orden->fecha_aprobacion = now();
-            $orden->save();
+            $orden->estado = 'reparacion';
+            $orden->fecha_reparacion = now();
 
-            // Notificar al técnico
             $this->notificarTecnico(
-                $orden, 
-                '🛠️ ¡Orden lista para reparar!', 
-                "El cliente aprobó el presupuesto del folio {$orden->folio}."
+                $orden,
+                '🛠️ Reparación autorizada',
+                "El cliente aprobó la reparación del folio {$orden->folio}."
             );
 
-            DB::commit();
+            $titulo = '¡Reparación Aprobada!';
+            $mensaje = 'Hemos recibido tu confirmación. Tu equipo entrará a reparación a la brevedad. Te notificaremos cuando esté listo.';
+        } else {
+            $orden->estado = 'para_pzas';
 
-            return view('seguimiento.respuesta', [
-                'titulo'  => '¡Reparación Aprobada!',
-                'mensaje' => 'Hemos recibido tu confirmación. Tu equipo entrará a reparación a la brevedad. Te notificaremos cuando esté listo.',
-                'icono'   => 'check-circle',
-                'color'   => 'success',
-                'orden'   => $orden,
-            ]);
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return view('seguimiento.respuesta', [
-                'titulo'  => 'Error de Inventario',
-                'mensaje' => 'Lo sentimos, hubo un problema con la disponibilidad de las piezas: ' . $e->getMessage(),
-                'icono'   => 'exclamation-triangle',
-                'color'   => 'warning',
-                'orden'   => $orden,
-            ]);
+            $this->notificarTecnico(
+                $orden,
+                '🧩 Equipo aceptado para piezas',
+                "El cliente aceptó la oferta por piezas del folio {$orden->folio}."
+            );
+
+            $titulo = '¡Oferta Aceptada!';
+            $mensaje = 'Hemos recibido tu confirmación. Tu equipo pasará al proceso para piezas.';
         }
+
+        $orden->save();
+
+        DB::commit();
+
+        return view('seguimiento.respuesta', [
+            'titulo'  => $titulo,
+            'mensaje' => $mensaje,
+            'icono'   => 'check-circle',
+            'color'   => 'success',
+            'orden'   => $orden,
+        ]);
+    } catch (\Exception $e) {
+        DB::rollBack();
+
+        return view('seguimiento.respuesta', [
+            'titulo'  => 'Error al procesar la respuesta',
+            'mensaje' => 'Lo sentimos, ocurrió un problema al procesar tu decisión: ' . $e->getMessage(),
+            'icono'   => 'exclamation-triangle',
+            'color'   => 'warning',
+            'orden'   => $orden,
+        ]);
     }
+}
 
     /**
      * El cliente rechaza el diagnóstico via el link del correo (GET, sin login).
      */
     public function rechazar($token)
-    {
-        $orden = OrdenServicio::with('equipo.cliente')
-            ->where('token_rastreo', $token)
-            ->firstOrFail();
+{
+    $orden = OrdenServicio::with(['equipo.cliente', 'user'])
+        ->where('token_rastreo', $token)
+        ->firstOrFail();
 
-        if (!in_array($orden->estado, ['espera', 'diagnostico'])) {
-            return view('seguimiento.respuesta', [
-                'titulo'  => 'Ya procesado',
-                'mensaje' => 'Esta orden ya fue procesada anteriormente. No se realizaron cambios.',
-                'icono'   => 'info-circle',
-                'color'   => 'info',
-            ]);
-        }
-
-        $orden->estado           = 'rechazado';
-        $orden->decision_cliente = 'rechaza';
-        $orden->save();
-
-        app(\App\Services\FirebaseNotificationService::class)->enviar(
-            $orden->user?->fcm_token ?? '',
-            'Orden Rechazada',
-            'El cliente rechazó la reparación',
-            ['orden_id' => (string)$orden->id, 'token_rastreo' => $orden->token_rastreo]
-        );
-
+    if (!in_array($orden->estado, ['espera', 'diagnostico'])) {
         return view('seguimiento.respuesta', [
-            'titulo'  => 'Reparación Rechazada',
-            'mensaje' => 'Entendemos tu decisión. Por favor acércate al taller para recoger tu equipo. Si tienes preguntas, contáctanos.',
-            'icono'   => 'times-circle',
-            'color'   => 'danger',
+            'titulo'  => 'Ya procesado',
+            'mensaje' => 'Esta orden ya fue procesada anteriormente. No se realizaron cambios.',
+            'icono'   => 'info-circle',
+            'color'   => 'info',
             'orden'   => $orden,
         ]);
     }
 
+    $esReparable = (bool) $orden->es_reparable;
+
+    $orden->estado = 'rechazado';
+    $orden->decision_cliente = 'rechaza';
+    $orden->fecha_aprobacion = now();
+    $orden->save();
+
+    $this->notificarTecnico(
+        $orden,
+        $esReparable ? '❌ Reparación rechazada' : '❌ Oferta por piezas rechazada',
+        $esReparable
+            ? "El cliente rechazó la reparación del folio {$orden->folio}."
+            : "El cliente rechazó la oferta por piezas del folio {$orden->folio}."
+    );
+
+    return view('seguimiento.respuesta', [
+        'titulo'  => $esReparable ? 'Reparación Rechazada' : 'Oferta Rechazada',
+        'mensaje' => 'Hemos registrado tu decisión. Tu equipo quedará pendiente para que pases por él en sucursal.',
+        'icono'   => 'times-circle',
+        'color'   => 'danger',
+        'orden'   => $orden,
+    ]);
+}
     // --- MÉTODOS PRIVADOS DE APOYO ---
 
     /**
@@ -200,17 +243,18 @@ class TrackingController extends Controller
     /**
      * Procesa la baja de stock en inventario.
      */
-    private function procesarInventario($orden)
-    {
-        foreach ($orden->repuestos as $repuesto) {
-            $pieza = Inventario::lockForUpdate()->find($repuesto->id);
-            if ($pieza && $pieza->stock >= $repuesto->pivot->cantidad) {
-                $pieza->decrement('stock', $repuesto->pivot->cantidad);
-            } else {
-                throw new \Exception('Stock insuficiente para la pieza: ' . ($repuesto->nombre_pieza ?? 'ID '.$repuesto->id));
-            }
+   private function procesarInventario($orden)
+{
+    foreach ($orden->repuestos as $repuesto) {
+        $pieza = Inventario::lockForUpdate()->find($repuesto->id);
+
+        if ($pieza && $pieza->stock >= $repuesto->pivot->cantidad) {
+            $pieza->decrement('stock', $repuesto->pivot->cantidad);
+        } else {
+            throw new \Exception('Stock insuficiente para la pieza: ' . ($repuesto->nombre_pieza ?? 'ID ' . $repuesto->id));
         }
     }
+}
 
     /**
      * Retorna la vista estándar cuando una orden ya fue aceptada/rechazada.

@@ -74,7 +74,7 @@ class OrdenServicioController extends Controller
         return view('ordenes.show', compact('orden', 'inventario'));
     }
 
-    public function storeDiagnostico(Request $request, $id)
+  public function storeDiagnostico(Request $request, $id)
 {
     if ($request->has('es_reparable')) {
         $request->merge([
@@ -100,18 +100,22 @@ class OrdenServicioController extends Controller
         'repuestos.*.precio'   => 'required_with:repuestos|numeric|min:0',
     ]);
 
-    if ($request->boolean('es_reparable') === false && !$request->filled('monto_compra_piezas')) {
+    $esReparable = $request->boolean('es_reparable');
+
+    if (!$esReparable && !$request->filled('monto_compra_piezas')) {
         return back()
-            ->withErrors(['monto_compra_piezas' => 'Debes capturar el monto de compra para piezas.'])
+            ->withErrors([
+                'monto_compra_piezas' => 'Debes capturar el monto de compra para piezas.'
+            ])
             ->withInput();
     }
 
     $orden = OrdenServicio::findOrFail($id);
 
     $orden->solucion_propuesta = $request->solucion_propuesta;
-    $orden->es_reparable = $request->boolean('es_reparable');
-    $orden->mano_obra = $request->boolean('es_reparable') ? $request->mano_obra : 0;
-    $orden->monto_compra_piezas = $request->boolean('es_reparable')
+    $orden->es_reparable = $esReparable;
+    $orden->mano_obra = $esReparable ? $request->mano_obra : 0;
+    $orden->monto_compra_piezas = $esReparable
         ? null
         : $request->monto_compra_piezas;
 
@@ -127,15 +131,17 @@ class OrdenServicioController extends Controller
         ['solucion_propuesta' => $request->solucion_propuesta]
     );
 
-    if ($request->boolean('es_reparable')) {
-        if ($request->has('repuestos')) {
+    if ($esReparable) {
+        if ($request->has('repuestos') && is_array($request->repuestos) && count($request->repuestos) > 0) {
             $repuestosData = [];
+
             foreach ($request->repuestos as $r) {
                 $repuestosData[$r['id']] = [
                     'cantidad' => $r['cantidad'],
                     'precio_fijado' => $r['precio']
                 ];
             }
+
             $orden->repuestos()->sync($repuestosData);
         } else {
             $orden->repuestos()->detach();
@@ -147,6 +153,7 @@ class OrdenServicioController extends Controller
     if ($request->hasFile('fotos')) {
         foreach ($request->file('fotos') as $foto) {
             $path = $foto->store('evidencias', 'public');
+
             Evidencia::create([
                 'orden_servicio_id' => $orden->id,
                 'url_foto' => $path,
@@ -158,16 +165,17 @@ class OrdenServicioController extends Controller
     $orden->load(['equipo.cliente', 'evidencias', 'repuestos']);
 
     $correoCliente = $orden->equipo->cliente->correo ?? null;
+    $msgEmail = ' El cliente no tiene correo registrado.';
+
     if ($correoCliente) {
         try {
             Notification::route('mail', $correoCliente)
                 ->notify(new DiagnosticoNotificacion($orden));
+
             $msgEmail = ' Se envió el correo de diagnóstico al cliente.';
         } catch (\Exception $e) {
             $msgEmail = ' (No se pudo enviar el correo: ' . $e->getMessage() . ')';
         }
-    } else {
-        $msgEmail = ' El cliente no tiene correo registrado.';
     }
 
     return redirect()->route('ordenes.show', $id)
@@ -202,7 +210,9 @@ class OrdenServicioController extends Controller
         'fotos.*'              => 'image|mimes:jpeg,png,jpg,gif|max:5120',
     ]);
 
-    if ($request->boolean('es_reparable') === false && !$request->filled('monto_compra_piezas')) {
+    $esReparable = $request->boolean('es_reparable');
+
+    if (!$esReparable && !$request->filled('monto_compra_piezas')) {
         return response()->json([
             'success' => false,
             'message' => 'Debes capturar el monto de compra para piezas.'
@@ -212,9 +222,9 @@ class OrdenServicioController extends Controller
     $orden = OrdenServicio::findOrFail($id);
 
     $orden->solucion_propuesta = $request->solucion_propuesta;
-    $orden->es_reparable = $request->boolean('es_reparable');
-    $orden->mano_obra = $request->boolean('es_reparable') ? $request->mano_obra : 0;
-    $orden->monto_compra_piezas = $request->boolean('es_reparable')
+    $orden->es_reparable = $esReparable;
+    $orden->mano_obra = $esReparable ? $request->mano_obra : 0;
+    $orden->monto_compra_piezas = $esReparable
         ? null
         : $request->monto_compra_piezas;
 
@@ -230,8 +240,8 @@ class OrdenServicioController extends Controller
         ['solucion_propuesta' => $request->solucion_propuesta]
     );
 
-    if ($request->boolean('es_reparable')) {
-        if ($request->has('repuestos')) {
+    if ($esReparable) {
+        if ($request->has('repuestos') && is_array($request->repuestos) && count($request->repuestos) > 0) {
             $repuestosData = [];
 
             foreach ($request->repuestos as $r) {
@@ -287,18 +297,6 @@ class OrdenServicioController extends Controller
         'monto_compra_piezas' => $orden->monto_compra_piezas,
         'correo_enviado' => $correoEnviado,
         'error_correo' => $errorCorreo,
-    ], 200);
-}
-
-public function inventarioDisponibleApi()
-{
-    $inventario = Inventario::where('stock', '>', 0)
-        ->select('id', 'nombre_pieza', 'precio_venta', 'stock')
-        ->get();
-
-    return response()->json([
-        'success' => true,
-        'data' => $inventario
     ], 200);
 }
 
