@@ -288,37 +288,7 @@
             </div>
 
 
-        {{-- SOLICITUD DE COMPRA FUERA DEL FORM PRINCIPAL --}}
-        <div id="solicitud-compra-panel">
-            <hr class="my-4">
-            <div class="bg-light p-3 rounded" style="border:1px dashed #ced4da;">
-                <h6 class="mb-3" style="font-weight:700; color:#4b5563;">
-                    <i class="fas fa-shopping-cart mr-2"></i>¿Falta una pieza? Solicitar Compra
-                </h6>
-                <form action="{{ route('solicitudes.store') }}" method="POST">
-                    @csrf
-                    <input type="hidden" name="orden_servicio_id" value="{{ $orden->id }}">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <input type="text" name="nombre_pieza" class="form-control form-control-sm mb-2" placeholder="Nombre de la pieza..." required>
-                        </div>
-                        <div class="col-md-3">
-                            <input type="number" name="cantidad" class="form-control form-control-sm mb-2" value="1" min="1" required>
-                        </div>
-                        <div class="col-md-3">
-                            <button type="submit" class="btn btn-outline-secondary btn-sm btn-block">Solicitar</button>
-                        </div>
-                        <div class="col-12">
-                            <textarea name="descripcion" class="form-control form-control-sm" rows="1" placeholder="Detalles extra..."></textarea>
-                        </div>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-
-                        <div id="bloque-no-reparable" style="display:none;">
+            <div id="bloque-no-reparable" style="display:none;">
                             <div class="form-group mb-3">
                                 <label>Monto de compra para piezas *</label>
                                 <div class="input-group">
@@ -352,6 +322,34 @@
                             <i class="fas fa-paper-plane mr-2"></i> Guardar Diagnóstico y Notificar al Cliente
                         </button>
                     </form>
+
+                    {{-- SOLICITUD DE COMPRA FUERA DEL FORM PRINCIPAL --}}
+                    <div id="solicitud-compra-panel">
+                        <hr class="my-4">
+                        <div class="bg-light p-3 rounded" style="border:1px dashed #ced4da;">
+                            <h6 class="mb-3" style="font-weight:700; color:#4b5563;">
+                                <i class="fas fa-shopping-cart mr-2"></i>¿Falta una pieza? Solicitar Compra
+                            </h6>
+                            <form action="{{ route('solicitudes.store') }}" method="POST">
+                                @csrf
+                                <input type="hidden" name="orden_servicio_id" value="{{ $orden->id }}">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <input type="text" name="nombre_pieza" class="form-control form-control-sm mb-2" placeholder="Nombre de la pieza..." required>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <input type="number" name="cantidad" class="form-control form-control-sm mb-2" value="1" min="1" required>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <button type="submit" class="btn btn-outline-secondary btn-sm btn-block">Solicitar</button>
+                                    </div>
+                                    <div class="col-12">
+                                        <textarea name="descripcion" class="form-control form-control-sm" rows="1" placeholder="Detalles extra..."></textarea>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
                 </div>
             </div>
 

@@ -51,8 +51,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/ordenes/{id}/confirmar-entrega', [OrdenServicioController::class, 'confirmarEntrega'])->name('ordenes.confirmarEntrega');
 });
 
-// SOLICITUDES DE COMPRA (Solo admin y almacenista)
-Route::middleware(['auth', 'role:admin,almacenista'])->group(function () {
+// SOLICITUDES DE COMPRA
+Route::middleware(['auth', 'role:admin,almacenista,tecnico'])->group(function () {
     Route::post('/solicitudes', [SolicitudCompraController::class , 'store'])->name('solicitudes.store');
     Route::get('/solicitudes', [SolicitudCompraController::class , 'index'])->name('solicitudes.index');
     Route::post('/solicitudes/{id}/surtir', [SolicitudCompraController::class , 'surtir'])->name('solicitudes.surtir');

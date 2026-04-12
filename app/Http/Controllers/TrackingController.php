@@ -85,6 +85,37 @@ class TrackingController extends Controller
 }
 
     /**
+     * Acción del cliente para rechazar la propuesta.
+     */
+    public function rechazarPresupuesto(Request $request, $token_rastreo)
+    {
+        $orden = OrdenServicio::with(['equipo.cliente', 'user'])
+            ->where('token_rastreo', $token_rastreo)
+            ->firstOrFail();
+
+        if (!in_array($orden->estado, ['espera', 'diagnostico'])) {
+            return back()->with('error', 'Esta orden ya fue procesada anteriormente.');
+        }
+
+        $esReparable = (bool)$orden->es_reparable;
+
+        $orden->estado = 'rechazado';
+        $orden->decision_cliente = 'rechaza';
+        $orden->fecha_aprobacion = now();
+        $orden->save();
+
+        $this->notificarTecnico(
+            $orden,
+            $esReparable ? '❌ Reparación rechazada' : '❌ Oferta por piezas rechazada',
+            $esReparable
+                ? "El cliente rechazó la reparación del folio {$orden->folio}."
+                : "El cliente rechazó la oferta por piezas del folio {$orden->folio}."
+        );
+
+        return back()->with('success', 'Has rechazado la propuesta. El técnico ha sido notificado.');
+    }
+
+    /**
      * El cliente acepta el diagnóstico via el link del correo (GET, sin login).
      */
    public function aceptar($token)

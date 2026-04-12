@@ -67,6 +67,8 @@
                             @if($s->estado === 'pendiente')
                             <button type="button" class="btn btn-sm btn-success shadow-sm btn-surtir-modal" 
                                 style="border-radius: 6px;"
+                                data-toggle="modal"
+                                data-target="#modalSurtir"
                                 data-id="{{ $s->id }}"
                                 data-nombre="{{ $s->nombre_pieza }}"
                                 data-cantidad="{{ $s->cantidad }}">

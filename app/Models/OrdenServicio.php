@@ -28,7 +28,9 @@ class OrdenServicio extends Model
         'fecha_listo',
         'fecha_entrega_real',
         'mano_obra',
-        'solucion_propuesta'
+        'solucion_propuesta',
+        'es_reparable',
+        'monto_compra_piezas'
     ];
 
     public function equipo()
