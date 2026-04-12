@@ -5,55 +5,123 @@
 
 <style>
 
-/* Fondo */
+/* 🌌 Fondo con degradado suave */
 .login-page{
-    background:#f4f6f9 !important;
+    background: linear-gradient(135deg, #eef2f7, #e3e8ef) !important;
 }
 
-/* Tarjeta */
+/* 🧊 Tarjeta */
 .login-box .card{
-    border-radius:10px;
+    border-radius:16px;
     border:none;
-    box-shadow:0 8px 20px rgba(0,0,0,0.15);
+    box-shadow:0 12px 30px rgba(0,0,0,0.08);
+    backdrop-filter: blur(6px);
+    animation: fadeInUp 0.6s ease;
 }
 
-/* Header */
+/* ✨ Animación entrada */
+@keyframes fadeInUp{
+    from{
+        opacity:0;
+        transform: translateY(20px);
+    }
+    to{
+        opacity:1;
+        transform: translateY(0);
+    }
+}
+
+/* 🏷️ Header */
 .login-title{
-    font-weight:600;
-    color:#000;
+    font-weight:700;
+    color:#2c2f36;
+    letter-spacing:0.5px;
 }
 
 .login-subtitle{
-    color:#6c757d;
+    color:#8a94a6;
     font-size:14px;
 }
 
-/* Inputs */
+/* 🧾 Inputs */
 .form-control{
-    border-radius:6px;
+    border-radius:10px;
+    border:1px solid #e0e6ed;
+    padding:10px;
+    transition: all 0.2s ease;
 }
 
+/* Focus bonito */
 .form-control:focus{
-    border-color:#444;
-    box-shadow:none;
-}
-
-/* Botón login */
-.btn-login{
-    background:#000 !important;
-    border:none !important;
-    color:#fff !important;
-    font-weight:600;
-    border-radius:6px;
-}
-
-.btn-login:hover{
-    background:#333 !important;
+    border-color:#6c63ff;
+    box-shadow:0 0 0 3px rgba(108,99,255,0.1);
 }
 
 /* Iconos */
 .input-group-text{
-    background:#f8f9fa;
+    background:#f1f3f6;
+    border:none;
+    border-radius:0 10px 10px 0;
+}
+
+/* ✨ Botón */
+.btn-login{
+    background: linear-gradient(135deg, #6c63ff, #5a54e6) !important;
+    border:none !important;
+    color:#fff !important;
+    font-weight:600;
+    border-radius:10px;
+    transition: all 0.25s ease;
+    box-shadow:0 4px 12px rgba(108,99,255,0.3);
+}
+
+/* Hover */
+.btn-login:hover{
+    transform: translateY(-1px);
+    box-shadow:0 6px 16px rgba(108,99,255,0.35);
+}
+
+/* Click */
+.btn-login:active{
+    transform: scale(0.98);
+}
+
+/* Links */
+a{
+    color:#6c63ff;
+    transition: all 0.2s ease;
+}
+
+a:hover{
+    color:#4b47c2;
+    text-decoration:none;
+}
+
+/* Checkbox */
+.icheck-primary input:checked ~ label::before{
+    background-color:#6c63ff !important;
+    border-color:#6c63ff !important;
+}
+
+/* Inputs error */
+.is-invalid{
+    border-color:#e74c3c !important;
+}
+
+/* ✨ Animación suave en inputs */
+.input-group{
+    transition: all 0.2s ease;
+}
+
+.input-group:focus-within{
+    transform: scale(1.01);
+}
+
+/* 📱 Responsive mejorado */
+@media (max-width: 576px){
+    .login-box{
+        width: 95%;
+    }
 }
 
 </style>
@@ -81,8 +149,6 @@ if (config('adminlte.use_route_url', false)) {
 
 <div class="text-center">
 
-
-
 <h3 class="login-title mt-2">
 MaintainQR
 </h3>
@@ -90,6 +156,7 @@ MaintainQR
 <p class="login-subtitle">
 Sistema de gestión de mantenimiento
 </p>
+
 
 </div>
 

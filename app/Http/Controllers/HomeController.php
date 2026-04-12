@@ -27,10 +27,12 @@ class HomeController extends Controller
         $stockBajo = Inventario::where('stock', '<', 5)->count();
 
         // 2. Últimas 5 órdenes con su relación cliente cargada (Eager Loading)
-        $ordenesRecientes = OrdenServicio::with('cliente')
-                                        ->latest()
-                                        ->take(5)
-                                        ->get();
+        $ordenesRecientes = OrdenServicio::with('equipo.cliente')
+            ->latest()
+            ->get()
+            ->sortByDesc(function($orden){
+        return \Carbon\Carbon::parse($orden->created_at)->diffInHours(now());
+        });
 
         // 3. Lógica para la Gráfica de los últimos 7 días
         // Cambiamos el orderBy para que use la misma lógica de agrupación

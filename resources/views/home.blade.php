@@ -11,6 +11,23 @@
         .btn-dark-modern:hover { background-color: #374151; color: white; }
         .list-group-item { transition: 0.2s; border: none !important; margin-bottom: 2px; }
         .list-group-item:hover { background-color: #f3f4f6 !important; border-radius: 8px !important; }
+
+        .filtro-btn {
+    border: none;
+    transition: all 0.2s ease;
+}
+
+.filtro-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+.filtro-btn.active {
+    transform: scale(1.05);
+    box-shadow: 0 6px 14px rgba(0,0,0,0.15);
+}
+
+
     </style>
 @stop
 
@@ -21,6 +38,8 @@
 @stop
 
 @section('content')
+
+
 
 @if(session('error'))
     <div class="alert alert-danger alert-dismissible fade show shadow-sm" style="border-radius:12px; border-left: 5px solid #dc3545; background-color: #fff; color: #1f2937;">
@@ -91,52 +110,147 @@
 <div class="row">
     {{-- COLUMNA PRINCIPAL --}}
     <div class="col-md-8">
-        {{-- TABLA DE ÓRDENES RECIENTES --}}
-        <div class="card shadow-sm mb-4">
-            <div class="card-header border-0 bg-white py-3">
-                <h3 class="card-title" style="font-weight: 700; color: #111827;">Últimos Movimientos</h3>
-                <div class="card-tools">
-                    <a href="{{ route('ordenes.index') }}" class="btn btn-sm btn-light">Ver todo</a>
-                </div>
-            </div>
-            <div class="card-body table-responsive p-0">
-                <table class="table table-hover table-valign-middle">
-                    <thead class="text-muted" style="font-size: 0.85rem; text-transform: uppercase;">
-                        <tr>
-                            <th class="px-4">Folio</th>
-                            <th>Cliente</th>
-                            <th>Equipo</th>
-                            <th>Estado</th>
-                            <th></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($ordenesRecientes as $orden)
-                        <tr>
-                            <td class="px-4"><strong>#{{ $orden->id }}</strong></td>
-                            {{-- Operador ?-> para evitar error si el cliente es null --}}
-                            <td>{{ $orden->clientes?->nombre ?? 'Sin cliente' }}</td>
-                            <td>{{ $orden->equipo->tipo ?? 'N/A' }}</td>
-                            <td>
-                                <span class="badge badge-pill p-2" style="background: #e5e7eb; color: #374151;">
-                                    {{ ucfirst($orden->estado) }}
-                                </span>
-                            </td>
-                            <td class="text-right px-4">
-                                <a href="{{ route('ordenes.show', $orden->id) }}" class="btn btn-sm btn-default border-0">
-                                    <i class="fas fa-chevron-right"></i>
-                                </a>
-                            </td>
-                        </tr>
-                        @empty
-                        <tr>
-                            <td colspan="5" class="text-center py-5 text-muted">No hay actividad reciente.</td>
-                        </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-        </div>
+        {{-- PANEL DE URGENCIAS MEJORADO --}}
+
+<div class="card shadow-sm mb-4">
+
+<div class="card-header border-0 bg-white py-3 d-flex justify-content-between align-items-center">
+    <h3 class="card-title" style="font-weight:700; color:#111827;">
+        Panel de Urgencias
+    </h3>
+
+</div>
+
+<div class="d-flex flex-wrap align-items-center gap-2 mb-3 px-3" style="gap:10px; margin-top: 1rem;">
+
+    <button class="btn filtro-btn active" data-filtro="todos"
+        style="background:#f3f4f6; color:#374151; border-radius:20px; padding:6px 14px; font-weight:600;">
+        Todas
+    </button>
+
+    <button class="btn filtro-btn" data-filtro="urgente"
+        style="background:#fee2e2; color:#dc2626; border-radius:20px; padding:6px 14px; font-weight:600;">
+        🔴 Urgentes
+    </button>
+
+    <button class="btn filtro-btn" data-filtro="atencion"
+        style="background:#fef3c7; color:#d97706; border-radius:20px; padding:6px 14px; font-weight:600;">
+        🟡 En atención
+    </button>
+
+    <button class="btn filtro-btn" data-filtro="tiempo"
+        style="background:#dcfce7; color:#16a34a; border-radius:20px; padding:6px 14px; font-weight:600;">
+        🟢 En tiempo
+    </button>
+
+</div>
+
+<div class="card-body table-responsive p-0">
+    <table class="table table-hover table-valign-middle">
+
+        <thead class="text-muted" style="font-size:0.85rem; text-transform:uppercase;">
+            <tr>
+                <th class="px-4">Folio</th>
+                <th>Cliente</th>
+                <th>Estado</th>
+                <th>Tiempo</th>
+                <th>Prioridad</th>
+                <th></th>
+            </tr>
+        </thead>
+
+        <tbody>
+           @forelse($ordenesRecientes as $orden)
+
+
+@php
+    $fecha = \Carbon\Carbon::parse($orden->created_at ?? now());
+    $horas = $fecha->diffInHours(now());
+
+    if($horas >= 72){
+        $tipo = 'urgente';
+        $color = '#dc2626';
+        $bg = '#fee2e2';
+        $label = 'URGENTE';
+    } elseif($horas >= 24){
+        $tipo = 'atencion';
+        $color = '#d97706';
+        $bg = '#fef3c7';
+        $label = 'EN ATENCIÓN';
+    } else {
+        $tipo = 'tiempo';
+        $color = '#16a34a';
+        $bg = '#dcfce7';
+        $label = 'EN TIEMPO';
+    }
+@endphp
+
+<tr data-tipo="{{ $tipo }}" style="display:none; border-left:6px solid {{ $color }}; background: {{ $bg }};">
+                
+                {{-- Folio --}}
+                <td class="px-4">
+                    <strong>#{{ $orden->id }}</strong>
+                </td>
+
+                {{-- Cliente --}}
+                <td>
+                    {{ $orden->equipo?->cliente?->nombre ?? 'Sin cliente' }}
+                </td>
+
+                {{-- Estado --}}
+                <td>
+                    <span class="badge badge-pill p-2"
+                        style="background:#e5e7eb; color:#374151; font-size:12px;">
+                        {{ ucfirst($orden->estado) }}
+                    </span>
+                </td>
+
+                {{-- Tiempo --}}
+                <td>
+                    <span style="font-weight:600; font-size:14px; color:#374151;">
+                        {{ $fecha->diffForHumans() }}
+                    </span>
+                </td>
+
+                {{-- PRIORIDAD GRANDE --}}
+                <td>
+                    <span class="badge badge-pill px-3 py-2"
+                        style="
+                            background: {{ $color }};
+                            color:#fff;
+                            font-weight:700;
+                            font-size:12px;
+                            letter-spacing:0.5px;
+                            box-shadow:0 4px 10px {{ $color }}40;
+                        ">
+                         {{ $label }}
+                    </span>
+                </td>
+
+                {{-- Acción --}}
+                <td class="text-right px-4">
+                    <a href="{{ route('ordenes.show', $orden->id) }}"
+                       class="btn btn-sm btn-light border-0"
+                       style="transition:0.2s;">
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                </td>
+
+            </tr>
+
+            @empty
+            <tr>
+                <td colspan="6" class="text-center py-5 text-muted">
+                    No hay órdenes registradas.
+                </td>
+            </tr>
+            @endforelse
+
+        </tbody>
+    </table>
+</div>
+
+</div>
 
         {{-- GRÁFICA SEMANAL --}}
         <div class="card shadow-sm">
@@ -243,5 +357,39 @@
             scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
         }
     });
+</script>
+<script>
+document.addEventListener("DOMContentLoaded", function(){
+
+    const botones = document.querySelectorAll(".filtro-btn");
+    const filas = document.querySelectorAll("tbody tr");
+
+    // 👇 OCULTAR TODO AL INICIO
+    filas.forEach(fila => fila.style.display = "none");
+
+    botones.forEach(btn => {
+        btn.addEventListener("click", function(){
+
+            botones.forEach(b => b.classList.remove("active"));
+            this.classList.add("active");
+
+            const filtro = this.getAttribute("data-filtro");
+
+            filas.forEach(fila => {
+                const tipo = fila.getAttribute("data-tipo");
+
+                if(filtro === "todos"){
+                    fila.style.display = "";
+                } else if(tipo === filtro){
+                    fila.style.display = "";
+                } else {
+                    fila.style.display = "none";
+                }
+            });
+
+        });
+    });
+
+});
 </script>
 @stop
