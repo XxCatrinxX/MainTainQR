@@ -185,136 +185,171 @@
             </div>
 
         @elseif($orden->estado === 'diagnostico')
-            {{-- ─── PANEL: DIAGNÓSTICO ─── --}}
-            <div class="card" style="border-left: 4px solid #f59e0b;">
-                <div class="card-header">
-                    <h5 class="card-title"><i class="fas fa-stethoscope mr-2 text-warning"></i>Paso 2: Diagnóstico Técnico</h5>
+{{-- ─── PANEL: DIAGNÓSTICO ─── --}}
+<div class="card" style="border-left: 4px solid #f59e0b;">
+    <div class="card-header">
+        <h5 class="card-title"><i class="fas fa-stethoscope mr-2 text-warning"></i>Paso 2: Diagnóstico Técnico</h5>
+    </div>
+    <div class="card-body">
+        <form method="POST" action="{{ route('ordenes.diagnostico', $orden->id) }}" enctype="multipart/form-data">
+            @csrf
+
+            <div class="form-group mb-3">
+                <label>Solución Propuesta *</label>
+                <textarea
+                    name="solucion_propuesta"
+                    class="form-control"
+                    rows="4"
+                    placeholder="Describe el diagnóstico y la solución propuesta..."
+                    required>{{ old('solucion_propuesta', $orden->solucion_propuesta) }}</textarea>
+            </div>
+
+            @php
+                $esReparableOld = old('es_reparable', is_null($orden->es_reparable) ? '1' : ($orden->es_reparable ? '1' : '0'));
+            @endphp
+
+            <div class="form-group mb-3">
+                <label>Resultado de la revisión *</label>
+                <select name="es_reparable" id="es_reparable" class="custom-select" required>
+                    <option value="1" {{ $esReparableOld === '1' ? 'selected' : '' }}>Sí, el equipo es reparable</option>
+                    <option value="0" {{ $esReparableOld === '0' ? 'selected' : '' }}>No, ofrecer compra para piezas</option>
+                </select>
+                <small class="text-muted">
+                    Si el equipo no tiene reparación, podrás enviar una propuesta de compra para piezas al cliente.
+                </small>
+            </div>
+
+            <div id="bloque-reparable">
+                <div class="form-group mb-3">
+                    <label>Costo de Mano de Obra *</label>
+                    <div class="input-group">
+                        <div class="input-group-prepend"><span class="input-group-text">$</span></div>
+                        <input
+                            type="number"
+                            name="mano_obra"
+                            id="mano_obra"
+                            class="form-control"
+                            step="0.01"
+                            min="0"
+                            value="{{ old('mano_obra', $orden->mano_obra ?? 0) }}"
+                            placeholder="0.00">
+                    </div>
                 </div>
-                <div class="card-body">
-                    <form method="POST" action="{{ route('ordenes.diagnostico', $orden->id) }}" enctype="multipart/form-data">
-                        @csrf
 
-                        <div class="form-group mb-3">
-                            <label>Solución Propuesta *</label>
-                            <textarea
-                                name="solucion_propuesta"
-                                class="form-control"
-                                rows="4"
-                                placeholder="Describe el diagnóstico y la solución propuesta..."
-                                required>{{ old('solucion_propuesta', $orden->solucion_propuesta) }}</textarea>
-                        </div>
-
-                        @php
-                            $esReparableOld = old('es_reparable', is_null($orden->es_reparable) ? '1' : ($orden->es_reparable ? '1' : '0'));
-                        @endphp
-
-                        <div class="form-group mb-3">
-                            <label>Resultado de la revisión *</label>
-                            <select name="es_reparable" id="es_reparable" class="custom-select" required>
-                                <option value="1" {{ $esReparableOld === '1' ? 'selected' : '' }}>Sí, el equipo es reparable</option>
-                                <option value="0" {{ $esReparableOld === '0' ? 'selected' : '' }}>No, ofrecer compra para piezas</option>
+                <div class="form-group mb-3">
+                    <label>Refacciones Necesarias</label>
+                    <div class="row mb-2">
+                        <div class="col-md-7">
+                            <select id="select-repuesto" class="custom-select">
+                                <option value="">-- Seleccionar pieza del inventario --</option>
+                                @foreach($inventario as $pieza)
+                                    <option
+                                        value="{{ $pieza->id }}"
+                                        data-precio="{{ $pieza->precio_venta }}"
+                                        data-nombre="{{ $pieza->nombre_pieza }}"
+                                        data-stock="{{ $pieza->stock }}">
+                                        {{ $pieza->nombre_pieza }} (Stock: {{ $pieza->stock }}) - ${{ number_format($pieza->precio_venta, 2) }}
+                                    </option>
+                                @endforeach
                             </select>
-                            <small class="text-muted">
-                                Si el equipo no tiene reparación, podrás enviar una propuesta de compra para piezas al cliente.
-                            </small>
                         </div>
-
-                        <div id="bloque-reparable">
-                            <div class="form-group mb-3">
-                                <label>Costo de Mano de Obra *</label>
-                                <div class="input-group">
-                                    <div class="input-group-prepend"><span class="input-group-text">$</span></div>
-                                    <input
-                                        type="number"
-                                        name="mano_obra"
-                                        id="mano_obra"
-                                        class="form-control"
-                                        step="0.01"
-                                        min="0"
-                                        value="{{ old('mano_obra', $orden->mano_obra ?? 0) }}"
-                                        placeholder="0.00">
-                                </div>
-                            </div>
-
-                            {{-- REPUESTOS --}}
-                            <div class="form-group mb-3">
-                                <label>Refacciones Necesarias</label>
-                                <div class="row mb-2">
-                                    <div class="col-md-7">
-                                        <select id="select-repuesto" class="custom-select">
-                                            <option value="">-- Seleccionar pieza del inventario --</option>
-                                            @foreach($inventario as $pieza)
-                                                <option
-                                                    value="{{ $pieza->id }}"
-                                                    data-precio="{{ $pieza->precio_venta }}"
-                                                    data-nombre="{{ $pieza->nombre_pieza }}"
-                                                    data-stock="{{ $pieza->stock }}">
-                                                    {{ $pieza->nombre_pieza }} (Stock: {{ $pieza->stock }}) - ${{ number_format($pieza->precio_venta, 2) }}
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <input type="number" id="cant-repuesto" class="form-control" value="1" min="1" placeholder="Cant.">
-                                    </div>
-                                    <div class="col-md-2">
-                                        <button type="button" id="btn-add-repuesto" class="btn btn-secondary btn-block">
-                                            <i class="fas fa-plus"></i>
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <div class="table-responsive">
-                                    <table class="table table-sm table-bordered" id="tabla-repuestos-diagnosis">
-                                        <thead class="bg-light">
-                                            <tr>
-                                                <th>Pieza</th>
-                                                <th>Cant.</th>
-                                                <th>Precio</th>
-                                                <th>Subtotal</th>
-                                                <th></th>
-                                            </tr>
-                                        </thead>
-                                        <tbody></tbody>
-                                        <tfoot>
-                                            <tr>
-                                                <th colspan="3" class="text-right">Total Piezas:</th>
-                                                <th id="total-piezas-diag">$0.00</th>
-                                                <th></th>
-                                            </tr>
-                                        </tfoot>
-                                    </table>
-                                </div>
-                            </div>
-
-                            {{-- SOLICITUD DE COMPRA --}}
-                            <div id="solicitud-compra-panel">
-                                <hr class="my-4">
-                                <div class="bg-light p-3 rounded" style="border:1px dashed #ced4da;">
-                                    <h6 class="mb-3" style="font-weight:700; color:#4b5563;">
-                                        <i class="fas fa-shopping-cart mr-2"></i>¿Falta una pieza? Solicitar Compra
-                                    </h6>
-                                    <form action="{{ route('solicitudes.store') }}" method="POST">
-                                        @csrf
-                                        <input type="hidden" name="orden_servicio_id" value="{{ $orden->id }}">
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                <input type="text" name="nombre_pieza" class="form-control form-control-sm mb-2" placeholder="Nombre de la pieza..." required>
-                                            </div>
-                                            <div class="col-md-3">
-                                                <input type="number" name="cantidad" class="form-control form-control-sm mb-2" value="1" min="1" required>
-                                            </div>
-                                            <div class="col-md-3">
-                                                <button type="submit" class="btn btn-outline-secondary btn-sm btn-block">Solicitar</button>
-                                            </div>
-                                            <div class="col-12">
-                                                <textarea name="descripcion" class="form-control form-control-sm" rows="1" placeholder="Detalles extra..."></textarea>
-                                            </div>
-                                        </div>
-                                    </form>
-                                </div>
-                            </div>
+                        <div class="col-md-3">
+                            <input type="number" id="cant-repuesto" class="form-control" value="1" min="1" placeholder="Cant.">
                         </div>
+                        <div class="col-md-2">
+                            <button type="button" id="btn-add-repuesto" class="btn btn-secondary btn-block">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered" id="tabla-repuestos-diagnosis">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th>Pieza</th>
+                                    <th>Cant.</th>
+                                    <th>Precio</th>
+                                    <th>Subtotal</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                            <tfoot>
+                                <tr>
+                                    <th colspan="3" class="text-right">Total Piezas:</th>
+                                    <th id="total-piezas-diag">$0.00</th>
+                                    <th></th>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div id="bloque-no-reparable" style="display:none;">
+                <div class="form-group mb-3">
+                    <label>Monto de compra para piezas *</label>
+                    <div class="input-group">
+                        <div class="input-group-prepend"><span class="input-group-text">$</span></div>
+                        <input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            name="monto_compra_piezas"
+                            id="monto_compra_piezas"
+                            class="form-control"
+                            value="{{ old('monto_compra_piezas', $orden->monto_compra_piezas) }}"
+                            placeholder="0.00">
+                    </div>
+                    <small class="text-muted">
+                        Este será el monto que verá el cliente como oferta por su equipo para uso en piezas.
+                    </small>
+                </div>
+            </div>
+
+            <div class="form-group mb-3">
+                <label>Evidencia Fotográfica (opcional)</label>
+                <input type="file" name="fotos[]" class="form-control" multiple accept="image/*" style="padding:0.4rem;">
+                <small class="text-muted">JPG, PNG, GIF. Máx 5 MB c/u.</small>
+            </div>
+
+            <div id="hidden-inputs-repuestos"></div>
+
+            <button type="submit" class="btn btn-warning btn-block py-3" style="color:#fff; font-size:1rem;">
+                <i class="fas fa-paper-plane mr-2"></i> Guardar Diagnóstico y Notificar al Cliente
+            </button>
+        </form>
+
+        {{-- SOLICITUD DE COMPRA FUERA DEL FORM PRINCIPAL --}}
+        <div id="solicitud-compra-panel">
+            <hr class="my-4">
+            <div class="bg-light p-3 rounded" style="border:1px dashed #ced4da;">
+                <h6 class="mb-3" style="font-weight:700; color:#4b5563;">
+                    <i class="fas fa-shopping-cart mr-2"></i>¿Falta una pieza? Solicitar Compra
+                </h6>
+                <form action="{{ route('solicitudes.store') }}" method="POST">
+                    @csrf
+                    <input type="hidden" name="orden_servicio_id" value="{{ $orden->id }}">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <input type="text" name="nombre_pieza" class="form-control form-control-sm mb-2" placeholder="Nombre de la pieza..." required>
+                        </div>
+                        <div class="col-md-3">
+                            <input type="number" name="cantidad" class="form-control form-control-sm mb-2" value="1" min="1" required>
+                        </div>
+                        <div class="col-md-3">
+                            <button type="submit" class="btn btn-outline-secondary btn-sm btn-block">Solicitar</button>
+                        </div>
+                        <div class="col-12">
+                            <textarea name="descripcion" class="form-control form-control-sm" rows="1" placeholder="Detalles extra..."></textarea>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 
                         <div id="bloque-no-reparable" style="display:none;">
                             <div class="form-group mb-3">
