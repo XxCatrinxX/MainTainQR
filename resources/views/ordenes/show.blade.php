@@ -287,39 +287,6 @@
                 </div>
             </div>
 
-            <div id="bloque-no-reparable" style="display:none;">
-                <div class="form-group mb-3">
-                    <label>Monto de compra para piezas *</label>
-                    <div class="input-group">
-                        <div class="input-group-prepend"><span class="input-group-text">$</span></div>
-                        <input
-                            type="number"
-                            step="0.01"
-                            min="0"
-                            name="monto_compra_piezas"
-                            id="monto_compra_piezas"
-                            class="form-control"
-                            value="{{ old('monto_compra_piezas', $orden->monto_compra_piezas) }}"
-                            placeholder="0.00">
-                    </div>
-                    <small class="text-muted">
-                        Este será el monto que verá el cliente como oferta por su equipo para uso en piezas.
-                    </small>
-                </div>
-            </div>
-
-            <div class="form-group mb-3">
-                <label>Evidencia Fotográfica (opcional)</label>
-                <input type="file" name="fotos[]" class="form-control" multiple accept="image/*" style="padding:0.4rem;">
-                <small class="text-muted">JPG, PNG, GIF. Máx 5 MB c/u.</small>
-            </div>
-
-            <div id="hidden-inputs-repuestos"></div>
-
-            <button type="submit" class="btn btn-warning btn-block py-3" style="color:#fff; font-size:1rem;">
-                <i class="fas fa-paper-plane mr-2"></i> Guardar Diagnóstico y Notificar al Cliente
-            </button>
-        </form>
 
         {{-- SOLICITUD DE COMPRA FUERA DEL FORM PRINCIPAL --}}
         <div id="solicitud-compra-panel">
