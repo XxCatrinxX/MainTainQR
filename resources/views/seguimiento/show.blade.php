@@ -157,13 +157,21 @@
     if ($esReparable) {
         $levels = ['recibido', 'diagnostico', 'espera', 'reparacion', 'listo', 'entregado'];
     } else {
-        $levels = ['recibido', 'diagnostico', 'espera', 'para_pzas', 'entregado'];
+        if ($orden->ofrecer_compra) {
+            $levels = ['recibido', 'diagnostico', 'espera', 'para_pzas', 'listo', 'entregado'];
+        } else {
+            $levels = ['recibido', 'diagnostico', 'listo', 'entregado'];
+        }
     }
 
     $currentIndex = array_search($orden->estado, $levels);
-    if ($currentIndex === false) {
-        $currentIndex = 0;
-    }
+    if ($currentIndex === false) $currentIndex = 0;
+
+    $idxRecepcion = array_search('recibido', $levels);
+    $idxDiagnostico = array_search('diagnostico', $levels);
+    $idxEspera = array_search('espera', $levels);
+    $idxActividad = $esReparable ? array_search('reparacion', $levels) : array_search('para_pzas', $levels);
+    $idxListo = array_search('listo', $levels);
 
     $subtotalRepuestos = 0;
     if ($orden->repuestos) {
@@ -210,7 +218,7 @@
             <ul class="timeline">
                 {{-- RECEPCION --}}
                 <li class="timeline-item">
-                    <div class="timeline-icon {{ $currentIndex >= 0 ? 'active' : '' }}"></div>
+                    <div class="timeline-icon {{ $currentIndex >= $idxRecepcion ? 'active' : '' }}"></div>
                     <div class="timeline-content">
                         <h5>Equipo Ingresado</h5>
                         <p>Recibido el {{ \Carbon\Carbon::parse($orden->fecha_recepcion)->format('d M Y, h:i A') }}</p>
@@ -222,10 +230,10 @@
 
                 {{-- DIAGNOSTICO --}}
                 <li class="timeline-item">
-                    <div class="timeline-icon {{ $currentIndex >= 1 ? 'active' : '' }}"></div>
+                    <div class="timeline-icon {{ $currentIndex >= $idxDiagnostico ? 'active' : '' }}"></div>
                     <div class="timeline-content">
                         <h5>Diagnóstico Técnico</h5>
-                        @if($currentIndex >= 1)
+                        @if($currentIndex >= $idxDiagnostico)
                             <p>Evaluado el {{ $orden->fecha_diagnostico ? \Carbon\Carbon::parse($orden->fecha_diagnostico)->format('d M Y, h:i A') : 'recientemente' }}</p>
 
                             <div class="result-box {{ $esReparable ? 'result-ok' : 'result-bad' }}">
@@ -244,9 +252,10 @@
                     </div>
                 </li>
 
+                @if($idxEspera !== false)
                 {{-- ESPERA / RESPUESTA --}}
                 <li class="timeline-item">
-                    <div class="timeline-icon {{ $currentIndex >= 2 ? 'active' : '' }}"></div>
+                    <div class="timeline-icon {{ $currentIndex >= $idxEspera ? 'active' : '' }}"></div>
                     <div class="timeline-content">
                         <h5>{{ $esReparable ? 'Aprobación de Presupuesto' : 'Respuesta a Propuesta por Piezas' }}</h5>
 
@@ -261,14 +270,15 @@
                         @endif
                     </div>
                 </li>
+                @endif
 
                 @if($esReparable)
                     {{-- REPARACION --}}
                     <li class="timeline-item">
-                        <div class="timeline-icon {{ $currentIndex >= 3 ? 'active' : '' }}"></div>
+                        <div class="timeline-icon {{ $currentIndex >= $idxActividad ? 'active' : '' }}"></div>
                         <div class="timeline-content">
                             <h5>En Reparación</h5>
-                            @if($currentIndex >= 3)
+                            @if($currentIndex >= $idxActividad)
                                 <p>Iniciado el {{ $orden->fecha_reparacion ? \Carbon\Carbon::parse($orden->fecha_reparacion)->format('d M Y, h:i A') : '' }}</p>
                                 <p>Nuestros técnicos están trabajando en tu equipo.</p>
                             @else
@@ -276,36 +286,44 @@
                             @endif
                         </div>
                     </li>
-
-                    {{-- LISTO --}}
-                    <li class="timeline-item">
-                        <div class="timeline-icon {{ $currentIndex >= 4 ? 'active' : '' }}"></div>
-                        <div class="timeline-content">
-                            <h5>Listo para Entrega</h5>
-                            @if($currentIndex >= 4)
-                                <p>Finalizado el {{ $orden->fecha_listo ? \Carbon\Carbon::parse($orden->fecha_listo)->format('d M Y, h:i A') : '' }}</p>
-                                <p>Tu equipo ha sido reparado y está listo en sucursal.</p>
-                            @else
-                                <p>Pendiente.</p>
-                            @endif
-                        </div>
-                    </li>
-                @else
+                @elseif($idxActividad !== false)
                     {{-- PARA PIEZAS --}}
                     <li class="timeline-item">
-                        <div class="timeline-icon {{ $currentIndex >= 3 ? 'active' : '' }}"></div>
+                        <div class="timeline-icon {{ $currentIndex >= $idxActividad ? 'active' : '' }}"></div>
                         <div class="timeline-content">
                             <h5>Proceso para Piezas</h5>
                             @if($orden->estado === 'para_pzas')
                                 <p>Has aceptado la propuesta por tu equipo para uso en piezas.</p>
-                            @elseif($currentIndex > 3)
-                                <p>La propuesta fue procesada y el equipo siguió su flujo de salida.</p>
+                                @if($orden->metodo_pago_compra === 'transferencia')
+                                    <p class="text-warning font-weight-bold">Pendiente de pago (Transferencia en proceso)</p>
+                                @elseif($orden->metodo_pago_compra === 'efectivo')
+                                    <p class="text-dark font-weight-bold">Pasa a sucursal para recibir tu efectivo.</p>
+                                @endif
+                                @if($currentIndex > $idxActividad)
+                                    <p class="text-success font-weight-bold mt-2"><i class="fas fa-check-circle"></i> Pago registrado correctamente.</p>
+                                @endif
+                            @elseif($currentIndex > $idxActividad)
+                                <p>La propuesta fue procesada y el equipo completó el flujo.</p>
                             @else
                                 <p>Pendiente de tu respuesta.</p>
                             @endif
                         </div>
                     </li>
                 @endif
+
+                {{-- LISTO --}}
+                <li class="timeline-item border-left-0">
+                    <div class="timeline-icon {{ $currentIndex >= $idxListo ? 'active' : '' }}"></div>
+                    <div class="timeline-content">
+                        <h5>{{ ($esReparable || !$orden->ofrecer_compra) ? 'Listo para Entrega' : 'Pago Completado' }}</h5>
+                        @if($currentIndex >= $idxListo)
+                            <p>Finalizado el {{ $orden->fecha_listo ? \Carbon\Carbon::parse($orden->fecha_listo)->format('d M Y, h:i A') : '' }}</p>
+                            <p>{{ ($esReparable || !$orden->ofrecer_compra) ? 'Tu equipo está listo en sucursal.' : 'La operación ha concluido exitosamente.' }}</p>
+                        @else
+                            <p>Pendiente.</p>
+                        @endif
+                    </div>
+                </li>
             </ul>
 
             {{-- ACCION REQUERIDA --}}

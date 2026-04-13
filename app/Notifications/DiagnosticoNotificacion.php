@@ -49,7 +49,11 @@ class DiagnosticoNotificacion extends Notification implements ShouldQueue
             $totalPiezas = number_format(0, 2);
             $total = number_format($orden->monto_compra_piezas ?? 0, 2);
 
-            $subject = 'Propuesta por equipo no reparable: ' . $orden->folio . ' — ' . $equipo->marca . ' ' . $equipo->modelo;
+            if ($orden->ofrecer_compra) {
+                $subject = 'Propuesta por equipo no reparable: ' . $orden->folio . ' — ' . $equipo->marca . ' ' . $equipo->modelo;
+            } else {
+                $subject = 'Diagnóstico: Equipo no reparable — ' . $orden->folio . ' — ' . $equipo->marca . ' ' . $equipo->modelo;
+            }
         }
 
         $urlAceptar = route('orden.aceptar', $orden->token_rastreo);

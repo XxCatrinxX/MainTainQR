@@ -41,7 +41,7 @@
                                     Tu equipo <strong style="color:#111827;">{{ $equipo->marca }} {{ $equipo->modelo ?? '' }}</strong>
                                     (Orden <code style="background:#f3f4f6; padding:2px 6px; border-radius:4px; font-size:0.85rem;">{{ $orden->folio }}</code>)
                                     fue revisado por nuestro equipo técnico y el diagnóstico indica que <strong style="color:#b91c1c;">no es reparable</strong>.
-                                    A continuación te compartimos el motivo y una propuesta por el equipo para uso en piezas.
+                                    A continuación te compartimos el motivo{{ $orden->ofrecer_compra ? ' y una propuesta por el equipo para uso en piezas' : '' }}.
                                 </p>
                             @endif
 
@@ -100,18 +100,20 @@
                                         </td>
                                     </tr>
                                 @else
-                                    <tr>
-                                        <td style="padding:0.75rem 1rem; color:#374151; border-top:1px solid #f3f4f6;">Oferta por equipo para piezas</td>
-                                        <td style="padding:0.75rem 1rem; color:#374151; border-top:1px solid #f3f4f6; text-align:right; font-weight:700;">
-                                            ${{ $total }}
-                                        </td>
-                                    </tr>
-                                    <tr style="background:#111827;">
-                                        <td style="padding:0.85rem 1rem; color:#ffffff; font-weight:700; font-size:1rem;">Monto Ofrecido</td>
-                                        <td style="padding:0.85rem 1rem; color:#ffffff; font-weight:800; font-size:1.1rem; text-align:right;">
-                                            ${{ $total }}
-                                        </td>
-                                    </tr>
+                                    @if($orden->ofrecer_compra)
+                                        <tr>
+                                            <td style="padding:0.75rem 1rem; color:#374151; border-top:1px solid #f3f4f6;">Oferta por equipo para piezas</td>
+                                            <td style="padding:0.75rem 1rem; color:#374151; border-top:1px solid #f3f4f6; text-align:right; font-weight:700;">
+                                                ${{ $total }}
+                                            </td>
+                                        </tr>
+                                        <tr style="background:#111827;">
+                                            <td style="padding:0.85rem 1rem; color:#ffffff; font-weight:700; font-size:1rem;">Monto Ofrecido</td>
+                                            <td style="padding:0.85rem 1rem; color:#ffffff; font-weight:800; font-size:1.1rem; text-align:right;">
+                                                ${{ $total }}
+                                            </td>
+                                        </tr>
+                                    @endif
                                 @endif
                             </table>
 
@@ -162,9 +164,14 @@
                                 </table>
                             @else
                                 <p style="color:#374151; font-size:0.95rem; line-height:1.6; margin:0 0 1.5rem 0;">
-                                    Si estás de acuerdo con esta propuesta por tu equipo para uso en piezas, confirma tu decisión a continuación:
+                                    @if($orden->ofrecer_compra)
+                                        Si estás de acuerdo con esta propuesta por tu equipo para uso en piezas, confirma tu decisión a continuación:
+                                    @else
+                                        Por favor pasa a nuestra sucursal con tu comprobante para la devolución de tu equipo. Lamentamos profundamente que no haya sido posible repararlo.
+                                    @endif
                                 </p>
 
+                                @if($orden->ofrecer_compra)
                                 <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="margin-bottom:2rem;">
                                     <tr>
                                         <td style="padding-right:0.5rem;" width="50%">
@@ -181,6 +188,7 @@
                                         </td>
                                     </tr>
                                 </table>
+                                @endif
                             @endif
 
                         </td>

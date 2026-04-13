@@ -122,8 +122,14 @@ class OrdenServicioController extends Controller
         : null;
 
     if (in_array($orden->estado, ['recibido', 'diagnostico'])) {
-        $orden->estado = 'espera';
-        $orden->fecha_diagnostico = now();
+        if (!$esReparable && !$ofrecerCompra) {
+            $orden->estado = 'listo';
+            $orden->fecha_diagnostico = now();
+            $orden->fecha_listo = now();
+        } else {
+            $orden->estado = 'espera';
+            $orden->fecha_diagnostico = now();
+        }
     }
 
     $orden->save();
@@ -213,11 +219,12 @@ class OrdenServicioController extends Controller
     ]);
 
     $esReparable = $request->boolean('es_reparable');
+    $ofrecerCompra = $request->boolean('ofrecer_compra');
 
-    if (!$esReparable && !$request->filled('monto_compra_piezas')) {
+    if (!$esReparable && $ofrecerCompra && !$request->filled('monto_compra_piezas')) {
         return response()->json([
             'success' => false,
-            'message' => 'Debes capturar el monto de compra para piezas.'
+            'message' => 'Debes capturar el monto de compra si deseas ofrecerla.'
         ], 422);
     }
 
@@ -225,14 +232,21 @@ class OrdenServicioController extends Controller
 
     $orden->solucion_propuesta = $request->solucion_propuesta;
     $orden->es_reparable = $esReparable;
+    $orden->ofrecer_compra = $esReparable ? false : $ofrecerCompra;
     $orden->mano_obra = $esReparable ? $request->mano_obra : 0;
-    $orden->monto_compra_piezas = $esReparable
-        ? null
-        : $request->monto_compra_piezas;
+    $orden->monto_compra_piezas = (!$esReparable && $ofrecerCompra)
+        ? $request->monto_compra_piezas
+        : null;
 
     if (in_array($orden->estado, ['recibido', 'diagnostico'])) {
-        $orden->estado = 'espera';
-        $orden->fecha_diagnostico = now();
+        if (!$esReparable && !$ofrecerCompra) {
+            $orden->estado = 'listo';
+            $orden->fecha_diagnostico = now();
+            $orden->fecha_listo = now();
+        } else {
+            $orden->estado = 'espera';
+            $orden->fecha_diagnostico = now();
+        }
     }
 
     $orden->save();

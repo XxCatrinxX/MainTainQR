@@ -38,7 +38,7 @@
                         @foreach($orden_lista as $orden)
                             <option value="{{ $orden->id }}" 
                                 {{ (old('orden_servicio_id') == $orden->id || (isset($orden_preseleccionada) && $orden_preseleccionada->id == $orden->id)) ? 'selected' : '' }}>
-                                {{ $orden->folio }} - {{ $orden->equipo->cliente->nombre ?? 'N/A' }}
+                                {{ $orden->folio }} - {{ $orden->equipo->cliente->nombre ?? 'N/A' }} | Pendiente: ${{ number_format($orden->restante, 2) }} | Estado: {{ strtoupper($orden->estado) }}
                             </option>
                         @endforeach
                     </select>
@@ -75,9 +75,13 @@
                             <input class="custom-control-input" type="radio" id="pago_anticipo" name="tipo_pago" value="anticipo" {{ old('tipo_pago', 'anticipo') == 'anticipo' ? 'checked' : '' }}>
                             <label for="pago_anticipo" class="custom-control-label font-weight-normal text-muted">Anticipo / Reserva</label>
                         </div>
-                        <div class="custom-control custom-radio">
+                        <div class="custom-control custom-radio mr-4">
                             <input class="custom-control-input" type="radio" id="pago_liquidacion" name="tipo_pago" value="liquidacion" {{ old('tipo_pago') == 'liquidacion' ? 'checked' : '' }}>
                             <label for="pago_liquidacion" class="custom-control-label font-weight-normal text-muted">Liquidación Final de Deuda</label>
+                        </div>
+                        <div class="custom-control custom-radio">
+                            <input class="custom-control-input" type="radio" id="pago_cliente" name="tipo_pago" value="pago_cliente" {{ old('tipo_pago') == 'pago_cliente' ? 'checked' : '' }}>
+                            <label for="pago_cliente" class="custom-control-label font-weight-normal text-muted">Pago a Cliente (Compra de Piezas)</label>
                         </div>
                     </div>
                     @error('tipo_pago') <span class="text-danger small d-block">{{ $message }}</span> @enderror
