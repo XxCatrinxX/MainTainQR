@@ -407,12 +407,9 @@
                             <p>Lamentamos informarte que tu equipo no tiene reparación.</p>
                             <p>Por favor, acude a la sucursal con tu comprobante para la devolución del equipo.</p>
                             <div class="mt-4">
-                                <form action="{{ route('seguimiento.rechazar', $orden->token_rastreo) }}" method="POST">
-                                    @csrf
-                                    <button type="submit" class="btn btn-secondary btn-block">
-                                        <i class="fas fa-check mr-2"></i> Entendido, pasaré por mi equipo
-                                    </button>
-                                </form>
+                                <a href="/" class="btn btn-secondary btn-block">
+                                    <i class="fas fa-check mr-2"></i> Entendido, pasaré por mi equipo
+                                </a>
                             </div>
                         @endif
                     @endif

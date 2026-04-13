@@ -99,6 +99,22 @@ class PagoController extends Controller
         $data['orden_servicio_id'] = $id;
         Pago::create($data);
 
+        $orden = OrdenServicio::with('pagos')->find($id);
+
+        // Si es compra de piezas y ya le pagaron todo el monto acordado, la finalizamos.
+        if ($orden->estado === 'para_pzas') {
+            $totalDebe = $orden->monto_compra_piezas ?? 0;
+            $totalPagado = $orden->pagos->sum('monto');
+            
+            if ($totalPagado >= $totalDebe) {
+                $orden->estado = 'entregado'; // Ya se le pagó, el equipo se queda con nosotros, cerramos orden.
+                $orden->fecha_entrega_real = now();
+                $orden->save();
+                return redirect()->route('ordenes.show', $id)->with('success', 'Pago a cliente registrado. Al cubrirse el monto total, la orden ha sido Cerrada (Completada).');
+            }
+            return redirect()->route('ordenes.show', $id)->with('success', 'Abono a cliente registrado correctamente.');
+        }
+
         return redirect()->route('ordenes.show', $id)->with('success', 'Cobro registrado correctamente.');
     }
 }

@@ -475,9 +475,49 @@
                         </div>
                     @endif
 
-                    <p class="text-muted mb-0">
-                        Da seguimiento interno al proceso correspondiente y usa el cambio de estado cuando el equipo ya haya salido del taller o el pago se haya efectuado.
-                    </p>
+                    @if(in_array(Auth::user()->rol, ['admin', 'recepcionista']))
+                        @php
+                            $totalDebe = $orden->monto_compra_piezas ?? 0;
+                            $totalPagado = $orden->pagos->sum('monto');
+                            $saldo = $totalDebe - $totalPagado;
+                        @endphp
+                        
+                        @if($saldo > 0)
+                            <div class="alert alert-warning mt-4" style="border-radius:8px;">
+                                <i class="fas fa-exclamation-triangle mr-2"></i>
+                                <strong>Saldo pendiente a pagar al cliente: ${{ number_format($saldo, 2) }}</strong>
+                            </div>
+
+                            <form method="POST" action="{{ route('ordenes.pago', $orden->id) }}" class="mt-4 border-top pt-4">
+                                @csrf
+                                <input type="hidden" name="tipo_pago" value="pago_cliente">
+                                <h6 style="font-weight:700; color:#b91c1c;"><i class="fas fa-hand-holding-usd mr-2"></i>Registrar Pago al Cliente</h6>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <label>Monto Puntos/Efectivo A Pagar</label>
+                                        <div class="input-group">
+                                            <div class="input-group-prepend"><span class="input-group-text">$</span></div>
+                                            <input type="number" name="monto" class="form-control" step="0.01" min="1" max="{{ $saldo }}" value="{{ $saldo }}" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label>Canal del Movimiento</label>
+                                        <select name="metodo_pago" class="custom-select">
+                                            <option value="efectivo" {{ $orden->metodo_pago_compra === 'efectivo' ? 'selected' : '' }}>Efectivo (Caja)</option>
+                                            <option value="transferencia" {{ $orden->metodo_pago_compra === 'transferencia' ? 'selected' : '' }}>Transferencia</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn btn-outline-danger mt-3 btn-block">
+                                    <i class="fas fa-check-circle mr-1"></i> Asentar Pago y Completar Orden
+                                </button>
+                            </form>
+                        @endif
+                    @else
+                        <div class="alert alert-info mt-3" style="border-radius:8px;">
+                            <i class="fas fa-info-circle mr-2"></i> Solo Recepcionistas y Administradores pueden registrar pagos y completar la orden.
+                        </div>
+                    @endif
                 </div>
             </div>
 
