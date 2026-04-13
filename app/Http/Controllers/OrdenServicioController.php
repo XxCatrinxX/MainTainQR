@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Notification;
 use Endroid\QrCode\Writer\SvgWriter;
 use Endroid\QrCode\Encoding\Encoding;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
 use Kreait\Firebase\Messaging\CloudMessage;
 use Kreait\Firebase\Messaging\Notification as FCMNotification;
 
@@ -40,6 +41,7 @@ class OrdenServicioController extends Controller
         if ($user->rol === 'tecnico') {
             $baseMetricas->where('user_id', $user->id);
         }
+        
 
         return view('ordenes.index', [
             'ordenes'         => $ordenes,
