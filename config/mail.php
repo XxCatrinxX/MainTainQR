@@ -71,6 +71,7 @@ return [
 
         'resend' => [
             'transport' => 'resend',
+            'default' => env('MAIL_MAILER', 'resend'),
         ],
 
         'sendmail' => [

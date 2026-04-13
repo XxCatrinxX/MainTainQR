@@ -7,7 +7,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class OrdenCreadaNotificacion extends Notification
+class OrdenCreadaNotificacion extends Notification implements ShouldQueue
 {
     use Queueable;
 
@@ -37,10 +37,14 @@ class OrdenCreadaNotificacion extends Notification
     public function toMail($notifiable)
     {
         return (new MailMessage)
-            ->subject('Nueva orden creada')
-            ->line('Se ha creado una nueva orden.')
-            ->line('Folio: ' . $this->orden->folio)
-            ->line('Gracias por confiar en nosotros.');
+            ->subject('📦 Orden de servicio creada')
+            ->greeting('Hola, ' . ($this->orden->equipo->cliente->nombre ?? 'cliente'))
+            ->line('Tu equipo ha sido registrado correctamente en nuestro sistema.')
+            ->line('🔢 Folio: ' . $this->orden->folio)
+            ->line('📌 Estado: Recibido')
+            ->line('En breve un técnico revisará tu equipo.')
+            ->action('Ver estado de tu orden', url('/rastreo/' . $this->orden->token_rastreo))
+            ->line('Gracias por confiar en nosotros 🙌');
     }
 
     /**
