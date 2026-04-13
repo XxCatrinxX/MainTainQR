@@ -115,7 +115,13 @@
                             @elseif($orden->estado == 'reparacion')
                                 <span class="badge badge-primary">Reparación</span>
                             @elseif($orden->estado == 'listo')
-                                <span class="badge badge-success">Listo</span>
+                                @if($orden->decision_cliente === 'rechaza')
+                                    <span class="badge badge-danger" style="background-color: #f59e0b !important; border:none;">Listo (Rechazado)</span>
+                                @elseif($orden->es_reparable === false || $orden->es_reparable === 0)
+                                    <span class="badge badge-warning">Listo (No Rep.)</span>
+                                @else
+                                    <span class="badge badge-success">Listo (Reparado)</span>
+                                @endif
                             @elseif($orden->estado == 'entregado')
                                 <span class="badge badge-dark">Entregado</span>
                             @elseif($orden->estado == 'para_pzas')

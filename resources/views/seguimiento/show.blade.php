@@ -154,10 +154,16 @@
 
     $estadoActual = $estados[$orden->estado] ?? ['label' => strtoupper($orden->estado), 'class' => 'status-entregado'];
 
-    if ($esReparable) {
+    $esReparable = (bool) $orden->es_reparable;
+    $esRechazada = $orden->decision_cliente === 'rechaza';
+
+    if ($esReparable && !$esRechazada) {
         $levels = ['recibido', 'diagnostico', 'espera', 'reparacion', 'listo', 'entregado'];
     } else {
-        if ($orden->ofrecer_compra) {
+        if ($esRechazada) {
+            // Flujo de rechazo: No hubo reparación
+            $levels = ['recibido', 'diagnostico', 'espera', 'listo', 'entregado'];
+        } else if ($orden->ofrecer_compra) {
             $levels = ['recibido', 'diagnostico', 'espera', 'para_pzas', 'listo', 'entregado'];
         } else {
             $levels = ['recibido', 'diagnostico', 'listo', 'entregado'];
@@ -170,7 +176,7 @@
     $idxRecepcion = array_search('recibido', $levels);
     $idxDiagnostico = array_search('diagnostico', $levels);
     $idxEspera = array_search('espera', $levels);
-    $idxActividad = $esReparable ? array_search('reparacion', $levels) : array_search('para_pzas', $levels);
+    $idxActividad = $esReparable && !$esRechazada ? array_search('reparacion', $levels) : array_search('para_pzas', $levels);
     $idxListo = array_search('listo', $levels);
 
     $subtotalRepuestos = 0;
@@ -236,13 +242,13 @@
                         @if($currentIndex >= $idxDiagnostico)
                             <p>Evaluado el {{ $orden->fecha_diagnostico ? \Carbon\Carbon::parse($orden->fecha_diagnostico)->format('d M Y, h:i A') : 'recientemente' }}</p>
 
-                            <div class="result-box {{ $esReparable ? 'result-ok' : 'result-bad' }}">
-                                <strong>Resultado:</strong> {{ $esReparable ? 'Equipo reparable' : 'Equipo no reparable' }}
+                            <div class="result-box {{ $esReparable && !$esRechazada ? 'result-ok' : 'result-bad' }}">
+                                <strong>Resultado:</strong> {{ $esReparable ? ($esRechazada ? 'Reparación posible (Rechazada)' : 'Equipo reparable') : 'Equipo no reparable' }}
                             </div>
 
                             @if($orden->solucion_propuesta)
                                 <div class="mt-2 p-3" style="background: #f8fafc; border-radius: 8px;">
-                                    <strong>{{ $esReparable ? 'Solución propuesta:' : 'Motivo del diagnóstico:' }}</strong><br>
+                                    <strong>{{ ($esReparable && !$esRechazada) ? 'Solución propuesta:' : 'Motivo del diagnóstico:' }}</strong><br>
                                     {{ $orden->solucion_propuesta }}
                                 </div>
                             @endif
@@ -257,7 +263,7 @@
                 <li class="timeline-item">
                     <div class="timeline-icon {{ $currentIndex >= $idxEspera ? 'active' : '' }}"></div>
                     <div class="timeline-content">
-                        <h5>{{ $esReparable ? 'Aprobación de Presupuesto' : 'Respuesta a Propuesta por Piezas' }}</h5>
+                        <h5>{{ $esRechazada ? 'Presupuesto Rechazado' : ($esReparable ? 'Aprobación de Presupuesto' : 'Respuesta a Propuesta por Piezas') }}</h5>
 
                         @if($orden->estado === 'espera')
                             <p class="text-danger font-weight-bold">
@@ -265,6 +271,9 @@
                             </p>
                         @elseif($orden->fecha_aprobacion)
                             <p>Respondido el {{ \Carbon\Carbon::parse($orden->fecha_aprobacion)->format('d M Y, h:i A') }}</p>
+                            @if($esRechazada)
+                                <p class="text-muted" style="font-size: 0.9rem;">Has decidido no proceder con la reparación.</p>
+                            @endif
                         @else
                             <p>{{ $esReparable ? 'Cotización en elaboración.' : 'Propuesta en elaboración.' }}</p>
                         @endif
@@ -315,10 +324,20 @@
                 <li class="timeline-item border-left-0">
                     <div class="timeline-icon {{ $currentIndex >= $idxListo ? 'active' : '' }}"></div>
                     <div class="timeline-content">
-                        <h5>{{ ($esReparable || !$orden->ofrecer_compra) ? 'Listo para Entrega' : 'Pago Completado' }}</h5>
+                        <h5>{{ ($esReparable && !$esRechazada) || (!$esReparable && !$orden->ofrecer_compra && !$esRechazada) ? 'Listo para Entrega' : ($esRechazada || (!$esReparable && !$orden->ofrecer_compra) ? 'Disponible para Devolución' : 'Pago Completado') }}</h5>
                         @if($currentIndex >= $idxListo)
                             <p>Finalizado el {{ $orden->fecha_listo ? \Carbon\Carbon::parse($orden->fecha_listo)->format('d M Y, h:i A') : '' }}</p>
-                            <p>{{ ($esReparable || !$orden->ofrecer_compra) ? 'Tu equipo está listo en sucursal.' : 'La operación ha concluido exitosamente.' }}</p>
+                            <p>
+                                @if($esRechazada)
+                                    Tu equipo está listo para ser recogido (sin reparación).
+                                @elseif(!$esReparable && !$orden->ofrecer_compra)
+                                    Tu equipo está listo para ser recogido.
+                                @elseif($esReparable)
+                                    ¡Tu equipo ha sido reparado con éxito!
+                                @else
+                                    La operación ha concluido exitosamente.
+                                @endif
+                            </p>
                         @else
                             <p>Pendiente.</p>
                         @endif

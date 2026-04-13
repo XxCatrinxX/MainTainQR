@@ -68,7 +68,21 @@
                     <tr>
                         <td class="align-middle font-weight-bold">{{ $orden->folio }}</td>
                         <td class="align-middle">{{ $orden->equipo->cliente->nombre ?? 'N/A' }}</td>
-                        <td class="align-middle text-uppercase"><span class="badge badge-secondary">{{ $orden->estado }}</span></td>
+                        <td class="align-middle text-uppercase">
+                            @if($orden->estado == 'listo')
+                                @if($orden->decision_cliente === 'rechaza')
+                                    <span class="badge badge-danger" style="background-color: #f59e0b !important; color: white !important;">Listo (Rechazado)</span>
+                                @elseif($orden->es_reparable === false || $orden->es_reparable === 0)
+                                    <span class="badge badge-warning">Listo (No Rep.)</span>
+                                @else
+                                    <span class="badge badge-success">Listo (Reparado)</span>
+                                @endif
+                            @elseif($orden->estado == 'para_pzas')
+                                <span class="badge badge-info">Para Piezas</span>
+                            @else
+                                <span class="badge badge-secondary">{{ $orden->estado }}</span>
+                            @endif
+                        </td>
                         <td class="align-middle">${{ number_format($orden->total_calculado, 2) }}</td>
                         <td class="align-middle font-weight-bold text-danger">${{ number_format($orden->restante, 2) }}</td>
                         <td class="align-middle">
