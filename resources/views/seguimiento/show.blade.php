@@ -364,36 +364,39 @@
 
                         <div class="mb-3 mx-auto p-3 text-left" style="max-width: 500px; background:#fff; border:1px solid #e5e7eb; border-radius:10px;">
                             <p class="mb-2"><strong>Motivo del diagnóstico:</strong></p>
-                            <p class="text-muted mb-0">{{ $orden->solucion_propuesta }}</p>
-                        </div>
+                        <h4>Propuesta por Equipo No Reparable</h4>
+                        
+                        @if($orden->ofrecer_compra)
+                            <p>Lamentamos informarte que tu equipo no tiene reparación, pero <b>nos gustaría comprarlo</b>.</p>
+                            <p>Monto ofrecido: <b>${{ number_format($montoPiezas, 2) }}</b> para ser utilizado en piezas y refacciones.</p>
 
-                        <div class="d-flex justify-content-between mx-auto mb-4 border-top pt-3" style="max-width: 340px; text-align: left;">
-                            <span style="font-size: 1.1rem;">Monto que te ofrecemos:</span>
-                            <strong style="font-size: 1.2rem; color: #111827;">${{ number_format($montoPiezas, 2) }}</strong>
-                        </div>
-
-                        <div class="row justify-content-center">
-                            <div class="col-md-6 mb-2">
-                                <form action="{{ route('seguimiento.aceptar', $orden->token_rastreo) }}" method="POST">
-                                    @csrf
-                                    <button type="submit" class="btn btn-modern btn-black w-100">
-                                        <i class="fas fa-check-circle mr-1"></i> Aceptar Oferta
+                            <div class="row mt-4">
+                                <div class="col-6">
+                                    <button type="button" class="btn btn-success btn-block" data-toggle="modal" data-target="#modalPagoPiezas">
+                                        Aceptar Oferta (${{ number_format($montoPiezas, 2) }})
                                     </button>
-                                </form>
+                                </div>
+                                <div class="col-6">
+                                    <form action="{{ route('seguimiento.rechazar', $orden->token_rastreo) }}" method="POST">
+                                        @csrf
+                                        <button type="submit" class="btn btn-outline-danger btn-block" onclick="return confirm('¿Rechazas la oferta de compra? Tu equipo será marcado para devolución.')">
+                                            Rechazar Oferta
+                                        </button>
+                                    </form>
+                                </div>
                             </div>
-                            <div class="col-md-6">
+                        @else
+                            <p>Lamentamos informarte que tu equipo no tiene reparación.</p>
+                            <p>Por favor, acude a la sucursal con tu comprobante para la devolución del equipo.</p>
+                            <div class="mt-4">
                                 <form action="{{ route('seguimiento.rechazar', $orden->token_rastreo) }}" method="POST">
                                     @csrf
-                                    <button type="submit" class="btn btn-modern btn-outline-danger w-100" onclick="return confirm('¿Estás seguro de que deseas rechazar esta oferta por tu equipo?')">
-                                        <i class="fas fa-times-circle mr-1"></i> No Aceptar
+                                    <button type="submit" class="btn btn-secondary btn-block">
+                                        <i class="fas fa-check mr-2"></i> Entendido, pasaré por mi equipo
                                     </button>
                                 </form>
                             </div>
-                        </div>
-
-                        <p class="text-muted small mt-3">
-                            Si aceptas, registraremos tu equipo para el flujo de piezas. Si no aceptas, podrás recuperarlo en sucursal.
-                        </p>
+                        @endif
                     @endif
                 </div>
             @endif
@@ -406,5 +409,68 @@
     </div>
 </div>
 
+{{-- MODAL PAGO PIEZAS --}}
+@if(!$esReparable && $orden->ofrecer_compra)
+<div class="modal fade" id="modalPagoPiezas" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content" style="border-radius: 12px; border: none; box-shadow: 0 10px 25px rgba(0,0,0,0.1);">
+            <div class="modal-header" style="border-bottom: 1px solid #f1f5f9;">
+                <h5 class="modal-title" style="font-weight: 700; color: #1e293b;">Confirmar Venta y Pago</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form action="{{ route('seguimiento.aceptar', $orden->token_rastreo) }}" method="POST">
+                @csrf
+                <div class="modal-body p-4">
+                    <p class="mb-4">Has elegido vender tu equipo por <b>${{ number_format($montoPiezas, 2) }}</b>.</p>
+                    
+                    <label style="font-weight: 600; color: #475569;">¿Cómo deseas recibir tu pago?</label>
+                    <div class="form-group mt-2">
+                        <div class="custom-control custom-radio mb-3">
+                            <input type="radio" id="pago_efectivo" name="metodo_pago_compra" class="custom-control-input" value="efectivo" checked required>
+                            <label class="custom-control-label" for="pago_efectivo" style="cursor: pointer;">Efectivo en sucursal (al entregar el equipo)</label>
+                        </div>
+                        <div class="custom-control custom-radio mb-3">
+                            <input type="radio" id="pago_transferencia" name="metodo_pago_compra" class="custom-control-input" value="transferencia" required>
+                            <label class="custom-control-label" for="pago_transferencia" style="cursor: pointer;">Transferencia Bancaria</label>
+                        </div>
+                    </div>
+
+                    <div id="bloque-datos-transferencia" style="display:none; transition: all 0.3s ease;">
+                        <div class="form-group">
+                            <label style="font-weight: 600; color: #475569;">Datos para la transferencia *</label>
+                            <textarea name="datos_transferencia" id="input_datos_transferencia" class="form-control" rows="3" placeholder="Ingresa: Banco, CLABE y Nombre del titular"></textarea>
+                            <small class="text-muted">Tus datos están protegidos y solo se usarán para este pago.</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer" style="border-top: 1px solid #f1f5f9;">
+                    <button type="button" class="btn btn-light" data-dismiss="modal" style="font-weight: 600;">Cancelar</button>
+                    <button type="submit" class="btn btn-success px-4" style="font-weight: 600; border-radius: 8px;">
+                        <i class="fas fa-check mr-2"></i> Confirmar y Aceptar Oferta
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+@endif
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('input[name="metodo_pago_compra"]').on('change', function() {
+                if ($(this).val() === 'transferencia') {
+                    $('#bloque-datos-transferencia').slideDown();
+                    $('#input_datos_transferencia').attr('required', true);
+                } else {
+                    $('#bloque-datos-transferencia').slideUp();
+                    $('#input_datos_transferencia').attr('required', false);
+                }
+            });
+        });
+    </script>
 </body>
 </html>

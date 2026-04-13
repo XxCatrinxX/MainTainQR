@@ -212,11 +212,8 @@
                 <label>Resultado de la revisión *</label>
                 <select name="es_reparable" id="es_reparable" class="custom-select" required>
                     <option value="1" {{ $esReparableOld === '1' ? 'selected' : '' }}>Sí, el equipo es reparable</option>
-                    <option value="0" {{ $esReparableOld === '0' ? 'selected' : '' }}>No, ofrecer compra para piezas</option>
+                    <option value="0" {{ $esReparableOld === '0' ? 'selected' : '' }}>No, el equipo NO tiene reparación</option>
                 </select>
-                <small class="text-muted">
-                    Si el equipo no tiene reparación, podrás enviar una propuesta de compra para piezas al cliente.
-                </small>
             </div>
 
             <div id="bloque-reparable">
@@ -289,25 +286,32 @@
 
 
             <div id="bloque-no-reparable" style="display:none;">
-                            <div class="form-group mb-3">
-                                <label>Monto de compra para piezas *</label>
-                                <div class="input-group">
-                                    <div class="input-group-prepend"><span class="input-group-text">$</span></div>
-                                    <input
-                                        type="number"
-                                        step="0.01"
-                                        min="0"
-                                        name="monto_compra_piezas"
-                                        id="monto_compra_piezas"
-                                        class="form-control"
-                                        value="{{ old('monto_compra_piezas', $orden->monto_compra_piezas) }}"
-                                        placeholder="0.00">
-                                </div>
-                                <small class="text-muted">
-                                    Este será el monto que verá el cliente como oferta por su equipo para uso en piezas.
-                                </small>
-                            </div>
+                <div class="card bg-light mb-3" style="border: 1px dashed #ced4da;">
+                    <div class="card-body">
+                        <div class="custom-control custom-switch mb-3">
+                            <input type="checkbox" name="ofrecer_compra" class="custom-control-input" id="ofrecer_compra" value="1" {{ old('ofrecer_compra', $orden->ofrecer_compra) ? 'checked' : '' }}>
+                            <label class="custom-control-label" for="ofrecer_compra" style="font-weight: 600;">¿Deseamos comprar el equipo para piezas?</label>
                         </div>
+
+                        <div id="bloque-precio-compra" style="display:none;">
+                            <label>Monto de compra ofrecido *</label>
+                            <div class="input-group">
+                                <div class="input-group-prepend"><span class="input-group-text">$</span></div>
+                                <input
+                                    type="number"
+                                    step="0.01"
+                                    min="0"
+                                    name="monto_compra_piezas"
+                                    id="monto_compra_piezas"
+                                    class="form-control"
+                                    value="{{ old('monto_compra_piezas', $orden->monto_compra_piezas) }}"
+                                    placeholder="0.00">
+                            </div>
+                            <small class="text-muted">Este es el monto total que pagaremos al cliente por su equipo.</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
                         {{-- EVIDENCIAS --}}
                         <div class="form-group mb-3">
@@ -458,8 +462,21 @@
                         </div>
                     @endif
 
+                    @if($orden->metodo_pago_compra)
+                        <div class="p-3 rounded mb-3" style="background:#f0f9ff; border:1px solid #bae6fd;">
+                            <strong><i class="fas fa-money-bill-wave mr-2"></i>Información de Pago Solicitada:</strong><br>
+                            <p class="mt-2 mb-1"><b>Método elegido por el cliente:</b> {{ $orden->metodo_pago_compra === 'transferencia' ? 'Transferencia Bancaria' : 'Efectivo en Sucursal' }}</p>
+                            @if($orden->metodo_pago_compra === 'transferencia')
+                                <div class="bg-white p-2 border rounded mt-2">
+                                    <small class="text-muted d-block mb-1">Datos de transferencia:</small>
+                                    <p class="mb-0" style="font-family: monospace; white-space: pre-wrap;">{{ $orden->datos_transferencia }}</p>
+                                </div>
+                            @endif
+                        </div>
+                    @endif
+
                     <p class="text-muted mb-0">
-                        Da seguimiento interno al proceso correspondiente y usa el cambio de estado cuando el equipo ya haya salido del taller.
+                        Da seguimiento interno al proceso correspondiente y usa el cambio de estado cuando el equipo ya haya salido del taller o el pago se haya efectuado.
                     </p>
                 </div>
             </div>
@@ -930,7 +947,21 @@
 
         if (selectEstadoReparable) {
             selectEstadoReparable.addEventListener('change', toggleTipoDiagnostico);
+            
+            const checkboxOfrecer = document.getElementById('ofrecer_compra');
+            const bloquePrecio = document.getElementById('bloque-precio-compra');
+            
+            if (checkboxOfrecer) {
+                checkboxOfrecer.addEventListener('change', function() {
+                    if (bloquePrecio) bloquePrecio.style.display = this.checked ? 'block' : 'none';
+                });
+            }
+            
             toggleTipoDiagnostico();
+            // Trigger checkbox change on load if needed
+            if (checkboxOfrecer && checkboxOfrecer.checked && bloquePrecio) {
+                bloquePrecio.style.display = 'block';
+            }
         }
     });
 </script>

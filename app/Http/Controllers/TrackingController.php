@@ -28,61 +28,71 @@ class TrackingController extends Controller
      * Acción del cliente para aceptar su presupuesto.
      */
     public function aceptarPresupuesto(Request $request, $token_rastreo)
-{
-    $orden = OrdenServicio::with(['equipo.cliente', 'repuestos', 'user'])
-        ->where('token_rastreo', $token_rastreo)
-        ->firstOrFail();
+    {
+        $request->validate([
+            'metodo_pago_compra' => 'nullable|in:efectivo,transferencia',
+            'datos_transferencia' => 'required_if:metodo_pago_compra,transferencia|nullable|string',
+        ]);
 
-    if (!in_array($orden->estado, ['espera', 'diagnostico'])) {
-        return back()->with('error', 'Esta orden ya fue procesada anteriormente.');
-    }
+        $orden = OrdenServicio::with(['equipo.cliente', 'repuestos', 'user'])
+            ->where('token_rastreo', $token_rastreo)
+            ->firstOrFail();
 
-    if ($orden->decision_cliente === 'acepta' || in_array($orden->estado, ['reparacion', 'para_pzas'])) {
-        return back()->with('error', 'Esta orden ya fue aceptada anteriormente.');
-    }
-
-    DB::beginTransaction();
-
-    try {
-        $esReparable = (bool) $orden->es_reparable;
-
-        $orden->decision_cliente = 'acepta';
-        $orden->fecha_aprobacion = now();
-
-        if ($esReparable) {
-            $this->procesarInventario($orden);
-
-            $orden->estado = 'reparacion';
-            $orden->fecha_reparacion = now();
-
-            $this->notificarTecnico(
-                $orden,
-                '✅ Presupuesto Aceptado',
-                "El cliente aceptó la reparación del equipo folio: {$orden->folio}"
-            );
-
-            $mensaje = '¡Presupuesto aceptado! Comenzaremos con la reparación de tu equipo.';
-        } else {
-            $orden->estado = 'para_pzas';
-
-            $this->notificarTecnico(
-                $orden,
-                '✅ Oferta por piezas aceptada',
-                "El cliente aceptó la propuesta por piezas del equipo folio: {$orden->folio}"
-            );
-
-            $mensaje = '¡Propuesta aceptada! El equipo pasará al proceso para piezas.';
+        if (!in_array($orden->estado, ['espera', 'diagnostico', 'reparacion'])) {
+            return back()->with('error', 'Esta orden ya fue procesada anteriormente.');
         }
 
-        $orden->save();
+        if ($orden->decision_cliente === 'acepta' && $orden->estado === 'para_pzas') {
+            return back()->with('error', 'Esta orden ya fue aceptada anteriormente.');
+        }
 
-        DB::commit();
-        return back()->with('success', $mensaje);
-    } catch (\Exception $e) {
-        DB::rollBack();
-        return back()->with('error', 'Ocurrió un error al procesar la aceptación: ' . $e->getMessage());
+        DB::beginTransaction();
+
+        try {
+            $esReparable = (bool) $orden->es_reparable;
+
+            $orden->decision_cliente = 'acepta';
+            $orden->fecha_aprobacion = now();
+
+            if ($esReparable) {
+                // Si existe la lógica de procesar inventario (descontar stock)
+                if (method_exists($this, 'procesarInventario')) {
+                    $this->procesarInventario($orden);
+                }
+
+                $orden->estado = 'reparacion';
+                $orden->fecha_reparacion = now();
+
+                $this->notificarTecnico(
+                    $orden,
+                    '✅ Presupuesto Aceptado',
+                    "El cliente aceptó la reparación del equipo folio: {$orden->folio}"
+                );
+
+                $mensaje = '¡Presupuesto aceptado! Comenzaremos con la reparación de tu equipo.';
+            } else {
+                $orden->estado = 'para_pzas';
+                $orden->metodo_pago_compra = $request->metodo_pago_compra;
+                $orden->datos_transferencia = $request->datos_transferencia;
+
+                $this->notificarTecnico(
+                    $orden,
+                    '✅ Oferta por piezas aceptada',
+                    "El cliente aceptó la propuesta por piezas del equipo folio: {$orden->folio}"
+                );
+
+                $mensaje = '¡Propuesta aceptada! ' . ($request->metodo_pago_compra === 'transferencia' ? 'Procesaremos tu pago a los datos proporcionados.' : 'Podrás pasar por tu efectivo a sucursal.');
+            }
+
+            $orden->save();
+
+            DB::commit();
+            return back()->with('success', $mensaje);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Ocurrió un error al procesar la aceptación: ' . $e->getMessage());
+        }
     }
-}
 
     /**
      * Acción del cliente para rechazar la propuesta.

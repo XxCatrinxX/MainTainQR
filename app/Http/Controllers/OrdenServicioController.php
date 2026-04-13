@@ -101,11 +101,12 @@ class OrdenServicioController extends Controller
     ]);
 
     $esReparable = $request->boolean('es_reparable');
+    $ofrecerCompra = $request->boolean('ofrecer_compra');
 
-    if (!$esReparable && !$request->filled('monto_compra_piezas')) {
+    if (!$esReparable && $ofrecerCompra && !$request->filled('monto_compra_piezas')) {
         return back()
             ->withErrors([
-                'monto_compra_piezas' => 'Debes capturar el monto de compra para piezas.'
+                'monto_compra_piezas' => 'Debes capturar el monto de compra si deseas ofrecerla.'
             ])
             ->withInput();
     }
@@ -114,10 +115,11 @@ class OrdenServicioController extends Controller
 
     $orden->solucion_propuesta = $request->solucion_propuesta;
     $orden->es_reparable = $esReparable;
+    $orden->ofrecer_compra = $esReparable ? false : $ofrecerCompra;
     $orden->mano_obra = $esReparable ? $request->mano_obra : 0;
-    $orden->monto_compra_piezas = $esReparable
-        ? null
-        : $request->monto_compra_piezas;
+    $orden->monto_compra_piezas = (!$esReparable && $ofrecerCompra)
+        ? $request->monto_compra_piezas
+        : null;
 
     if (in_array($orden->estado, ['recibido', 'diagnostico'])) {
         $orden->estado = 'espera';

@@ -118,6 +118,10 @@
                                 <span class="badge badge-success">Listo</span>
                             @elseif($orden->estado == 'entregado')
                                 <span class="badge badge-dark">Entregado</span>
+                            @elseif($orden->estado == 'para_pzas')
+                                <span class="badge badge-info" style="background-color: #10b981 !important; color: white !important;">Para Piezas</span>
+                            @elseif($orden->estado == 'rechazado')
+                                <span class="badge badge-danger">Rechazado</span>
                             @endif
                         </td>
                         

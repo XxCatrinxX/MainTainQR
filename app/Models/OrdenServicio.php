@@ -30,7 +30,10 @@ class OrdenServicio extends Model
         'mano_obra',
         'solucion_propuesta',
         'es_reparable',
-        'monto_compra_piezas'
+        'monto_compra_piezas',
+        'ofrecer_compra',
+        'metodo_pago_compra',
+        'datos_transferencia'
     ];
 
     public function equipo()
