@@ -8,11 +8,10 @@ use App\Http\Controllers\Api\InventarioController;
 use App\Http\Controllers\Api\SolicitudCompraController;
 use App\Http\Controllers\Api\PagoController;
 use App\Http\Controllers\Api\OrderAuditController;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\OrdenServicioController;
+use Illuminate\Support\Facades\Route;
 
-// Rutas públicas (sin autenticación)
+// Rutas publicas (sin autenticacion)
 Route::get('/orders/{token_rastreo}/audits', [OrderAuditController::class, 'index']);
 Route::get('/orders/{token_rastreo}/audits/recent', [OrderAuditController::class, 'recent']);
 Route::get('/orders/{token_rastreo}/audits/stream', [OrderAuditController::class, 'stream']);
@@ -28,9 +27,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('clientes', ClienteController::class);
     Route::apiResource('equipos', EquipoController::class);
 
-    //InventarioApiResource
-    Route::get('/inventario/disponible', [OrdenServicioController::class, 'inventarioDisponibleApi']);
     // Inventario
+    Route::get('/inventario/disponible', [OrdenServicioController::class, 'inventarioDisponibleApi']);
     Route::apiResource('inventario', InventarioController::class);
 
     // Solicitudes de Compra
@@ -38,32 +36,17 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/solicitudes', [SolicitudCompraController::class, 'store']);
     Route::post('/solicitudes/{id}/surtir', [SolicitudCompraController::class, 'surtir']);
 
-    // Órdenes & Pagos
-    // 🔥 QR primero
+    // Ordenes & Pagos
     Route::get('/ordenes/qr/{qr_token}', [OrdenTecnicoController::class, 'showByQr']);
-
-    // 🔥 Órdenes del técnico
     Route::get('/ordenes', [OrdenTecnicoController::class, 'index']);
     Route::get('/ordenes/{id}', [OrdenTecnicoController::class, 'show']);
 
-    // 🔥 Acciones
-    Route::middleware('auth:sanctum')->group(function () {
-        Route::put('/ordenes/{id}/confirmar-recepcion', [OrdenTecnicoController::class, 'confirmarRecepcion'])->name('ordenes.confirmarRecepcion');
-        Route::post('/ordenes/{id}/rechazar', [OrdenTecnicoController::class, 'rechazarOrden']);
-        
-        // Diagnóstico: Reutiliza lógica web, retorna JSON
-      Route::middleware('auth:sanctum')->post('/ordenes/{id}/diagnostico', [OrdenServicioController::class, 'storeDiagnosticoApi']);
-      
-
-
-
-Route::get('/inventario/disponible', [OrdenServicioController::class, 'inventarioDisponibleApi']);
-Route::get('/inventario/{inventario}', [InventarioController::class, 'show']);
-            
-    });
+    // Acciones
+    Route::put('/ordenes/{id}/confirmar-recepcion', [OrdenTecnicoController::class, 'confirmarRecepcion'])->name('ordenes.confirmarRecepcion');
+    Route::post('/ordenes/{id}/rechazar', [OrdenTecnicoController::class, 'rechazarOrden']);
+    Route::post('/ordenes/{id}/diagnostico', [OrdenServicioController::class, 'storeDiagnosticoApi']);
+    Route::post('/ordenes/{id}/detalle', [OrdenServicioController::class, 'storeDetalle']);
 
     Route::post('/ordenes/{id}/pago', [PagoController::class, 'storeDesdeOrden']);
     Route::apiResource('pagos', PagoController::class);
-    
 });
-// | Aquí es donde puedes registrar las rutas API para tu aplicación. Estas rutas son cargadas por el RouteServiceProvider dentro de un grupo que

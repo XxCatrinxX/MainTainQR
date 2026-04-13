@@ -76,6 +76,11 @@ class OrdenServicioController extends Controller
         return view('ordenes.show', compact('orden', 'inventario'));
     }
 
+    public function inventarioDisponibleApi()
+    {
+        return response()->json(Inventario::where('stock', '>', 0)->get());
+    }
+
   public function storeDiagnostico(Request $request, $id)
 {
     if ($request->has('es_reparable')) {
@@ -95,11 +100,6 @@ class OrdenServicioController extends Controller
         'monto_compra_piezas'  => 'nullable|numeric|min:0',
         'fotos'                => 'nullable|array',
         'fotos.*'              => 'image|mimes:jpeg,png,jpg,gif|max:5120',
-
-        'repuestos'            => 'nullable|array',
-        'repuestos.*.id'       => 'required_with:repuestos|exists:inventario,id',
-        'repuestos.*.cantidad' => 'required_with:repuestos|integer|min:1',
-        'repuestos.*.precio'   => 'required_with:repuestos|numeric|min:0',
     ]);
 
     $esReparable = $request->boolean('es_reparable');
@@ -148,25 +148,6 @@ class OrdenServicioController extends Controller
         ['orden_servicio_id' => $orden->id],
         ['solucion_propuesta' => $request->solucion_propuesta]
     );
-
-    if ($esReparable) {
-        if ($request->has('repuestos') && is_array($request->repuestos) && count($request->repuestos) > 0) {
-            $repuestosData = [];
-
-            foreach ($request->repuestos as $r) {
-                $repuestosData[$r['id']] = [
-                    'cantidad' => $r['cantidad'],
-                    'precio_fijado' => $r['precio']
-                ];
-            }
-
-            $orden->repuestos()->sync($repuestosData);
-        } else {
-            $orden->repuestos()->detach();
-        }
-    } else {
-        $orden->repuestos()->detach();
-    }
 
     if ($request->hasFile('fotos')) {
         foreach ($request->file('fotos') as $foto) {
@@ -218,12 +199,6 @@ class OrdenServicioController extends Controller
         'es_reparable'         => 'required|boolean',
         'mano_obra'            => 'required|numeric|min:0',
         'monto_compra_piezas'  => 'nullable|numeric|min:0',
-
-        'repuestos'            => 'nullable|array',
-        'repuestos.*.id'       => 'required_with:repuestos|exists:inventario,id',
-        'repuestos.*.cantidad' => 'required_with:repuestos|integer|min:1',
-        'repuestos.*.precio'   => 'required_with:repuestos|numeric|min:0',
-
         'fotos'                => 'nullable|array',
         'fotos.*'              => 'image|mimes:jpeg,png,jpg,gif|max:5120',
     ]);
@@ -272,25 +247,6 @@ class OrdenServicioController extends Controller
         ['orden_servicio_id' => $orden->id],
         ['solucion_propuesta' => $request->solucion_propuesta]
     );
-
-    if ($esReparable) {
-        if ($request->has('repuestos') && is_array($request->repuestos) && count($request->repuestos) > 0) {
-            $repuestosData = [];
-
-            foreach ($request->repuestos as $r) {
-                $repuestosData[$r['id']] = [
-                    'cantidad' => $r['cantidad'],
-                    'precio_fijado' => $r['precio']
-                ];
-            }
-
-            $orden->repuestos()->sync($repuestosData);
-        } else {
-            $orden->repuestos()->detach();
-        }
-    } else {
-        $orden->repuestos()->detach();
-    }
 
     if ($request->hasFile('fotos')) {
         foreach ($request->file('fotos') as $foto) {
@@ -546,6 +502,12 @@ if ($tecnico && $tecnico->fcm_token) {
         $request->validate([
             'trabajo_finalizado' => 'required|string',
             'observaciones_internas' => 'nullable|string',
+            'repuestos' => 'nullable|array',
+            'repuestos.*.id' => 'required_with:repuestos|exists:inventario,id',
+            'repuestos.*.cantidad' => 'required_with:repuestos|integer|min:1',
+            'repuestos.*.precio' => 'required_with:repuestos|numeric|min:0',
+            'fotos' => 'nullable|array',
+            'fotos.*' => 'image|mimes:jpeg,png,jpg,gif|max:5120',
         ]);
 
         $orden = OrdenServicio::with('equipo.cliente')->findOrFail($id);
@@ -558,13 +520,42 @@ if ($tecnico && $tecnico->fcm_token) {
             ]
         );
 
+        if ($request->has('repuestos')) {
+            $repuestosData = [];
+
+            foreach ((array) $request->input('repuestos', []) as $r) {
+                $repuestosData[$r['id']] = [
+                    'cantidad' => $r['cantidad'],
+                    'precio_fijado' => $r['precio'],
+                ];
+            }
+
+            $orden->repuestos()->sync($repuestosData);
+        }
+
+        if ($request->hasFile('fotos')) {
+            foreach ($request->file('fotos') as $foto) {
+                $path = $foto->store('evidencias', 'public');
+
+                Evidencia::create([
+                    'orden_servicio_id' => $orden->id,
+                    'url_foto' => $path,
+                    'momento' => 'reparacion',
+                ]);
+            }
+        }
+
         // Avanzar estado a LISTO
         $orden->estado = 'listo';
         $orden->fecha_listo = now();
         $orden->save();
+        $orden->load(['equipo.cliente', 'evidencias', 'repuestos', 'detallesTecnicos']);
 
         // Notificar al cliente
         $correoCliente = $orden->equipo->cliente->correo ?? null;
+        $correoEnviado = false;
+        $errorCorreo = null;
+
         if ($correoCliente) {
             \Illuminate\Support\Facades\Log::info('ListoNotificacion (storeDetalle): intentando enviar correo', [
                 'orden_id' => $orden->id,
@@ -578,7 +569,9 @@ if ($tecnico && $tecnico->fcm_token) {
                     'orden_id' => $orden->id,
                     'correo'   => $correoCliente,
                 ]);
+                $correoEnviado = true;
             } catch (\Exception $e) {
+                $errorCorreo = $e->getMessage();
                 \Illuminate\Support\Facades\Log::error('ListoNotificacion (storeDetalle): error al enviar correo', [
                     'orden_id'  => $orden->id,
                     'correo'    => $correoCliente,
@@ -586,6 +579,16 @@ if ($tecnico && $tecnico->fcm_token) {
                     'exception' => $e,
                 ]);
             }
+        }
+
+        if ($request->expectsJson() || $request->is('api/*')) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Reparacion finalizada. Estado actualizado a Listo.',
+                'orden' => $orden,
+                'correo_enviado' => $correoEnviado,
+                'error_correo' => $errorCorreo,
+            ]);
         }
 
         return redirect()->route('ordenes.show', $id)
@@ -755,4 +758,3 @@ if ($tecnico && $tecnico->fcm_token) {
 
 
 }
-
