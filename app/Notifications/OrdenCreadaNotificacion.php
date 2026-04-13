@@ -11,12 +11,14 @@ class OrdenCreadaNotificacion extends Notification
 {
     use Queueable;
 
+    protected $orden;
+
     /**
      * Create a new notification instance.
      */
-    public function __construct()
+    public function __construct($orden)
     {
-        //
+        $this->orden = $orden;
     }
 
     /**
@@ -24,7 +26,7 @@ class OrdenCreadaNotificacion extends Notification
      *
      * @return array<int, string>
      */
-    public function via(object $notifiable): array
+    public function via($notifiable)
     {
         return ['mail'];
     }
@@ -34,12 +36,11 @@ class OrdenCreadaNotificacion extends Notification
      */
     public function toMail($notifiable)
     {
-        $link = config('app.url') . '/seguimiento/' . $this->orden->token_rastreo;
-         
-        return (new \Illuminate\Notifications\Messages\MailMessage)
-        ->subject('Orden creada')
-        ->line('Tu orden fue registrada')
-        ->action('Ver seguimiento', $link);
+        return (new MailMessage)
+            ->subject('Nueva orden creada')
+            ->line('Se ha creado una nueva orden.')
+            ->line('Folio: ' . $this->orden->folio)
+            ->line('Gracias por confiar en nosotros.');
     }
 
     /**

@@ -94,12 +94,3 @@ use App\Http\Controllers\UsuarioController;
 Route::middleware('auth')->resource('usuarios', UsuarioController::class);
 
 
-// RUTA DE PRUEBA PARA NOTIFICACIONES (Eliminar después)
-Route::get('/test-mail', function () {
-    Mail::raw('PRUEBA REAL', function ($message) {
-        $message->to('2123200534@soy.utj.edu.mx')
-                ->subject('Prueba SMTP');
-    });
-
-    return 'Correo enviado';
-});

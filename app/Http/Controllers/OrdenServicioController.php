@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\Notification;
 use Endroid\QrCode\Writer\SvgWriter;
 use Endroid\QrCode\Encoding\Encoding;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Mail;
+use App\Notifications\OrdenCreadaNotificacion;
 use Kreait\Firebase\Messaging\CloudMessage;
 use Kreait\Firebase\Messaging\Notification as FCMNotification;
 
@@ -469,6 +469,20 @@ class OrdenServicioController extends Controller
             'estado' => 'recibido',
             'token_rastreo' => uniqid('rastreo_'),
         ]);
+
+        $correoCliente = $orden->equipo->cliente->correo ?? null;
+
+        if($correoCliente) {
+            try {
+                \Illuminate\Support\Facades\Notification::route('mail', $correoCliente)
+                    ->notify(new OrdenCreadaNotificacion($orden));
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error('Error al enviar correo de orden creada' , [
+                    'orden_id' => $orden->id,
+                    'error' => $e->getMessage()
+                ]);
+            }
+        }
 
        
         $tecnico = User::find($request->id_usuario);
