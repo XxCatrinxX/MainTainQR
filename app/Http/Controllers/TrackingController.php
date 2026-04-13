@@ -109,9 +109,17 @@ class TrackingController extends Controller
 
         $esReparable = (bool)$orden->es_reparable;
 
-        $orden->estado = 'rechazado';
+        $orden->estado = 'listo'; // El equipo queda listo para que el cliente pase por él.
         $orden->decision_cliente = 'rechaza';
         $orden->fecha_aprobacion = now();
+        $orden->fecha_listo = now();
+        
+        // Al rechazar o no ser reparable sin compra, el costo es de $100 simbolicos.
+        $orden->mano_obra = 100;
+        
+        // Limpiamos repuestos si los había (ya que no se reparará).
+        $orden->repuestos()->detach();
+
         $orden->save();
 
         $this->notificarTecnico(

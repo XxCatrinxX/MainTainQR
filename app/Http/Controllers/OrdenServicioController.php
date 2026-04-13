@@ -116,7 +116,15 @@ class OrdenServicioController extends Controller
     $orden->solucion_propuesta = $request->solucion_propuesta;
     $orden->es_reparable = $esReparable;
     $orden->ofrecer_compra = $esReparable ? false : $ofrecerCompra;
-    $orden->mano_obra = $esReparable ? $request->mano_obra : 0;
+
+    // Si no es reparable y no lo compramos, cobramos 100 de diagnóstico.
+    // Si sí es reparable, tomamos el monto capturado (presupuesto).
+    if (!$esReparable && !$ofrecerCompra) {
+        $orden->mano_obra = 100;
+    } else {
+        $orden->mano_obra = $request->mano_obra;
+    }
+
     $orden->monto_compra_piezas = (!$esReparable && $ofrecerCompra)
         ? $request->monto_compra_piezas
         : null;
@@ -233,7 +241,14 @@ class OrdenServicioController extends Controller
     $orden->solucion_propuesta = $request->solucion_propuesta;
     $orden->es_reparable = $esReparable;
     $orden->ofrecer_compra = $esReparable ? false : $ofrecerCompra;
-    $orden->mano_obra = $esReparable ? $request->mano_obra : 0;
+
+    // Si no es reparable y no lo compramos, cobramos 100 de diagnóstico.
+    if (!$esReparable && !$ofrecerCompra) {
+        $orden->mano_obra = 100;
+    } else {
+        $orden->mano_obra = $request->mano_obra;
+    }
+
     $orden->monto_compra_piezas = (!$esReparable && $ofrecerCompra)
         ? $request->monto_compra_piezas
         : null;
