@@ -475,7 +475,7 @@ if ($tecnico && $tecnico->fcm_token) {
 
         $messaging->send($message);
         
-    } catch (\Exception $e) {
+    } catch (\Throwable $e) {
         \Illuminate\Support\Facades\Log::error("Error FCM: " . $e->getMessage());
     }
 }
@@ -657,6 +657,11 @@ if ($tecnico && $tecnico->fcm_token) {
         if ($orden->estado !== 'rechazado') {
             return back()->with('error', 'La orden debe estar en estado Rechazado para cerrarse.');
         }
+        
+        if (!in_array(Auth::user()->rol, ['admin', 'recepcionista'])) {
+            return back()->with('error', 'Solo el recepcionista o administrador puede realizar la devolución al cliente.');
+        }
+
         $orden->estado = 'entregado';
         $orden->fecha_entrega_real = now();
         $orden->save();
@@ -671,17 +676,29 @@ if ($tecnico && $tecnico->fcm_token) {
             return back()->with('error', 'La orden debe estar en estado Listo para confirmar entrega.');
         }
 
-        $totalDebe  = ($orden->mano_obra ?? 0) + $orden->repuestos->sum(fn($r) => $r->pivot->cantidad * $r->pivot->precio_fijado);
-        $totalPagado = $orden->pagos->sum('monto');
+        if (!in_array(Auth::user()->rol, ['admin', 'recepcionista'])) {
+            return back()->with('error', 'Solo el recepcionista o administrador puede entregar o cerrar la compra de la orden.');
+        }
 
-        if ($totalPagado < $totalDebe) {
-            return back()->with('error', 'No se puede entregar. Saldo pendiente: $' . number_format($totalDebe - $totalPagado, 2));
+        if ($orden->ofrecer_compra) {
+            $totalDebe = $orden->monto_compra_piezas ?? 0;
+            $totalPagado = $orden->pagos->sum('monto');
+            if ($totalPagado < $totalDebe) {
+                return back()->with('error', 'No se puede cerrar. Saldo pendiente de pago al cliente: $' . number_format($totalDebe - $totalPagado, 2));
+            }
+        } else {
+            $totalDebe  = ($orden->mano_obra ?? 0) + $orden->repuestos->sum(fn($r) => $r->pivot->cantidad * $r->pivot->precio_fijado);
+            $totalPagado = $orden->pagos->sum('monto');
+
+            if ($totalPagado < $totalDebe) {
+                return back()->with('error', 'No se puede entregar. Saldo pendiente del cliente: $' . number_format($totalDebe - $totalPagado, 2));
+            }
         }
 
         $orden->estado = 'entregado';
         $orden->fecha_entrega_real = now();
         $orden->save();
-        return back()->with('success', '¡Equipo entregado! La orden ha sido cerrada correctamente.');
+        return back()->with('success', 'Operación completada y orden cerrada exitosamente.');
     }
 
     public function verQR($id)

@@ -273,7 +273,7 @@ class TrackingController extends Controller
             
             \Illuminate\Support\Facades\Log::info("FCM Enviado desde Tracking: " . $orden->folio);
             
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             \Illuminate\Support\Facades\Log::error("Error FCM en Tracking: " . $e->getMessage());
         }
     } else {
