@@ -40,7 +40,6 @@ Route::get('/ordenes/{id}/qr', [OrdenServicioController::class, 'verQR'])->name(
 // DETALLE TÉCNICO (Protegido)
 Route::middleware('auth')->group(function () {
     Route::get('/ordenes/{id}', [OrdenServicioController::class , 'show'])->name('ordenes.show');
-    Route::post('/ordenes/{id}/pago', [PagoController::class, 'storeDesdeOrden'])->name('ordenes.pago');
     Route::post('/ordenes/{id}/detalle', [OrdenServicioController::class , 'storeDetalle'])->name('ordenes.detalle');
     Route::post('/ordenes/{id}/diagnostico', [OrdenServicioController::class , 'storeDiagnostico'])->name('ordenes.diagnostico');
 
@@ -80,6 +79,7 @@ Route::middleware(['auth', 'role:admin,almacenista'])->group(function () {
 // PAGOS (Protegido)
 Route::middleware(['auth', 'role:admin,recepcionista'])->group(function () {
     Route::resource('pagos', PagoController::class);
+    Route::post('/ordenes/{id}/pago', [PagoController::class, 'storeDesdeOrden'])->name('ordenes.pago');
 });
 
 // DIRECTORIOS GENERALES (Protegido)

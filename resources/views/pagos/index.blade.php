@@ -1,16 +1,12 @@
 @extends('adminlte::page')
 
-@section('title', 'Historial de Pagos')
-
-@section('css')
-    {{-- Estilos centralizados en admin-custom.css --}}
-@stop
+@section('title', 'Ingresos y Pagos')
 
 @section('content_header')
     <div class="d-flex justify-content-between align-items-center">
         <h1>Ingresos y Pagos</h1>
         <a href="{{ route('pagos.create') }}" class="btn btn-modern btn-dark-modern">
-            <i class="fas fa-plus mr-1"></i> Registrar Ingreso
+            <i class="fas fa-plus mr-1"></i> Asentar Movimiento
         </a>
     </div>
 @stop
@@ -23,37 +19,114 @@
     </div>
 @endif
 
-<div class="card overflow-hidden">
+<!-- KPIs -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card shadow-sm border-0" style="border-radius: 12px; background: white;">
+            <div class="card-body px-4 py-3 d-flex align-items-center">
+                <div class="mr-3 p-3 rounded-circle" style="background-color: #ecfccb; color: #4d7c0f;">
+                    <i class="fas fa-arrow-down fa-2x"></i>
+                </div>
+                <div>
+                    <h6 class="text-uppercase text-muted font-weight-bold mb-1" style="letter-spacing: 0.05em; font-size: 0.8rem;">Total Ingresos Recibidos</h6>
+                    <h3 class="mb-0 font-weight-bold" style="color: #111827;">${{ number_format($total_ingresos, 2) }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card shadow-sm border-0" style="border-radius: 12px; background: white;">
+            <div class="card-body px-4 py-3 d-flex align-items-center">
+                <div class="mr-3 p-3 rounded-circle" style="background-color: #fee2e2; color: #b91c1c;">
+                    <i class="fas fa-arrow-up fa-2x"></i>
+                </div>
+                <div>
+                    <h6 class="text-uppercase text-muted font-weight-bold mb-1" style="letter-spacing: 0.05em; font-size: 0.8rem;">Total Pagado por Piezas</h6>
+                    <h3 class="mb-0 font-weight-bold" style="color: #111827;">${{ number_format($total_egresos, 2) }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<h4 class="mb-3 font-weight-bold" style="color: #374151;">Órdenes Pendientes de Pago</h4>
+<div class="card shadow-sm border-0 mb-4" style="border-radius: 12px;">
     <div class="table-responsive">
-        <table class="table table-modern">
-            <thead>
+        <table class="table table-hover mb-0">
+            <thead class="bg-light">
                 <tr>
-                    <th>Folio de Orden</th>
-                    <th>Subtotal Abonado</th>
-                    <th>Método de Pago</th>
-                    <th>Clasificación</th>
-                    <th>Fecha Registro</th>
+                    <th class="border-top-0">Folio</th>
+                    <th class="border-top-0">Cliente</th>
+                    <th class="border-top-0">Estado</th>
+                    <th class="border-top-0">Calculado</th>
+                    <th class="border-top-0 text-danger">Saldo Restante</th>
+                    <th class="border-top-0">Acción</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($ordenes_pendientes as $orden)
+                    <tr>
+                        <td class="align-middle font-weight-bold">{{ $orden->folio }}</td>
+                        <td class="align-middle">{{ $orden->equipo->cliente->nombre ?? 'N/A' }}</td>
+                        <td class="align-middle text-uppercase"><span class="badge badge-secondary">{{ $orden->estado }}</span></td>
+                        <td class="align-middle">${{ number_format($orden->total_calculado, 2) }}</td>
+                        <td class="align-middle font-weight-bold text-danger">${{ number_format($orden->restante, 2) }}</td>
+                        <td class="align-middle">
+                            <a href="{{ route('ordenes.show', $orden->id) }}" class="btn btn-sm btn-outline-dark" style="border-radius: 6px;">
+                                <i class="fas fa-external-link-alt mr-1"></i> Ver Orden
+                            </a>
+                        </td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="6" class="text-center py-4 text-muted">
+                            No hay órdenes con saldos pendientes por cobrar o pagar.
+                        </td>
+                    </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<h4 class="mb-3 font-weight-bold" style="color: #374151;">Últimos Movimientos</h4>
+<div class="card overflow-hidden shadow-sm border-0" style="border-radius: 12px;">
+    <div class="table-responsive">
+        <table class="table table-modern mb-0">
+            <thead class="bg-light">
+                <tr>
+                    <th class="border-top-0">Folio de Orden</th>
+                    <th class="border-top-0">Monto</th>
+                    <th class="border-top-0">Canal</th>
+                    <th class="border-top-0">Clasificación</th>
+                    <th class="border-top-0">Fecha Registro</th>
                 </tr>
             </thead>
             <tbody>
                 @forelse($pagos as $pago)
                     <tr>
-                        <td style="font-family: monospace; font-weight: 600; color: #4b5563;">
+                        <td class="align-middle" style="font-family: monospace; font-weight: 600; color: #4b5563;">
                             {{ $pago->orden_servicio->folio ?? 'N/A' }}
                         </td>
-                        <td style="font-weight: 600; color: #111827;">${{ number_format($pago->monto, 2) }}</td>
-                        <td>
+                        <td class="align-middle" style="font-weight: 600; color: {{ $pago->tipo_pago == 'pago_cliente' ? '#b91c1c' : '#111827' }};">
+                            {{ $pago->tipo_pago == 'pago_cliente' ? '-' : '+' }}${{ number_format($pago->monto, 2) }}
+                        </td>
+                        <td class="align-middle">
                             <span class="text-capitalize text-muted">
                                 <i class="fas {{ $pago->metodo_pago == 'efectivo' ? 'fa-money-bill-wave' : ($pago->metodo_pago == 'tarjeta' ? 'fa-credit-card' : 'fa-university') }} mr-1"></i>
                                 {{ $pago->metodo_pago }}
                             </span>
                         </td>
-                        <td>
-                            <span class="badge-modern text-capitalize {{ $pago->tipo_pago == 'anticipo' ? 'badge-anticipo' : 'badge-liquidacion' }}">
-                                {{ $pago->tipo_pago }}
-                            </span>
+                        <td class="align-middle">
+                            @if($pago->tipo_pago == 'anticipo')
+                                <span class="badge badge-info text-uppercase">Anticipo</span>
+                            @elseif($pago->tipo_pago == 'pago_cliente')
+                                <span class="badge badge-danger text-uppercase">Pago a Cliente</span>
+                            @else
+                                <span class="badge badge-success text-uppercase">Liquidación</span>
+                            @endif
                         </td>
-                        <td class="text-muted" style="font-size: 0.85rem;">
+                        <td class="align-middle text-muted" style="font-size: 0.85rem;">
                             {{ \Carbon\Carbon::parse($pago->created_at)->format('d M, Y h:i a') }}
                         </td>
                     </tr>
@@ -70,3 +143,4 @@
     </div>
 </div>
 @stop
+

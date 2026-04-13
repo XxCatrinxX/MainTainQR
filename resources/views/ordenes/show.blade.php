@@ -532,8 +532,9 @@
                         </div>
                     @endif
 
-                    {{-- REGISTRO DE COBRO --}}
-                    <form method="POST" action="{{ route('ordenes.pago', $orden->id) }}" class="mb-4">
+                    {{-- REGISTRO DE COBRO Y ENTREGA --}}
+                    @if(in_array(Auth::user()->rol, ['admin', 'recepcionista']))
+                    <form method="POST" action="{{ route('ordenes.pago', $orden->id) }}" class="mb-4 pb-3 border-bottom">
                         @csrf
                         <h6 style="font-weight:700; color:#374151;"><i class="fas fa-dollar-sign mr-2 text-success"></i>Registrar Cobro</h6>
                         <div class="row">
@@ -573,6 +574,12 @@
                             <i class="fas fa-handshake mr-2"></i> Confirmar Entrega al Cliente
                         </button>
                     </form>
+                    @else
+                        <div class="alert alert-info mt-3" style="border-radius:8px;">
+                            <i class="fas fa-info-circle mr-2"></i> 
+                            Esta orden está en etapa de Entrega y Facturación. Solo Recepcionistas y Administradores pueden registrar pagos y liberar el equipo.
+                        </div>
+                    @endif
                 </div>
             </div>
 
@@ -580,6 +587,7 @@
             {{-- ─── PANEL: ENTREGADO / CERRADO ─── --}}
             <div class="card" style="border-left: 4px solid #111827;">
                 <div class="card-header" style="background:#111827;">
+
                     <h5 class="card-title text-white"><i class="fas fa-flag-checkered mr-2"></i>Orden Cerrada</h5>
                 </div>
                 <div class="card-body">

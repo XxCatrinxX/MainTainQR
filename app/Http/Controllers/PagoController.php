@@ -10,9 +10,32 @@ class PagoController extends Controller
 {
     public function index()
     {
-        // En una app real, podrías filtrar por fecha o cliente.
         $pagos = Pago::with('orden_servicio')->latest()->get();
-        return view('pagos.index', compact('pagos'));
+        
+        $total_ingresos = $pagos->where('tipo_pago', '!=', 'pago_cliente')->sum('monto');
+        $total_egresos = $pagos->where('tipo_pago', 'pago_cliente')->sum('monto');
+
+        $ordenes_pendientes = OrdenServicio::with(['equipo.cliente', 'pagos', 'repuestos'])
+            ->whereIn('estado', ['listo', 'entregado', 'reparacion', 'para_pzas'])
+            ->get()
+            ->map(function ($orden) {
+                if ($orden->estado === 'para_pzas') {
+                    $total = $orden->monto_compra_piezas ?? 0;
+                } else {
+                    $total = ($orden->mano_obra ?? 0) + $orden->repuestos->sum(function($r) {
+                        return $r->pivot->cantidad * $r->pivot->precio_fijado;
+                    });
+                }
+                
+                $pagado = $orden->pagos->sum('monto');
+                $orden->restante = $total - $pagado;
+                $orden->total_calculado = $total;
+                return $orden;
+            })->filter(function ($orden) {
+                return $orden->restante > 0;
+            });
+
+        return view('pagos.index', compact('pagos', 'total_ingresos', 'total_egresos', 'ordenes_pendientes'));
     }
 
     public function create(Request $request)
