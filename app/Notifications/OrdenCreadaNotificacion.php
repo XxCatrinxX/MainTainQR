@@ -43,7 +43,7 @@ class OrdenCreadaNotificacion extends Notification implements ShouldQueue
             ->line('🔢 Folio: ' . $this->orden->folio)
             ->line('📌 Estado: Recibido')
             ->line('En breve un técnico revisará tu equipo.')
-            ->action('Ver estado de tu orden', url('/rastreo/' . $this->orden->token_rastreo))
+            ->action('Ver estado de tu orden', url('/seguimiento/' . $this->orden->token_rastreo))
             ->line('Gracias por confiar en nosotros 🙌');
     }
 
