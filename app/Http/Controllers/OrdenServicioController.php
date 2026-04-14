@@ -414,11 +414,8 @@ class OrdenServicioController extends Controller
         }
 
         $anio = date('Y');
-<<<<<<< HEAD
-        $siguienteId = OrdenServicio::withTrashed()->max('id') + 1;
-        $folio = 'OS-' . $anio . '-' . str_pad($siguienteId, 4, '0', STR_PAD_LEFT);
-=======
-        $lastFolio = OrdenServicio::where('folio', 'like', 'OS-' . $anio . '-%')
+        $lastFolio = OrdenServicio::withTrashed()
+            ->where('folio', 'like', 'OS-' . $anio . '-%')
             ->orderBy('folio', 'desc')
             ->first();
 
@@ -430,7 +427,6 @@ class OrdenServicioController extends Controller
         }
 
         $folio = 'OS-' . $anio . '-' . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
->>>>>>> f5532d58f317b9cc6bc0d0064cc44081d042951d
 
         $orden = OrdenServicio::create([
             'folio' => $folio,
