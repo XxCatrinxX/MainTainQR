@@ -20,13 +20,16 @@ class OrdenTecnicoController extends Controller
      */
 
 
-    public function index()
+    public function index(Request $request)
 {
-    $ordenes = OrdenServicio::with(['equipo.cliente', 'user'])
-        ->where('user_id', Auth::id())
-        ->where('estado', 'espera') // 👈 SOLO LAS QUE ACEPTÓ
-        ->latest()
-        ->get();
+    $query = OrdenServicio::with(['equipo.cliente', 'user'])
+        ->where('user_id', Auth::id());
+
+    if ($request->has('estado')) {
+        $query->where('estado', $request->estado);
+    }
+
+    $ordenes = $query->latest()->get();
 
     return response()->json([
         'ordenes' => $ordenes,
