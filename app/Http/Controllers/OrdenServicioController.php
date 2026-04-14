@@ -414,7 +414,7 @@ class OrdenServicioController extends Controller
         }
 
         $anio = date('Y');
-        $siguienteId = OrdenServicio::max('id') + 1;
+        $siguienteId = OrdenServicio::withTrashed()->max('id') + 1;
         $folio = 'OS-' . $anio . '-' . str_pad($siguienteId, 4, '0', STR_PAD_LEFT);
 
         $orden = OrdenServicio::create([
