@@ -42,7 +42,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/ordenes/{id}', [OrdenTecnicoController::class, 'show']);
 
     // Acciones
-    Route::put('/ordenes/{id}/confirmar-recepcion', [OrdenTecnicoController::class, 'confirmarRecepcion'])->name('ordenes.confirmarRecepcion');
+    Route::put('/ordenes/{id}/confirmar-recepcion', [OrdenTecnicoController::class, 'confirmarRecepcion'])->name('api.ordenes.confirmarRecepcion');
     Route::post('/ordenes/{id}/rechazar', [OrdenTecnicoController::class, 'rechazarOrden']);
     Route::post('/ordenes/{id}/diagnostico', [OrdenServicioController::class, 'storeDiagnosticoApi']);
     Route::post('/ordenes/{id}/detalle', [OrdenServicioController::class, 'storeDetalle']);
