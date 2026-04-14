@@ -439,7 +439,7 @@ class OrdenServicioController extends Controller
             'equipo_id' => $equipoId,
             'cliente_id' => session('wizard_cliente_id'),
             'user_id' => $request->id_usuario,
-            'falla_reportada' => $request->falla_reportada,
+            'falla_reportada' => $request->problema_reportado,
             'estado_fisico' => $request->estado_fisico,
             'token_rastreo' => bin2hex(random_bytes(16)),
             'fecha_recepcion' => now(),
