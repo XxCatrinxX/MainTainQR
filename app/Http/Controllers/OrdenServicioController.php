@@ -28,8 +28,7 @@ class OrdenServicioController extends Controller
     public function index()
     {
         $user = Auth::user();
-        $query = OrdenServicio::with(['equipo.cliente', 'user']);
-        $query = OrdenServicio::with(['equipo.cliente', 'user'])->whereNull('deleted_at');
+        $query = OrdenServicio::with(['equipo.cliente', 'user'])->where('estado', '!=', 'entregado');
 
         // Si es técnico, solo ve lo asignado a él
         if ($user->rol === 'tecnico') {
@@ -616,6 +615,9 @@ if ($tecnico && $tecnico->fcm_token) {
             $orden->save();
             
             $this->archivarOrden($orden);
+
+            // IMPORTANTE: Retornamos aquí para que no ejecute el ->update() de abajo
+            return redirect()->route('ordenes.index')->with('success', 'Orden entregada y archivada.');
         }
 
         $estadoAnterior = $orden->estado;
@@ -768,33 +770,59 @@ if ($tecnico && $tecnico->fcm_token) {
     return view('ordenes.qr', compact('orden', 'qrBase64'));
 }
 
+private function archivarOrden($orden)
+{
+    $orden->deleted_by = Auth::id();
+    // No es necesario save() si solo vas a hacer delete() justo después, 
+    // pero ayuda a mantener el rastro de quién cerró la orden.
+    $orden->save(); 
+
+    $orden->delete(); // Esto la mueve a la vista de "Archivadas" (gracias a onlyTrashed)
+}
+
 public function destroy($id)
 {
-    $orden = OrdenServicio::with(['evidencias', 'pagos'])->findOrFail($id);
+    $orden = OrdenServicio::findOrFail($id); // Quitamos el with para evitar peso si solo vamos a borrar
 
     if (Auth::user()->rol !== 'admin') {
         return back()->with('error', 'No tienes permiso.');
     }
 
-    // 🚨 BLOQUEO SI TIENE PAGOS
-    if ($orden->pagos->count() > 0) {
-        return back()->with('error', 'No se puede eliminar: la orden tiene pagos registrados.');
+    // Si quieres que se archive SIEMPRE aunque tenga pagos (solo para probar)
+    // Comenta estas líneas de validación temporalmente:
+    /*
+    if ($orden->pagos()->exists() || $orden->evidencias()->exists()) {
+         return back()->with('error', 'No se puede eliminar porque tiene historial.');
+    }
+    */
+
+    // 👤 Guardamos quién elimina
+    $orden->update(['deleted_by' => Auth::id()]);
+
+    // 🧠 Ejecutamos el Soft Delete
+    if($orden->delete()){
+        return redirect()->route('ordenes.index')
+            ->with('success', 'Orden enviada a la papelera correctamente.');
     }
 
-    // 🚨 BLOQUEO SI TIENE EVIDENCIAS
-    if ($orden->evidencias->count() > 0) {
-        return back()->with('error', 'No se puede eliminar: la orden tiene evidencias.');
+    return back()->with('error', 'Error inesperado al intentar archivar.');
+}
+
+public function forceDelete($id)
+{
+    // Buscamos específicamente en los registros eliminados (trashed)
+    $orden = OrdenServicio::onlyTrashed()->findOrFail($id);
+
+    if (Auth::user()->rol !== 'admin') {
+        return back()->with('error', 'No tienes permisos para eliminar permanentemente.');
     }
 
-    // 👤 guardar quién eliminó
-    $orden->deleted_by = Auth::id();
-    $orden->save();
+    // Aquí podrías agregar lógica para borrar archivos físicos (fotos/evidencias) 
+    // en Storage si fuera necesario antes de borrar el registro.
 
-    // 🧠 SOFT DELETE
-    $orden->delete();
+    $orden->forceDelete(); 
 
-    return redirect()->route('ordenes.index')
-        ->with('success', 'Orden eliminada correctamente (soft delete).');
+    return back()->with('success', 'La orden ha sido eliminada permanentemente de la base de datos.');
 }
 
 public function restore($id)
@@ -807,22 +835,19 @@ public function restore($id)
 
     $orden->restore();
     $orden->deleted_by = null;
+    
+    // CAMBIO CLAVE: Cambiamos el estado para que el index no la ignore
+    $orden->estado = 'listo'; 
+    
     $orden->save();
 
-    return back()->with('success', 'Orden restaurada correctamente');
+    return back()->with('success', 'Orden restaurada y estado cambiado a Listo.');
 }
+// Agrega esto a OrdenServicioController.php
 
-private function archivarOrden($orden)
+public function archivadas()
 {
-    $orden->deleted_by = Auth::id();
-    $orden->save();
-
-    $orden->delete(); // soft delete
-}
-
-public function papelera()
-{
-    $ordenes = OrdenServicio::onlyTrashed()
+    $ordenes = OrdenServicio::onlyTrashed() // Trae TODO lo que tenga deleted_at
         ->with(['equipo.cliente', 'user'])
         ->latest()
         ->get();

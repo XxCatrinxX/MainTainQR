@@ -15,6 +15,7 @@ class OrdenServicio extends Model
 
     protected $table = 'orden_servicios';
     protected $primaryKey = 'id';
+    protected $dates = ['deleted_at'];
 
     protected $fillable = [
         'folio',

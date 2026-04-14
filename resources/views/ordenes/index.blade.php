@@ -15,7 +15,7 @@
         @if(Auth::user()->rol !== 'tecnico')
         <div class="d-flex">
             @if(Auth::user()->rol === 'admin')
-                <a href="{{ route('ordenes.papelera') }}" class="btn btn-outline-secondary mr-2 shadow-sm" style="border-radius: 8px;">
+                <a href="{{ route('ordenes.archivadas') }}" class="btn btn-outline-secondary mr-2 shadow-sm" style="border-radius: 8px;">
                     <i class="fas fa-trash-alt mr-1"></i> Ver Papelera
                 </a>
             @endif
@@ -170,7 +170,7 @@
     <!-- Eliminar -->
 @if(Auth::user()->rol === 'admin')
     <form action="{{ route('ordenes.destroy', $orden->id) }}" method="POST" style="display:inline-block;" 
-          onsubmit="return confirm('⚠️ ¿Seguro que deseas eliminar esta orden? Esta acción no se puede deshacer.');">
+          onsubmit="return confirm('¿Estás seguro? Esta acción moverá la orden a la papelera.')">
         @csrf
         @method('DELETE')
 

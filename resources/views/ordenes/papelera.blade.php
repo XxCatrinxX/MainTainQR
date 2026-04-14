@@ -21,7 +21,7 @@
                         <th class="border-top-0">Folio</th>
                         <th class="border-top-0">Cliente</th>
                         <th class="border-top-0">Estado al Borrar</th>
-                        <th class="border-top-0">Fecha Recepción</th>
+                        <th class="border-top-0">Fecha Entrega</th>
                         <th class="border-top-0 text-right">Acciones</th>
                     </tr>
                 </thead>
@@ -37,15 +37,26 @@
                                 <span class="badge badge-secondary text-uppercase" style="font-size: 0.75rem;">{{ $orden->estado }}</span>
                             </td>
                             <td class="align-middle text-muted" style="font-size: 0.9rem;">
-                                {{ \Carbon\Carbon::parse($orden->fecha_recepcion)->format('d M, Y') }}
+                                {{ $orden->fecha_entrega_real ? \Carbon\Carbon::parse($orden->fecha_entrega_real)->format('d M, Y') : 'N/A' }}
                             </td>
                             <td class="align-middle text-right">
-                                <form action="{{ route('ordenes.restore', $orden->id) }}" method="POST" style="display:inline-block;">
-                                    @csrf
-                                    <button type="submit" class="btn btn-success btn-sm px-3 shadow-sm" style="border-radius: 6px;" title="Restaurar Orden">
-                                        <i class="fas fa-trash-restore mr-1"></i> Restaurar
-                                    </button>
-                                </form>
+                                <div class="d-flex justify-content-end">
+                                    <form action="{{ route('ordenes.restore', $orden->id) }}" method="POST" class="mr-2">
+                                        @csrf
+                                        <button type="submit" class="btn btn-sm btn-success shadow-sm" title="Restaurar Orden">
+                                            <i class="fas fa-trash-restore"></i> Restaurar
+                                        </button>
+                                    </form>
+
+                                    <form action="{{ route('ordenes.forceDelete', $orden->id) }}" method="POST" 
+                                          onsubmit="return confirm('¿Estás seguro? Esta acción no se puede deshacer.')">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-sm btn-danger shadow-sm" title="Eliminar Permanentemente">
+                                            <i class="fas fa-fire"></i> Borrar Permanente
+                                        </button>
+                                    </form>
+                                </div>
                             </td>
                         </tr>
                     @empty
