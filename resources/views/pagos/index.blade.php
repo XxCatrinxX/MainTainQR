@@ -5,9 +5,6 @@
 @section('content_header')
     <div class="d-flex justify-content-between align-items-center">
         <h1>Ingresos y Pagos</h1>
-        <a href="{{ route('pagos.create') }}" class="btn btn-modern btn-dark-modern">
-            <i class="fas fa-plus mr-1"></i> Asentar Movimiento
-        </a>
     </div>
 @stop
 

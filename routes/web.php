@@ -96,4 +96,9 @@ Route::middleware('auth')->group(function () {
 use App\Http\Controllers\UsuarioController;
 Route::middleware('auth')->resource('usuarios', UsuarioController::class);
 
+Route::get('/acerca-de', function () {
+    return view('about');
+})->name('about');
+
+
 
