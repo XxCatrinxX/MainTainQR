@@ -37,14 +37,8 @@ class OrdenCreadaNotificacion extends Notification implements ShouldQueue
     public function toMail($notifiable)
     {
         return (new MailMessage)
-            ->subject('📦 Orden de servicio creada')
-            ->greeting('Hola, ' . ($this->orden->equipo->cliente->nombre ?? 'cliente'))
-            ->line('Tu equipo ha sido registrado correctamente en nuestro sistema.')
-            ->line('🔢 Folio: ' . $this->orden->folio)
-            ->line('📌 Estado: ' . $this->orden->estado)
-            ->line('En breve el técnico ' . ($this->orden->user->nombre ?? 'asignado') . ' se encargará de tu equipo.')
-            ->action('Ver estado de tu orden', url('/seguimiento/' . $this->orden->token_rastreo))
-            ->line('Gracias por confiar en nosotros 🙌');
+            ->subject('📦 Orden de servicio creada: ' . $this->orden->folio)
+            ->view('emails.orden_creada', ['orden' => $this->orden]);
     }
 
     /**
