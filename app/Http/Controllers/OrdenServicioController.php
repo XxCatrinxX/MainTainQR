@@ -322,18 +322,22 @@ class OrdenServicioController extends Controller
                 'telefono', 'correo', 'direccion'
             ]));
         } else {
-            // Find by email (unique key) or phone, update if found, create if not
+            // Find by email (unique key) or phone.
             $searchKey = $request->filled('correo')
                 ? ['correo' => $request->correo]
                 : ['telefono' => $request->telefono];
 
-            $cliente = Cliente::updateOrCreate(
-                $searchKey,
-                $request->only([
-                    'nombre', 'apellido_paterno', 'apellido_materno',
-                    'telefono', 'correo', 'direccion'
-                ])
-            );
+            // In order to protect historical data, we search for the client first.
+            $cliente = Cliente::where($searchKey)->first();
+
+            if ($cliente) {
+                // If found, we use the record but DON'T overwrite the name/identity fields 
+                // accidentally, just update potentially useful secondary info if provided.
+                $cliente->update($request->only(['direccion', 'correo']));
+            } else {
+                // If not found, create a brand new client.
+                $cliente = Cliente::create($request->all());
+            }
 
             session(['wizard_cliente_id' => $cliente->id]);
         }
