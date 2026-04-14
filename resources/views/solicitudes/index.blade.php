@@ -32,11 +32,15 @@
                     @forelse($solicitudes as $s)
                     <tr>
                         <td class="px-4">
-                            <a href="{{ route('ordenes.show', $s->orden_servicio_id) }}" style="font-weight: 700; color: #111827;">
-                                {{ $s->ordenServicio->folio }}
-                            </a>
-                            <br>
-                            <small class="text-muted">{{ $s->ordenServicio->equipo->marca }} {{ $s->ordenServicio->equipo->modelo }}</small>
+                            @if($s->ordenServicio)
+                                <a href="{{ route('ordenes.show', $s->orden_servicio_id) }}" style="font-weight: 700; color: #111827;">
+                                    {{ $s->ordenServicio->folio }}
+                                </a>
+                                <br>
+                                <small class="text-muted">{{ $s->ordenServicio->equipo->marca }} {{ $s->ordenServicio->equipo->modelo }}</small>
+                            @else
+                                <span style="font-weight: 700; color: #999;">Sin orden asociada</span>
+                            @endif
                         </td>
                         <td>
                             <span style="font-weight: 600; color: #374151;">{{ $s->nombre_pieza }}</span>
