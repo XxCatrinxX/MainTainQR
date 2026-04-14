@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\OrdenServicio;
 use App\Models\Cliente;
 use App\Models\Inventario;
+use App\Models\Pago;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
@@ -19,10 +20,10 @@ class HomeController extends Controller
         // Ajusta 'listo' por el nombre exacto de tu estado en la BD
         $pendientesEntrega = OrdenServicio::where('estado', 'recibido')->count();
         
-        // Suma de la columna de cobro (ajusta 'costo_total' al nombre de tu columna)
-        $ingresosMes = OrdenServicio::whereMonth('created_at', Carbon::now()->month)
-                                    ->whereYear('created_at', Carbon::now()->year)
-                                    ->sum('mano_obra'); // O el campo que corresponda a ingresos
+        // Suma de los pagos reales recibidos en el mes actual
+        $ingresosMes = Pago::whereMonth('created_at', Carbon::now()->month)
+                            ->whereYear('created_at', Carbon::now()->year)
+                            ->sum('monto');
 
         $stockBajo = Inventario::where('stock', '<', 5)->count();
 

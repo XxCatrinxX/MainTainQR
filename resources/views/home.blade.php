@@ -189,7 +189,7 @@
                 
                 {{-- Folio --}}
                 <td class="px-4">
-                    <strong>#{{ $orden->id }}</strong>
+                    <strong>#{{ $orden->folio }}</strong>
                 </td>
 
                 {{-- Cliente --}}
@@ -291,12 +291,12 @@
             </div>
             <div class="card-body p-2 mt-2">
                 <div class="list-group list-group-flush">
-                    <a href="{{ route('ordenes.index') }}" class="list-group-item list-group-item-action border-0" style="border-radius: 8px; font-weight: 500; padding: 0.6rem 1rem;"><i class="fas fa-clipboard-list text-primary mr-3" style="width:20px; text-align: center;"></i> Base de Órdenes</a>
-                    <a href="{{ route('clientes.index') }}" class="list-group-item list-group-item-action border-0" style="border-radius: 8px; font-weight: 500; padding: 0.6rem 1rem;"><i class="fas fa-users text-info mr-3" style="width:20px; text-align: center;"></i> Consulta de Clientes</a>
-                    <a href="{{ route('equipos.index') }}" class="list-group-item list-group-item-action border-0" style="border-radius: 8px; font-weight: 500; padding: 0.6rem 1rem;"><i class="fas fa-desktop text-secondary mr-3" style="width:20px; text-align: center;"></i> Archivo de Equipos</a>
-                    <a href="{{ route('web.inventario.index') }}" class="list-group-item list-group-item-action border-0" style="border-radius: 8px; font-weight: 500; padding: 0.6rem 1rem;"><i class="fas fa-boxes text-warning mr-3" style="width:20px; text-align: center;"></i> Stock de Repuestos</a>
-                    <a href="{{ route('solicitudes.index') }}" class="list-group-item list-group-item-action border-0" style="border-radius: 8px; font-weight: 500; padding: 0.6rem 1rem;"><i class="fas fa-boxes text-warning mr-3" style="width:20px; text-align: center;"></i> Solicitudes de Repuestos</a>
-                    <a href="{{ route('pagos.index') }}" class="list-group-item list-group-item-action border-0" style="border-radius: 8px; font-weight: 500; padding: 0.6rem 1rem;"><i class="fas fa-wallet text-success mr-3" style="width:20px; text-align: center;"></i> Flujo de Caja y Pagos</a>
+                    <a href="{{ route('ordenes.index') }}" class="list-group-item list-group-item-action border-0" style="border-radius: 8px; font-weight: 500; padding: 0.6rem 1rem;"><i class="fas fa-list-alt text-primary mr-3" style="width:20px; text-align: center;"></i> Base de Órdenes</a>
+                    <a href="{{ route('clientes.index') }}" class="list-group-item list-group-item-action border-0" style="border-radius: 8px; font-weight: 500; padding: 0.6rem 1rem;"><i class="fas fa-user-friends text-info mr-3" style="width:20px; text-align: center;"></i> Consulta de Clientes</a>
+                    <a href="{{ route('equipos.index') }}" class="list-group-item list-group-item-action border-0" style="border-radius: 8px; font-weight: 500; padding: 0.6rem 1rem;"><i class="fas fa-laptop-medical text-secondary mr-3" style="width:20px; text-align: center;"></i> Archivo de Equipos</a>
+                    <a href="{{ route('web.inventario.index') }}" class="list-group-item list-group-item-action border-0" style="border-radius: 8px; font-weight: 500; padding: 0.6rem 1rem;"><i class="fas fa-cubes text-warning mr-3" style="width:20px; text-align: center;"></i> Stock de Repuestos</a>
+                    <a href="{{ route('solicitudes.index') }}" class="list-group-item list-group-item-action border-0" style="border-radius: 8px; font-weight: 500; padding: 0.6rem 1rem;"><i class="fas fa-shopping-cart text-danger mr-3" style="width:20px; text-align: center;"></i> Solicitudes de Repuestos</a>
+                    <a href="{{ route('pagos.index') }}" class="list-group-item list-group-item-action border-0" style="border-radius: 8px; font-weight: 500; padding: 0.6rem 1rem;"><i class="fas fa-file-invoice-dollar text-success mr-3" style="width:20px; text-align: center;"></i> Flujo de Caja y Pagos</a>
                 </div>
             </div>
         </div>
