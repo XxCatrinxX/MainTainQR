@@ -22,7 +22,7 @@ class OrdenTecnicoController extends Controller
 
     public function index(Request $request)
 {
-    $query = OrdenServicio::with(['equipo.cliente', 'user'])
+    $query = OrdenServicio::with(['cliente', 'equipo', 'user'])
         ->where('user_id', Auth::id());
 
     if ($request->has('estado')) {
@@ -42,7 +42,8 @@ class OrdenTecnicoController extends Controller
     public function show($id)
     {
        $orden = OrdenServicio::with([
-        'equipo.cliente',
+        'cliente',
+        'equipo',
         'user',
         'evidencias',
         'repuestos'

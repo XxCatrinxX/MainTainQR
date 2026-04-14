@@ -17,7 +17,7 @@ class TrackingController extends Controller
      */
     public function show($token_rastreo)
     {
-        $orden = OrdenServicio::with(['equipo.cliente', 'evidencias', 'repuestos', 'pagos', 'user'])
+        $orden = OrdenServicio::with(['cliente', 'equipo', 'evidencias', 'repuestos', 'pagos', 'user'])
             ->where('token_rastreo', $token_rastreo)
             ->firstOrFail();
 
@@ -99,7 +99,7 @@ class TrackingController extends Controller
      */
     public function rechazarPresupuesto(Request $request, $token_rastreo)
     {
-        $orden = OrdenServicio::with(['equipo.cliente', 'user'])
+        $orden = OrdenServicio::with(['cliente', 'equipo.cliente', 'user'])
             ->where('token_rastreo', $token_rastreo)
             ->firstOrFail();
 
@@ -138,7 +138,7 @@ class TrackingController extends Controller
      */
    public function aceptar($token)
 {
-    $orden = OrdenServicio::with(['equipo.cliente', 'repuestos', 'user'])
+    $orden = OrdenServicio::with(['cliente', 'equipo', 'repuestos', 'user'])
         ->where('token_rastreo', $token)
         ->firstOrFail();
 
@@ -214,7 +214,7 @@ class TrackingController extends Controller
      */
     public function rechazar($token)
 {
-    $orden = OrdenServicio::with(['equipo.cliente', 'user'])
+    $orden = OrdenServicio::with(['cliente', 'equipo', 'user'])
         ->where('token_rastreo', $token)
         ->firstOrFail();
 

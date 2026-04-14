@@ -96,8 +96,8 @@
                         <td class="text-primary font-weight-bold">{{ $orden->folio }}</td>
 
                         <td>
-                            <div style="font-weight: 600; color: #111827;">{{ $orden->equipo->cliente->nombre ?? '' }} {{ $orden->equipo->cliente->apellido_paterno ?? '' }}</div>
-                            <div style="font-size: 0.75rem; color: #6b7280;">{{ $orden->equipo->cliente->telefono ?? 'Sin teléfono' }}</div>
+                            <div style="font-weight: 600; color: #111827;">{{ $orden->cliente->nombre ?? '' }} {{ $orden->cliente->apellido_paterno ?? '' }}</div>
+                            <div style="font-size: 0.75rem; color: #6b7280;">{{ $orden->cliente->telefono ?? 'Sin teléfono' }}</div>
                         </td>
 
                         <td>

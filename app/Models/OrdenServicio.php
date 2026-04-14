@@ -20,6 +20,7 @@ class OrdenServicio extends Model
     protected $fillable = [
         'folio',
         'equipo_id',
+        'cliente_id',
         'user_id',
         'falla_reportada',
         'estado_fisico',

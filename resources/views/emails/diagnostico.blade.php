@@ -26,8 +26,8 @@
                     <tr>
                         <td style="background:#ffffff; padding:2rem 2.5rem;">
 
-                            <p style="color:#374151; font-size:1rem; margin:0 0 1rem 0;">
-                                Hola, <strong>{{ $cliente->nombre }} {{ $cliente->apellido_paterno ?? '' }}</strong> 👋
+                            <p style="color:#374151; font-size:1.1rem; margin: 0 0 1rem 0;">
+                                Hola, <strong>{{ $orden->cliente->nombre ?? 'Cliente' }}</strong> 👋
                             </p>
 
                             @if($esReparable)

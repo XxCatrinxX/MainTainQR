@@ -25,8 +25,8 @@ class DiagnosticoNotificacion extends Notification implements ShouldQueue
 
     public function toMail($notifiable): MailMessage
     {
-        $orden = $this->orden->loadMissing(['equipo.cliente', 'repuestos', 'evidencias']);
-        $cliente = $orden->equipo->cliente;
+        $orden = $this->orden->loadMissing(['cliente', 'equipo', 'repuestos', 'evidencias']);
+        $cliente = $orden->cliente;
         $equipo = $orden->equipo;
 
         $esReparable = (bool) $orden->es_reparable;

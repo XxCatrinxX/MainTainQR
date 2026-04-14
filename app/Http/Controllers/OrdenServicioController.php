@@ -322,20 +322,22 @@ class OrdenServicioController extends Controller
                 'telefono', 'correo', 'direccion'
             ]));
         } else {
-            // Find by email (unique key) or phone.
-            $searchKey = $request->filled('correo')
-                ? ['correo' => $request->correo]
-                : ['telefono' => $request->telefono];
-
-            // In order to protect historical data, we search for the client first.
-            $cliente = Cliente::where($searchKey)->first();
+            if ($request->filled('correo')) {
+                // By email (unique)
+                $cliente = Cliente::where('correo', $request->correo)->first();
+            } else {
+                // By Phone AND Name (to avoid using the wrong person's ID if they share a phone)
+                $cliente = Cliente::where('telefono', $request->telefono)
+                    ->where('nombre', $request->nombre)
+                    ->where('apellido_paterno', $request->apellido_paterno)
+                    ->first();
+            }
 
             if ($cliente) {
-                // If found, we use the record but DON'T overwrite the name/identity fields 
-                // accidentally, just update potentially useful secondary info if provided.
+                // If found, update secondary info but preserve identity.
                 $cliente->update($request->only(['direccion', 'correo']));
             } else {
-                // If not found, create a brand new client.
+                // If not found, create new.
                 $cliente = Cliente::create($request->all());
             }
 
@@ -435,11 +437,13 @@ class OrdenServicioController extends Controller
         $orden = OrdenServicio::create([
             'folio' => $folio,
             'equipo_id' => $equipoId,
+            'cliente_id' => session('wizard_cliente_id'),
             'user_id' => $request->id_usuario,
-            'falla_reportada' => $request->problema_reportado,
+            'falla_reportada' => $request->falla_reportada,
             'estado_fisico' => $request->estado_fisico,
+            'token_rastreo' => bin2hex(random_bytes(16)),
+            'fecha_recepcion' => now(),
             'estado' => 'recibido',
-            'token_rastreo' => uniqid('rastreo_'),
         ]);
 
         $orden->load(['equipo.cliente', 'user']); // 👈 IMPORTANTE: Cargamos equipo.cliente y user (técnico)

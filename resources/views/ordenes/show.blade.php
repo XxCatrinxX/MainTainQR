@@ -530,9 +530,9 @@
         <div class="card">
             <div class="card-header"><h5 class="card-title"><i class="fas fa-user mr-2 text-primary"></i>Cliente</h5></div>
             <div class="card-body">
-                <div class="info-row"><span class="info-label">Nombre</span><span class="info-value">{{ $orden->equipo->cliente->nombre ?? '' }} {{ $orden->equipo->cliente->apellido_paterno ?? '' }}</span></div>
-                <div class="info-row"><span class="info-label">Teléfono</span><span class="info-value">{{ $orden->equipo->cliente->telefono ?? 'N/A' }}</span></div>
-                <div class="info-row"><span class="info-label">Correo</span><span class="info-value" style="font-size:0.82rem; word-break:break-word;">{{ $orden->equipo->cliente->correo ?? 'N/A' }}</span></div>
+                <div class="info-row"><span class="info-label">Nombre</span><span class="info-value">{{ $orden->cliente->nombre ?? '' }} {{ $orden->cliente->apellido_paterno ?? '' }}</span></div>
+                <div class="info-row"><span class="info-label">Teléfono</span><span class="info-value">{{ $orden->cliente->telefono ?? 'N/A' }}</span></div>
+                <div class="info-row"><span class="info-label">Correo</span><span class="info-value" style="font-size:0.82rem; word-break:break-word;">{{ $orden->cliente->correo ?? 'N/A' }}</span></div>
             </div>
         </div>
 

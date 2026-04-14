@@ -26,7 +26,7 @@ class ListoNotificacion extends Notification implements ShouldQueue
     {
         $orden = $this->orden;
         $equipo = $orden->equipo;
-        $cliente = $equipo->cliente;
+        $cliente = $orden->cliente;
 
         $urlSeguimiento = route('seguimiento.show', $orden->token_rastreo);
  

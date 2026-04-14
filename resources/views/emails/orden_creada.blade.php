@@ -25,7 +25,7 @@
                         <td style="background:#ffffff; padding: 2rem 2.5rem; border-radius: 0 0 12px 12px;">
 
                             <p style="color:#374151; font-size:1rem; margin: 0 0 1rem 0;">
-                                Hola, <strong>{{ $orden->equipo->cliente->nombre ?? 'Cliente' }}</strong> 👋
+                                Hola, <strong>{{ $orden->cliente->nombre ?? 'Cliente' }}</strong> 👋
                             </p>
 
                             <p style="color:#6b7280; font-size:0.95rem; line-height:1.6; margin: 0 0 1.5rem 0;">
