@@ -306,11 +306,6 @@ return [
         ],
 
         // Sidebar items:
-        [
-            'type' => 'sidebar-menu-search',
-            'text' => 'search',
-        ],
-
         ['header' => 'MENÚ PRINCIPAL'],
         [
             'text' => 'Inicio',
