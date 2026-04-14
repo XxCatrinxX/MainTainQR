@@ -25,9 +25,30 @@ Route::get('/home', [HomeController::class , 'index'])
 // ÓRDENES
 Route::get('/ordenes', [OrdenServicioController::class , 'index'])->name('ordenes.index');
 Route::delete('/ordenes/{id}', [OrdenServicioController::class, 'destroy'])->name('ordenes.destroy');
+Route::delete('/ordenes/{id}/force-delete', [OrdenServicioController::class, 'forceDelete'])->name('ordenes.forceDelete');
 Route::post('/ordenes/{id}/restore', [OrdenServicioController::class, 'restore'])->name('ordenes.restore');
-Route::get('/ordenes/papelera', [OrdenServicioController::class, 'papelera'])->name('ordenes.papelera');
+Route::get('/ordenes/archivadas', [OrdenServicioController::class, 'archivadas'])->name('ordenes.archivadas');
+// Solo para arreglar las 11 órdenes actuales
+Route::get('/limpieza-total', function() {
+    // Buscamos todas las órdenes que NO estén borradas
+    $ordenes = \App\Models\OrdenServicio::whereNull('deleted_at')->get();
+    $contador = 0;
 
+    foreach ($ordenes as $orden) {
+        // Normalizamos el texto: quitamos espacios y pasamos a minúsculas para comparar
+        $estadoLimpio = trim(strtolower($orden->estado));
+
+        if ($estadoLimpio === 'entregado') {
+            $orden->estado = 'entregado'; // Corregimos el formato en la DB
+            $orden->deleted_by = Auth::id() ?? 1;
+            $orden->save();
+            $orden->delete(); // Mandamos a papelera
+            $contador++;
+        }
+    }
+
+    return "Se corrigieron y archivaron $contador órdenes.";
+});
 // WIZARD (Solo admin y recepcionista pueden crear)
 Route::middleware(['auth', 'role:admin,recepcionista'])->group(function () {
     Route::get('/ordenes/nueva/paso-1', [OrdenServicioController::class , 'createPaso1'])->name('ordenes.create_paso1');
