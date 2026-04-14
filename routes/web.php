@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Mail;
 
 Route::redirect('/', '/home');
 
-Auth::routes(['reset' => false, 'confirm' => false]);
+Auth::routes(['reset' => true, 'confirm' => false]);
 
 // ✅ SOLO UNA RUTA HOME
 Route::get('/home', [HomeController::class , 'index'])
