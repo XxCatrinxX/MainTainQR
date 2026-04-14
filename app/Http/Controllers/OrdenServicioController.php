@@ -322,22 +322,18 @@ class OrdenServicioController extends Controller
                 'telefono', 'correo', 'direccion'
             ]));
         } else {
-            if ($request->filled('correo')) {
-                // By email (unique)
-                $cliente = Cliente::where('correo', $request->correo)->first();
-            } else {
-                // By Phone AND Name (to avoid using the wrong person's ID if they share a phone)
-                $cliente = Cliente::where('telefono', $request->telefono)
-                    ->where('nombre', $request->nombre)
-                    ->where('apellido_paterno', $request->apellido_paterno)
-                    ->first();
-            }
+            // Search by Phone AND Name to strictly identify individual people.
+            // This prevents "Juan" and "Maria" from being merged if they share a phone or email.
+            $cliente = Cliente::where('telefono', $request->telefono)
+                ->where('nombre', $request->nombre)
+                ->where('apellido_paterno', $request->apellido_paterno)
+                ->first();
 
             if ($cliente) {
-                // If found, update secondary info but preserve identity.
-                $cliente->update($request->only(['direccion', 'correo']));
+                // If the same person is found, update their contact info (email/address).
+                $cliente->update($request->all());
             } else {
-                // If not found, create new.
+                // If not found, create a new client record (duplicate emails are now allowed).
                 $cliente = Cliente::create($request->all());
             }
 
