@@ -13,7 +13,12 @@
             <p class="text-muted mb-0" style="font-size: 0.9rem;">Gestiona y da seguimiento a los equipos ingresados.</p>
         </div>
         @if(Auth::user()->rol !== 'tecnico')
-        <div>
+        <div class="d-flex">
+            @if(Auth::user()->rol === 'admin')
+                <a href="{{ route('ordenes.papelera') }}" class="btn btn-outline-secondary mr-2 shadow-sm" style="border-radius: 8px;">
+                    <i class="fas fa-trash-alt mr-1"></i> Ver Papelera
+                </a>
+            @endif
             <a href="{{ route('ordenes.create_paso1') }}" class="btn btn-dark-modern shadow-sm">
                 <i class="fas fa-plus mr-1"></i> Nueva Orden
             </a>

@@ -26,8 +26,9 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('ordenes', function (Blueprint $table) {
-            //
+        Schema::table('orden_servicios', function (Blueprint $table) {
+            $table->dropSoftDeletes();
+            $table->dropColumn('deleted_by');
         });
     }
 };

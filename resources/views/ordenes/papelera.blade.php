@@ -2,45 +2,63 @@
 
 @section('title', 'Papelera de Órdenes')
 
-@section('content')
-<div class="card">
-    <div class="card-header">
-        <h3>Órdenes Archivadas</h3>
+@section('content_header')
+    <div class="d-flex justify-content-between align-items-center">
+        <h1><i class="fas fa-trash-alt mr-2 text-muted"></i>Papelera de Órdenes</h1>
+        <a href="{{ route('ordenes.index') }}" class="btn btn-secondary shadow-sm" style="border-radius: 8px;">
+            <i class="fas fa-arrow-left mr-1"></i> Volver a Órdenes
+        </a>
     </div>
+@stop
 
-    <div class="card-body table-responsive">
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>Folio</th>
-                    <th>Cliente</th>
-                    <th>Estado</th>
-                    <th>Archivado por</th>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
-
-            <tbody>
-                @foreach($ordenes as $orden)
-                <tr>
-                    <td>{{ $orden->folio }}</td>
-                    <td>{{ $orden->equipo->cliente->nombre ?? '' }}</td>
-                    <td>{{ $orden->estado }}</td>
-                    <td>{{ $orden->deleted_by }}</td>
-
-                    <td>
-                        <form method="POST" action="{{ route('ordenes.restore', $orden->id) }}">
-                            @csrf
-                            <button class="btn btn-success btn-sm">
-                                Restaurar
-                            </button>
-                        </form>
-                    </td>
-                </tr>
-                @endforeach
-            </tbody>
-
-        </table>
+@section('content')
+<div class="card shadow-sm border-0" style="border-radius: 12px;">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="bg-light">
+                    <tr>
+                        <th class="border-top-0">Folio</th>
+                        <th class="border-top-0">Cliente</th>
+                        <th class="border-top-0">Estado al Borrar</th>
+                        <th class="border-top-0">Fecha Recepción</th>
+                        <th class="border-top-0 text-right">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($ordenes as $orden)
+                        <tr>
+                            <td class="align-middle font-weight-bold text-primary">{{ $orden->folio }}</td>
+                            <td class="align-middle">
+                                <div style="font-weight: 600;">{{ $orden->equipo->cliente->nombre ?? 'N/A' }}</div>
+                                <div class="small text-muted">{{ $orden->equipo->marca }} {{ $orden->equipo->modelo }}</div>
+                            </td>
+                            <td class="align-middle">
+                                <span class="badge badge-secondary text-uppercase" style="font-size: 0.75rem;">{{ $orden->estado }}</span>
+                            </td>
+                            <td class="align-middle text-muted" style="font-size: 0.9rem;">
+                                {{ \Carbon\Carbon::parse($orden->fecha_recepcion)->format('d M, Y') }}
+                            </td>
+                            <td class="align-middle text-right">
+                                <form action="{{ route('ordenes.restore', $orden->id) }}" method="POST" style="display:inline-block;">
+                                    @csrf
+                                    <button type="submit" class="btn btn-success btn-sm px-3 shadow-sm" style="border-radius: 6px;" title="Restaurar Orden">
+                                        <i class="fas fa-trash-restore mr-1"></i> Restaurar
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="5" class="text-center py-5 text-muted">
+                                <i class="fas fa-info-circle fa-2x mb-3 d-block"></i>
+                                No hay órdenes en la papelera.
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 @stop
