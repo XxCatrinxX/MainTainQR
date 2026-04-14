@@ -723,7 +723,7 @@ if ($tecnico && $tecnico->fcm_token) {
 
         $this->archivarOrden($orden);
 
-        return back()->with('success', 'Equipo devuelto. La orden fue cerrada.');
+        return redirect()->route('ordenes.index')->with('success', 'Equipo devuelto. La orden fue cerrada y archivada.');
     }
 
     /** listo → entregado  (recepcionista entrega con pago completo) */
@@ -759,7 +759,7 @@ if ($tecnico && $tecnico->fcm_token) {
 
         $this->archivarOrden($orden);
 
-        return back()->with('success', 'Operación completada y orden cerrada exitosamente.');
+        return redirect()->route('ordenes.index')->with('success', 'Operación completada, orden cerrada y enviada a la papelera.');
     }
 
     public function verQR($id)
