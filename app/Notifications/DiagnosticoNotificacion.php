@@ -56,21 +56,19 @@ class DiagnosticoNotificacion extends Notification implements ShouldQueue
             }
         }
 
-        $urlAceptar = route('orden.aceptar', $orden->token_rastreo);
-        $urlRechazar = route('orden.rechazar', $orden->token_rastreo);
-
-        return (new MailMessage)
-            ->subject($subject)
-            ->view('emails.diagnostico', compact(
-                'orden',
-                'cliente',
-                'equipo',
-                'esReparable',
-                'manoObra',
-                'totalPiezas',
-                'total',
-                'urlAceptar',
-                'urlRechazar'
-            ));
+        $urlSeguimiento = route('seguimiento.show', $orden->token_rastreo);
+ 
+         return (new MailMessage)
+             ->subject($subject)
+             ->view('emails.diagnostico', compact(
+                 'orden',
+                 'cliente',
+                 'equipo',
+                 'esReparable',
+                 'manoObra',
+                 'totalPiezas',
+                 'total',
+                 'urlSeguimiento'
+             ));
     }
 }

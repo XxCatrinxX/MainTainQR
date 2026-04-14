@@ -42,6 +42,13 @@
                                 {{ $orden->detallesTecnicos->trabajo_finalizado ?? 'Reparación completada según diagnóstico.' }}
                             </div>
 
+                            <div style="text-align: center; margin-bottom: 2rem;">
+                                <a href="{{ $urlSeguimiento }}"
+                                   style="display:inline-block; text-align:center; background-color:#059669; color:#ffffff; padding:0.9rem 2rem; border-radius:10px; font-weight:700; font-size:1rem; text-decoration:none;">
+                                    🔍 Ver detalles de la orden
+                                </a>
+                            </div>
+
                             <p style="color:#6b7280; font-size:0.85rem; line-height:1.4; margin: 2rem 0 0 0; text-align: center;">
                                 Gracias por confiar en <strong>MaintainQR</strong>.<br>
                                 Si tienes dudas, contáctanos mencionando el folio <strong>{{ $orden->folio }}</strong>.

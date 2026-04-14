@@ -143,21 +143,15 @@
                             {{-- CTA --}}
                             @if($esReparable)
                                 <p style="color:#374151; font-size:0.95rem; line-height:1.6; margin:0 0 1.5rem 0;">
-                                    ¿Deseas autorizar la reparación de tu equipo? Por favor elige una opción:
+                                    ¿Deseas autorizar la reparación de tu equipo? Por favor revisa los detalles y confirma tu decisión en nuestro portal de seguimiento:
                                 </p>
 
                                 <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="margin-bottom:2rem;">
                                     <tr>
-                                        <td style="padding-right:0.5rem;" width="50%">
-                                            <a href="{{ $urlAceptar }}"
-                                               style="display:block; text-align:center; background-color:#059669; color:#ffffff; padding:0.9rem; border-radius:10px; font-weight:700; font-size:1rem; text-decoration:none;">
-                                                ✅ Sí, proceder con la reparación
-                                            </a>
-                                        </td>
-                                        <td style="padding-left:0.5rem;" width="50%">
-                                            <a href="{{ $urlRechazar }}"
-                                               style="display:block; text-align:center; background-color:#ffffff; color:#dc2626; padding:0.9rem; border-radius:10px; font-weight:700; font-size:1rem; text-decoration:none; border:2px solid #dc2626;">
-                                                ❌ No, declinar la reparación
+                                        <td align="center">
+                                            <a href="{{ $urlSeguimiento }}"
+                                               style="display:inline-block; text-align:center; background-color:#3b82f6; color:#ffffff; padding:0.9rem 2rem; border-radius:10px; font-weight:700; font-size:1rem; text-decoration:none; box-shadow:0 4px 6px -1px rgba(0,0,0,0.1);">
+                                                🔍 Ver detalles y confirmar decisión
                                             </a>
                                         </td>
                                     </tr>
@@ -165,7 +159,7 @@
                             @else
                                 <p style="color:#374151; font-size:0.95rem; line-height:1.6; margin:0 0 1.5rem 0;">
                                     @if($orden->ofrecer_compra)
-                                        Si estás de acuerdo con esta propuesta por tu equipo para uso en piezas, confirma tu decisión a continuación:
+                                        Si estás de acuerdo con esta propuesta por tu equipo para uso en piezas, revisa los detalles y responde a continuación:
                                     @else
                                         Por favor pasa a nuestra sucursal con tu comprobante para la devolución de tu equipo. Lamentamos profundamente que no haya sido posible repararlo.
                                     @endif
@@ -174,16 +168,10 @@
                                 @if($orden->ofrecer_compra)
                                 <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="margin-bottom:2rem;">
                                     <tr>
-                                        <td style="padding-right:0.5rem;" width="50%">
-                                            <a href="{{ $urlAceptar }}"
-                                               style="display:block; text-align:center; background-color:#059669; color:#ffffff; padding:0.9rem; border-radius:10px; font-weight:700; font-size:1rem; text-decoration:none;">
-                                                ✅ Sí, aceptar oferta
-                                            </a>
-                                        </td>
-                                        <td style="padding-left:0.5rem;" width="50%">
-                                            <a href="{{ $urlRechazar }}"
-                                               style="display:block; text-align:center; background-color:#ffffff; color:#dc2626; padding:0.9rem; border-radius:10px; font-weight:700; font-size:1rem; text-decoration:none; border:2px solid #dc2626;">
-                                                ❌ No, rechazar oferta
+                                        <td align="center">
+                                            <a href="{{ $urlSeguimiento }}"
+                                               style="display:inline-block; text-align:center; background-color:#3b82f6; color:#ffffff; padding:0.9rem 2rem; border-radius:10px; font-weight:700; font-size:1rem; text-decoration:none; box-shadow:0 4px 6px -1px rgba(0,0,0,0.1);">
+                                                🔍 Ver propuesta y responder
                                             </a>
                                         </td>
                                     </tr>

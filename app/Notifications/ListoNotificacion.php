@@ -28,8 +28,10 @@ class ListoNotificacion extends Notification implements ShouldQueue
         $equipo = $orden->equipo;
         $cliente = $equipo->cliente;
 
-        return (new MailMessage)
-            ->subject('¡Equipo Listo! — ' . $orden->folio)
-            ->view('emails.listo', compact('orden', 'equipo', 'cliente'));
+        $urlSeguimiento = route('seguimiento.show', $orden->token_rastreo);
+ 
+         return (new MailMessage)
+             ->subject('¡Equipo Listo! — ' . $orden->folio)
+             ->view('emails.listo', compact('orden', 'equipo', 'cliente', 'urlSeguimiento'));
     }
 }
