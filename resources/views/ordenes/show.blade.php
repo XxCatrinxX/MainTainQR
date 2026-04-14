@@ -4,6 +4,30 @@
 
 @section('css')
     {{-- Estilos centralizados en admin-custom.css --}}
+
+    <style>
+    .evidence-gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 10px;
+}
+
+.evidence-thumb {
+    width: 100%;
+    height: 150px;
+    overflow: hidden;
+    border-radius: 10px;
+    border: 1px solid #ddd;
+    background: #f8f9fa;
+}
+
+.evidence-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+</style>
 @stop
 
 @section('content_header')
