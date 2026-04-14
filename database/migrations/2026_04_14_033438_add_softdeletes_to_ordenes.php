@@ -12,8 +12,12 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('orden_servicios', function (Blueprint $table) {
-            $table->softDeletes();
-            $table->foreignId('deleted_by')->nullable()->after('updated_at');
+            if (!Schema::hasColumn('orden_servicios', 'deleted_at')) {
+                $table->softDeletes();
+            }
+            if (!Schema::hasColumn('orden_servicios', 'deleted_by')) {
+                $table->foreignId('deleted_by')->nullable()->after('updated_at');
+            }
         });
     }
 
