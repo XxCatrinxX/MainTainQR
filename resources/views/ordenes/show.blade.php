@@ -342,55 +342,78 @@
 
         {{-- GALERÍA DE EVIDENCIAS --}}
         @if($orden->evidencias->count() > 0 || $orden->comentarios_tecnico || $orden->mano_obra || $orden->qr_token)
-    <div class="card mt-3">
-        <div class="card-header">
-            <h5 class="card-title">
-                <i class="fas fa-info-circle mr-2 text-info"></i>
-                Información del servicio
-            </h5>
-        </div>
-
-        <div class="card-body">
-
-            {{-- 🔑 Token --}}
-            @if($orden->token_rastreo)
-                <p><strong>Token de rastreo:</strong> {{ $orden->token_rastreo }}</p>
-            @endif
-
-            {{-- 💰 Mano de obra --}}
-            @if($orden->mano_obra)
-                <p><strong>Mano de obra:</strong> ${{ number_format($orden->mano_obra, 2) }}</p>
-            @endif
-
-            {{-- 📝 Comentarios --}}
-            @if($orden->comentarios_tecnico)
-                <div class="mb-3">
-                    <strong>Comentarios del técnico:</strong>
-                    <p class="mt-1">{{ $orden->comentarios_tecnico }}</p>
-                </div>
-            @endif
-
-            {{-- 📸 Evidencias --}}
-            @if($orden->evidencias->count() > 0)
-                <hr>
-                <h6>
-                    <i class="fas fa-images mr-2 text-info"></i>
-                    Evidencias ({{ $orden->evidencias->count() }})
-                </h6>
-
-                <div class="evidence-gallery mt-2">
-                    @foreach($orden->evidencias as $ev)
-                        <div class="evidence-thumb">
-                            <a href="{{ asset('storage/' . $ev->url_foto) }}" target="_blank">
-                                <img src="{{ asset('storage/' . $ev->url_foto) }}" alt="Evidencia">
-                            </a>
-                        </div>
-                    @endforeach
-                </div>
-            @endif
-
-        </div>
+<div class="card mt-4 shadow-sm border-0">
+    
+    {{-- HEADER --}}
+    <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">
+            <i class="fas fa-tools mr-2"></i>Detalle del servicio
+        </h5>
     </div>
+
+    <div class="card-body">
+
+        {{-- 🔑 TOKEN --}}
+        @if($orden->token_rastreo)
+            <div class="mb-3">
+                <label class="font-weight-bold text-muted">Seguimiento:</label><br>
+
+                @php
+                    $link = url('/seguimiento/' . $orden->token_rastreo);
+                @endphp
+
+                <a href="{{ $link }}" target="_blank" class="btn btn-outline-primary btn-sm">
+                    <i class="fas fa-link mr-1"></i>
+                    {{ $link }}
+                </a>
+            </div>
+        @endif
+
+        {{-- 💰 MANO DE OBRA --}}
+        @if($orden->mano_obra)
+            <div class="mb-3">
+                <label class="font-weight-bold text-muted">Costo de mano de obra:</label>
+                <div class="alert alert-success py-2 px-3 mb-0">
+                    💰 ${{ number_format($orden->mano_obra, 2) }}
+                </div>
+            </div>
+        @endif
+
+        {{-- 📝 COMENTARIOS --}}
+        @if($orden->comentarios_tecnico)
+            <div class="mb-4">
+                <label class="font-weight-bold text-muted">Comentarios del técnico:</label>
+                <div class="p-3 border rounded bg-light">
+                    {{ $orden->comentarios_tecnico }}
+                </div>
+            </div>
+        @endif
+
+        {{-- 📸 EVIDENCIAS --}}
+        @if($orden->evidencias->count() > 0)
+            <hr>
+            <h6 class="mb-3">
+                <i class="fas fa-images text-info mr-2"></i>
+                Evidencias ({{ $orden->evidencias->count() }})
+            </h6>
+
+            <div class="row">
+                @foreach($orden->evidencias as $ev)
+                    <div class="col-md-3 col-6 mb-3">
+                        <a href="{{ asset('storage/' . $ev->url_foto) }}" target="_blank">
+                            <img 
+                                src="{{ asset('storage/' . $ev->url_foto) }}" 
+                                class="img-fluid rounded shadow-sm evidence-img"
+                                style="height: 150px; object-fit: cover; width:100%;"
+                            >
+                        </a>
+                    </div>
+                @endforeach
+            </div>
+        @endif
+
+    </div>
+</div>
 @endif
 
         {{-- REPUESTOS USADOS --}}
