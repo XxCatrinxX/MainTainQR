@@ -24,6 +24,9 @@ Route::get('/home', [HomeController::class , 'index'])
 
 // ÓRDENES
 Route::get('/ordenes', [OrdenServicioController::class , 'index'])->name('ordenes.index');
+Route::delete('/ordenes/{id}', [OrdenServicioController::class, 'destroy'])->name('ordenes.destroy');
+Route::post('/ordenes/{id}/restore', [OrdenServicioController::class, 'restore'])->name('ordenes.restore');
+Route::get('/ordenes/papelera', [OrdenServicioController::class, 'papelera'])->name('ordenes.papelera');
 
 // WIZARD (Solo admin y recepcionista pueden crear)
 Route::middleware(['auth', 'role:admin,recepcionista'])->group(function () {

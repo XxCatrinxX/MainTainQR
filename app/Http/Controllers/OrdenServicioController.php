@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\OrdenServicio;
 use App\Models\Equipo;
 use App\Models\Cliente;
@@ -13,14 +12,16 @@ use App\Models\DetalleTecnico;
 use App\Models\SolicitudCompra;
 use App\Notifications\DiagnosticoNotificacion;
 use App\Notifications\ListoNotificacion;
+use App\Notifications\OrdenCreadaNotificacion;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Endroid\QrCode\Writer\SvgWriter;
 use Endroid\QrCode\Encoding\Encoding;
-use Illuminate\Support\Facades\Auth;
-use App\Notifications\OrdenCreadaNotificacion;
 use Kreait\Firebase\Messaging\CloudMessage;
 use Kreait\Firebase\Messaging\Notification as FCMNotification;
-
 
 class OrdenServicioController extends Controller
 {
@@ -28,6 +29,7 @@ class OrdenServicioController extends Controller
     {
         $user = Auth::user();
         $query = OrdenServicio::with(['equipo.cliente', 'user']);
+        $query = OrdenServicio::with(['equipo.cliente', 'user'])->whereNull('deleted_at');
 
         // Si es técnico, solo ve lo asignado a él
         if ($user->rol === 'tecnico') {
@@ -609,7 +611,11 @@ if ($tecnico && $tecnico->fcm_token) {
                 return back()->with('error', 'No se puede Entregar. Existe un saldo pendiente de $' . number_format($totalPagar - $totalPagado, 2));
             }
             
+            $orden->estado = 'entregado';
             $orden->fecha_entrega_real = now();
+            $orden->save();
+            
+            $this->archivarOrden($orden);
         }
 
         $estadoAnterior = $orden->estado;
@@ -701,6 +707,9 @@ if ($tecnico && $tecnico->fcm_token) {
         $orden->estado = 'entregado';
         $orden->fecha_entrega_real = now();
         $orden->save();
+
+        $this->archivarOrden($orden);
+
         return back()->with('success', 'Equipo devuelto. La orden fue cerrada.');
     }
 
@@ -734,6 +743,9 @@ if ($tecnico && $tecnico->fcm_token) {
         $orden->estado = 'entregado';
         $orden->fecha_entrega_real = now();
         $orden->save();
+
+        $this->archivarOrden($orden);
+
         return back()->with('success', 'Operación completada y orden cerrada exitosamente.');
     }
 
@@ -754,6 +766,68 @@ if ($tecnico && $tecnico->fcm_token) {
     $qrBase64 = base64_encode($result->getString());
 
     return view('ordenes.qr', compact('orden', 'qrBase64'));
+}
+
+public function destroy($id)
+{
+    $orden = OrdenServicio::with(['evidencias', 'pagos'])->findOrFail($id);
+
+    if (Auth::user()->rol !== 'admin') {
+        return back()->with('error', 'No tienes permiso.');
+    }
+
+    // 🚨 BLOQUEO SI TIENE PAGOS
+    if ($orden->pagos->count() > 0) {
+        return back()->with('error', 'No se puede eliminar: la orden tiene pagos registrados.');
+    }
+
+    // 🚨 BLOQUEO SI TIENE EVIDENCIAS
+    if ($orden->evidencias->count() > 0) {
+        return back()->with('error', 'No se puede eliminar: la orden tiene evidencias.');
+    }
+
+    // 👤 guardar quién eliminó
+    $orden->deleted_by = Auth::id();
+    $orden->save();
+
+    // 🧠 SOFT DELETE
+    $orden->delete();
+
+    return redirect()->route('ordenes.index')
+        ->with('success', 'Orden eliminada correctamente (soft delete).');
+}
+
+public function restore($id)
+{
+    $orden = OrdenServicio::onlyTrashed()->findOrFail($id);
+
+    if (Auth::user()->rol !== 'admin') {
+        return back()->with('error', 'No autorizado');
+    }
+
+    $orden->restore();
+    $orden->deleted_by = null;
+    $orden->save();
+
+    return back()->with('success', 'Orden restaurada correctamente');
+}
+
+private function archivarOrden($orden)
+{
+    $orden->deleted_by = Auth::id();
+    $orden->save();
+
+    $orden->delete(); // soft delete
+}
+
+public function papelera()
+{
+    $ordenes = OrdenServicio::onlyTrashed()
+        ->with(['equipo.cliente', 'user'])
+        ->latest()
+        ->get();
+
+    return view('ordenes.papelera', compact('ordenes'));
 }
 
 

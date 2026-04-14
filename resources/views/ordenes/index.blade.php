@@ -162,6 +162,19 @@
         <i class="fas fa-qrcode"></i>
     </a>
 
+    <!-- Eliminar -->
+@if(Auth::user()->rol === 'admin')
+    <form action="{{ route('ordenes.destroy', $orden->id) }}" method="POST" style="display:inline-block;" 
+          onsubmit="return confirm('⚠️ ¿Seguro que deseas eliminar esta orden? Esta acción no se puede deshacer.');">
+        @csrf
+        @method('DELETE')
+
+        <button type="submit" class="btn btn-action text-danger" title="Eliminar Orden">
+            <i class="fas fa-trash"></i>
+        </button>
+    </form>
+@endif
+
 </td>
                     </tr>
 
