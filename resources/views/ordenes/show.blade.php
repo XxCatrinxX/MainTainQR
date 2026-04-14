@@ -237,6 +237,78 @@
 
     </div>
 </div>
+        @elseif($orden->estado === 'para_pzas')
+            {{-- ─── PANEL: PARA PIEZAS (COMPRA A CLIENTE) ─── --}}
+            <div class="card" style="border-left: 4px solid #3d9970;">
+                <div class="card-header" style="background:#f0fdf4;">
+                    <h5 class="card-title" style="color:#166534;"><i class="fas fa-handshake mr-2"></i>Paso 4: Pago al Cliente por su Equipo</h5>
+                </div>
+                <div class="card-body">
+                    @php
+                        $totalDebe   = $orden->monto_compra_piezas ?? 0;
+                        $totalPagado = $orden->pagos->sum('monto');
+                        $saldo       = $totalDebe - $totalPagado;
+                    @endphp
+
+                    <div class="mb-4">
+                        <p class="text-muted">Has acordado comprar este equipo al cliente por un total de <strong>${{ number_format($totalDebe, 2) }}</strong>.</p>
+                    </div>
+
+                    @if($saldo > 0)
+                        <div class="alert alert-info" style="border-radius:8px;">
+                            <i class="fas fa-info-circle mr-2"></i>
+                            <strong>Saldo pendiente de pagar al cliente: ${{ number_format($saldo, 2) }}</strong>
+                        </div>
+                    @else
+                        <div class="alert alert-success" style="border-radius:8px;">
+                            <i class="fas fa-check-circle mr-2"></i> Se ha cubierto el monto total del equipo. Ya puedes confirmar el cierre de la compra.
+                        </div>
+                    @endif
+
+                    {{-- REGISTRO DE PAGO A CLIENTE --}}
+                    @if(in_array(Auth::user()->rol, ['admin', 'recepcionista']))
+                    <form method="POST" action="{{ route('ordenes.pago', $orden->id) }}" class="mb-4 pb-3 border-bottom">
+                        @csrf
+                        <h6 style="font-weight:700; color:#374151;"><i class="fas fa-wallet mr-2 text-success"></i>Registrar Pago al Cliente</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label>Monto</label>
+                                <div class="input-group">
+                                    <div class="input-group-prepend"><span class="input-group-text">$</span></div>
+                                    <input type="number" name="monto" class="form-control" step="0.01" min="1" max="{{ $saldo }}" value="{{ $saldo }}" placeholder="0.00">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label>Método</label>
+                                <select name="metodo_pago" class="custom-select">
+                                    <option value="efectivo">Efectivo</option>
+                                    <option value="transferencia">Transferencia</option>
+                                    <option value="tarjeta">Tarjeta (Devolución)</option>
+                                </select>
+                            </div>
+                            <input type="hidden" name="tipo_pago" value="pago_cliente">
+                        </div>
+                        <button type="submit" class="btn btn-success mt-3">
+                            <i class="fas fa-check mr-1"></i> Confirmar Entrega de Dinero
+                        </button>
+                    </form>
+
+                    <form method="POST" action="{{ route('ordenes.confirmarEntrega', $orden->id) }}">
+                        @csrf
+                        <button type="submit" class="btn btn-dark-modern btn-block py-3" style="font-size:1rem;"
+                            onclick="return confirm('¿Confirmar cierre de compra? El equipo pasará a ser propiedad definitiva del taller.')"
+                            {{ $saldo > 0 ? 'disabled' : '' }}>
+                            <i class="fas fa-archive mr-2"></i> Finalizar Proceso y Archivar
+                        </button>
+                    </form>
+                    @else
+                        <div class="alert alert-info" style="border-radius:8px;">
+                            <i class="fas fa-info-circle mr-2"></i> Solo personal administrativo puede registrar los pagos de compra de equipos.
+                        </div>
+                    @endif
+                </div>
+            </div>
+
         @elseif($orden->estado === 'listo')
             {{-- ─── PANEL: LISTO PARA ENTREGA ─── --}}
             <div class="card" style="border-left: 4px solid #10b981;">

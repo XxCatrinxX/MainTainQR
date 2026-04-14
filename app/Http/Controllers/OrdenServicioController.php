@@ -101,6 +101,10 @@ class OrdenServicioController extends Controller
         'monto_compra_piezas'  => 'nullable|numeric|min:0',
         'fotos'                => 'nullable|array',
         'fotos.*'              => 'image|mimes:jpeg,png,jpg,gif|max:5120',
+        'repuestos'            => 'nullable|array',
+        'repuestos.*.id'       => 'required_with:repuestos|exists:inventario,id',
+        'repuestos.*.cantidad' => 'required_with:repuestos|integer|min:1',
+        'repuestos.*.precio'   => 'required_with:repuestos|numeric|min:0',
     ]);
 
     $esReparable = $request->boolean('es_reparable');
@@ -144,6 +148,18 @@ class OrdenServicioController extends Controller
     }
 
     $orden->save();
+
+    // Guardar repuestos si vienen en el request
+    if ($request->has('repuestos')) {
+        $repuestosData = [];
+        foreach ((array) $request->input('repuestos', []) as $r) {
+            $repuestosData[$r['id']] = [
+                'cantidad' => $r['cantidad'],
+                'precio_fijado' => $r['precio'],
+            ];
+        }
+        $orden->repuestos()->sync($repuestosData);
+    }
 
     DetalleTecnico::updateOrCreate(
         ['orden_servicio_id' => $orden->id],
@@ -202,6 +218,10 @@ class OrdenServicioController extends Controller
         'monto_compra_piezas'  => 'nullable|numeric|min:0',
         'fotos'                => 'nullable|array',
         'fotos.*'              => 'image|mimes:jpeg,png,jpg,gif|max:5120',
+        'repuestos'            => 'nullable|array',
+        'repuestos.*.id'       => 'required_with:repuestos|exists:inventario,id',
+        'repuestos.*.cantidad' => 'required_with:repuestos|integer|min:1',
+        'repuestos.*.precio'   => 'required_with:repuestos|numeric|min:0',
     ]);
 
     $esReparable = $request->boolean('es_reparable');
@@ -243,6 +263,18 @@ class OrdenServicioController extends Controller
     }
 
     $orden->save();
+
+    // Guardar repuestos si vienen en el request
+    if ($request->has('repuestos')) {
+        $repuestosData = [];
+        foreach ((array) $request->input('repuestos', []) as $r) {
+            $repuestosData[$r['id']] = [
+                'cantidad' => $r['cantidad'],
+                'precio_fijado' => $r['precio'],
+            ];
+        }
+        $orden->repuestos()->sync($repuestosData);
+    }
 
     DetalleTecnico::updateOrCreate(
         ['orden_servicio_id' => $orden->id],

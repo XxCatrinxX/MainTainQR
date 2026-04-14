@@ -143,6 +143,10 @@ class OrdenTecnicoController extends Controller
             'mano_obra' => 'required|numeric|min:0',
             'fotos' => 'nullable|array',
             'fotos.*' => 'image|mimes:jpeg,png,jpg,gif|max:5120',
+            'repuestos' => 'nullable|array',
+            'repuestos.*.id' => 'required_with:repuestos|exists:inventario,id',
+            'repuestos.*.cantidad' => 'required_with:repuestos|integer|min:1',
+            'repuestos.*.precio' => 'required_with:repuestos|numeric|min:0',
         ]);
 
         $orden = OrdenServicio::where('id', $id)
@@ -169,6 +173,18 @@ class OrdenTecnicoController extends Controller
                         'momento' => 'diagnostico',
                     ]);
                 }
+            }
+
+            // Guardar repuestos si vienen en el request
+            if ($request->has('repuestos')) {
+                $repuestosData = [];
+                foreach ((array) $request->input('repuestos', []) as $r) {
+                    $repuestosData[$r['id']] = [
+                        'cantidad' => $r['cantidad'],
+                        'precio_fijado' => $r['precio'],
+                    ];
+                }
+                $orden->repuestos()->sync($repuestosData);
             }
 
             DB::commit();
