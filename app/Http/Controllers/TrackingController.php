@@ -230,7 +230,7 @@ class TrackingController extends Controller
 
     $esReparable = (bool) $orden->es_reparable;
 
-    $orden->estado = 'rechazado';
+    $orden->estado = 'listo'; // El equipo queda listo para entrega aunque se rechace el presupuesto
     $orden->decision_cliente = 'rechaza';
     $orden->fecha_aprobacion = now();
     $orden->save();

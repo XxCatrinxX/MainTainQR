@@ -438,7 +438,7 @@ class OrdenServicioController extends Controller
             'token_rastreo' => uniqid('rastreo_'),
         ]);
 
-        $orden->load('equipo.cliente'); // 👈 IMPORTANTE
+        $orden->load(['equipo.cliente', 'user']); // 👈 IMPORTANTE: Cargamos equipo.cliente y user (técnico)
 
         $correoCliente = $orden->equipo->cliente->correo ?? null;
 
