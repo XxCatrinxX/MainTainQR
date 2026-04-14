@@ -353,8 +353,8 @@
         <div class="card-body">
 
             {{-- 🔑 Token --}}
-            @if($orden->qr_token)
-                <p><strong>Token de rastreo:</strong> {{ $orden->qr_token }}</p>
+            @if($orden->token_rastreo)
+                <p><strong>Token de rastreo:</strong> {{ $orden->token_rastreo }}</p>
             @endif
 
             {{-- 💰 Mano de obra --}}
