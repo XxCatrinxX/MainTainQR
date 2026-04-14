@@ -28,7 +28,7 @@ class HomeController extends Controller
         $stockBajo = Inventario::where('stock', '<', 5)->count();
 
         // 2. Últimas 5 órdenes con su relación cliente cargada (Eager Loading)
-        $ordenesRecientes = OrdenServicio::with('equipo.cliente')
+        $ordenesRecientes = OrdenServicio::with(['cliente', 'equipo'])
             ->latest()
             ->get()
             ->sortByDesc(function($orden){

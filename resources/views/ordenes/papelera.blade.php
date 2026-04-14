@@ -30,7 +30,7 @@
                         <tr>
                             <td class="align-middle font-weight-bold text-primary">{{ $orden->folio }}</td>
                             <td class="align-middle">
-                                <div style="font-weight: 600;">{{ $orden->equipo->cliente->nombre ?? 'N/A' }}</div>
+                                <div style="font-weight: 600;">{{ $orden->cliente->nombre ?? 'N/A' }}</div>
                                 <div class="small text-muted">{{ $orden->equipo->marca }} {{ $orden->equipo->modelo }}</div>
                             </td>
                             <td class="align-middle">

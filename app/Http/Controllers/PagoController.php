@@ -15,7 +15,7 @@ class PagoController extends Controller
         $total_ingresos = $pagos->where('tipo_pago', '!=', 'pago_cliente')->sum('monto');
         $total_egresos = $pagos->where('tipo_pago', 'pago_cliente')->sum('monto');
 
-        $ordenes_pendientes = OrdenServicio::with(['equipo.cliente', 'pagos', 'repuestos'])
+        $ordenes_pendientes = OrdenServicio::with(['cliente', 'equipo', 'pagos', 'repuestos'])
             ->whereIn('estado', ['listo', 'entregado', 'reparacion', 'para_pzas'])
             ->get()
             ->map(function ($orden) {
@@ -40,7 +40,7 @@ class PagoController extends Controller
 
     public function create(Request $request)
     {
-        $orden_lista = OrdenServicio::with(['equipo.cliente', 'pagos', 'repuestos'])
+        $orden_lista = OrdenServicio::with(['cliente', 'equipo', 'pagos', 'repuestos'])
             ->whereIn('estado', ['listo', 'entregado', 'reparacion', 'para_pzas'])
             ->get()
             ->map(function ($orden) {

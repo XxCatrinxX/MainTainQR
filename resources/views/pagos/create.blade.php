@@ -38,7 +38,7 @@
                         @foreach($orden_lista as $orden)
                             <option value="{{ $orden->id }}" 
                                 {{ (old('orden_servicio_id') == $orden->id || (isset($orden_preseleccionada) && $orden_preseleccionada->id == $orden->id)) ? 'selected' : '' }}>
-                                {{ $orden->folio }} - {{ $orden->equipo->cliente->nombre ?? 'N/A' }} | Pendiente: ${{ number_format($orden->restante, 2) }} | Estado: {{ strtoupper($orden->estado) }}
+                                {{ $orden->folio }} - {{ $orden->cliente->nombre ?? 'N/A' }} | Pendiente: ${{ number_format($orden->restante, 2) }} | Estado: {{ strtoupper($orden->estado) }}
                             </option>
                         @endforeach
                     </select>

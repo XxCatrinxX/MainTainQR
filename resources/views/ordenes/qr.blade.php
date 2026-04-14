@@ -76,15 +76,15 @@
                     <div class="info-item">
                         <div class="info-label">Cliente</div>
                         <div class="info-value">
-                            {{ $orden->equipo->cliente->nombre }}
-                            {{ $orden->equipo->cliente->apellido_paterno }}
+                            {{ $orden->cliente->nombre ?? 'N/A' }}
+                            {{ $orden->cliente->apellido_paterno ?? '' }}
                         </div>
                     </div>
 
                     <div class="info-item">
                         <div class="info-label">Teléfono</div>
                         <div class="info-value">
-                            {{ $orden->equipo->cliente->telefono ?? 'N/A' }}
+                            {{ $orden->cliente->telefono ?? 'N/A' }}
                         </div>
                     </div>
 

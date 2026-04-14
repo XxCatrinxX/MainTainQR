@@ -28,7 +28,7 @@ class OrdenServicioController extends Controller
     public function index()
     {
         $user = Auth::user();
-        $query = OrdenServicio::with(['equipo.cliente', 'user'])->where('estado', '!=', 'entregado');
+        $query = OrdenServicio::with(['cliente', 'equipo', 'user'])->where('estado', '!=', 'entregado');
 
         // Si es técnico, solo ve lo asignado a él
         if ($user->rol === 'tecnico') {
@@ -59,7 +59,7 @@ class OrdenServicioController extends Controller
 
     public function show($id)
     {
-        $orden = OrdenServicio::with(['equipo.cliente', 'user', 'evidencias', 'repuestos', 'pagos', 'detallesTecnicos'])->findOrFail($id);
+        $orden = OrdenServicio::with(['cliente', 'equipo', 'user', 'evidencias', 'repuestos', 'pagos', 'detallesTecnicos'])->findOrFail($id);
 
         $user = \Illuminate\Support\Facades\Auth::user();
         
@@ -162,9 +162,9 @@ class OrdenServicioController extends Controller
         }
     }
 
-    $orden->load(['equipo.cliente', 'evidencias', 'repuestos']);
+    $orden->load(['cliente', 'equipo', 'evidencias', 'repuestos']);
 
-    $correoCliente = $orden->equipo->cliente->correo ?? null;
+    $correoCliente = $orden->cliente->correo ?? null;
     $msgEmail = ' El cliente no tiene correo registrado.';
 
     if ($correoCliente) {
@@ -261,9 +261,9 @@ class OrdenServicioController extends Controller
         }
     }
 
-    $orden->load(['equipo.cliente', 'evidencias', 'repuestos']);
+    $orden->load(['cliente', 'equipo', 'evidencias', 'repuestos']);
 
-    $correoCliente = $orden->equipo->cliente->correo ?? null;
+    $correoCliente = $orden->cliente->correo ?? null;
     $correoEnviado = false;
     $errorCorreo = null;
 
@@ -446,9 +446,9 @@ class OrdenServicioController extends Controller
             'estado' => 'recibido',
         ]);
 
-        $orden->load(['equipo.cliente', 'user']); // 👈 IMPORTANTE: Cargamos equipo.cliente y user (técnico)
+        $orden->load(['cliente', 'equipo', 'user']); // 👈 IMPORTANTE: Cargamos cliente, equipo y user
 
-        $correoCliente = $orden->equipo->cliente->correo ?? null;
+        $correoCliente = $orden->cliente->correo ?? null;
 
         if($correoCliente) {
             try {
@@ -501,7 +501,7 @@ if ($tecnico && $tecnico->fcm_token) {
     // ==========================================
     public function showRecepcion($id)
     {
-        $orden = OrdenServicio::with('equipo.cliente')->findOrFail($id);
+        $orden = OrdenServicio::with(['cliente', 'equipo'])->findOrFail($id);
 
         $qrCode = new \Endroid\QrCode\QrCode(
             data: $orden->equipo->qr_token,
@@ -530,7 +530,7 @@ if ($tecnico && $tecnico->fcm_token) {
             'fotos.*' => 'image|mimes:jpeg,png,jpg,gif|max:5120',
         ]);
 
-        $orden = OrdenServicio::with('equipo.cliente')->findOrFail($id);
+        $orden = OrdenServicio::with(['cliente', 'equipo'])->findOrFail($id);
         
         DetalleTecnico::updateOrCreate(
             ['orden_servicio_id' => $orden->id],
@@ -569,10 +569,10 @@ if ($tecnico && $tecnico->fcm_token) {
         $orden->estado = 'listo';
         $orden->fecha_listo = now();
         $orden->save();
-        $orden->load(['equipo.cliente', 'evidencias', 'repuestos', 'detallesTecnicos']);
+        $orden->load(['cliente', 'equipo', 'evidencias', 'repuestos', 'detallesTecnicos']);
 
         // Notificar al cliente
-        $correoCliente = $orden->equipo->cliente->correo ?? null;
+        $correoCliente = $orden->cliente->correo ?? null;
         $correoEnviado = false;
         $errorCorreo = null;
 
@@ -617,7 +617,7 @@ if ($tecnico && $tecnico->fcm_token) {
 
     public function update(Request $request, $id)
     {
-        $orden = OrdenServicio::with('repuestos', 'pagos', 'equipo.cliente')->findOrFail($id);
+        $orden = OrdenServicio::with('repuestos', 'pagos', 'cliente', 'equipo')->findOrFail($id);
 
         if ($request->input('estado') === 'entregado') {
             $totalPagar = $orden->mano_obra + $orden->repuestos->sum(function($r) {
@@ -644,7 +644,7 @@ if ($tecnico && $tecnico->fcm_token) {
 
         // Enviar notificación si el estado cambió a listo
         if ($estadoAnterior !== $orden->estado && $orden->estado === 'listo') {
-            $correoCliente = $orden->equipo->cliente->correo;
+            $correoCliente = $orden->cliente->correo;
             if (!empty($correoCliente)) {
                 \Illuminate\Support\Facades\Log::info('ListoNotificacion (update): intentando enviar correo', [
                     'orden_id' => $orden->id,
@@ -772,7 +772,7 @@ if ($tecnico && $tecnico->fcm_token) {
 
     public function verQR($id)
 {
-    $orden = OrdenServicio::with('equipo.cliente')->findOrFail($id);
+    $orden = OrdenServicio::with(['cliente', 'equipo'])->findOrFail($id);
 
     $qrCode = new \Endroid\QrCode\QrCode(
         data: $orden->equipo->qr_token,

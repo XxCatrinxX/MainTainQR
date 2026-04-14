@@ -64,7 +64,7 @@
                 @forelse($ordenes_pendientes as $orden)
                     <tr>
                         <td class="align-middle font-weight-bold">{{ $orden->folio }}</td>
-                        <td class="align-middle">{{ $orden->equipo->cliente->nombre ?? 'N/A' }}</td>
+                        <td class="align-middle">{{ $orden->cliente->nombre ?? 'N/A' }}</td>
                         <td class="align-middle text-uppercase">
                             @if($orden->estado == 'listo')
                                 @if($orden->decision_cliente === 'rechaza')

@@ -27,7 +27,7 @@ class MonitorOrderChangesJob implements ShouldQueue
     {
         try {
             // Obtener auditorías no notificadas
-            $auditorias = OrdenServicioAudit::with('ordenServicio.user', 'ordenServicio.equipo.cliente')
+            $auditorias = OrdenServicioAudit::with(['ordenServicio.user', 'ordenServicio.cliente', 'ordenServicio.equipo'])
                 ->where('notificado', false)
                 ->orderBy('created_at', 'asc')
                 ->get();

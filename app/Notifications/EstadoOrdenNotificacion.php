@@ -37,7 +37,7 @@ class EstadoOrdenNotificacion extends Notification implements ShouldQueue
 
         return (new MailMessage)
                     ->subject('Actualización de tu Orden: ' . $this->orden->folio)
-                    ->greeting('Hola ' . $this->orden->equipo->cliente->nombre . ',')
+                    ->greeting('Hola ' . $this->orden->cliente->nombre . ',')
                     ->line('El estado de tu equipo ' . $this->orden->equipo->marca . ' (' . $this->orden->equipo->modelo . ') ha cambiado a: **' . $estadoVisual . '**.')
                     ->action('Ver Seguimiento y Línea de Tiempo', route('seguimiento.show', $this->orden->token_rastreo))
                     ->line('Si tu orden requiere aprobación de presupuesto, podrás aceptarlo desde el enlace de seguimiento superior.')

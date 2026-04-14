@@ -34,7 +34,7 @@ class TrackingController extends Controller
             'datos_transferencia' => 'required_if:metodo_pago_compra,transferencia|nullable|string',
         ]);
 
-        $orden = OrdenServicio::with(['equipo.cliente', 'repuestos', 'user'])
+        $orden = OrdenServicio::with(['cliente', 'equipo', 'repuestos', 'user'])
             ->where('token_rastreo', $token_rastreo)
             ->firstOrFail();
 
@@ -99,7 +99,7 @@ class TrackingController extends Controller
      */
     public function rechazarPresupuesto(Request $request, $token_rastreo)
     {
-        $orden = OrdenServicio::with(['cliente', 'equipo.cliente', 'user'])
+        $orden = OrdenServicio::with(['cliente', 'equipo', 'user'])
             ->where('token_rastreo', $token_rastreo)
             ->firstOrFail();
 

@@ -60,8 +60,8 @@
 
                     <p>
                         <strong>Cliente:</strong><br>
-                        {{ $orden->equipo->cliente->nombre }}
-                        {{ $orden->equipo->cliente->apellido_paterno }}
+                        {{ $orden->cliente->nombre ?? '' }}
+                        {{ $orden->cliente->apellido_paterno ?? '' }}
                     </p>
 
                     <p>

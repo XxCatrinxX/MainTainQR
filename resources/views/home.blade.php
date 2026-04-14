@@ -194,7 +194,7 @@
 
                 {{-- Cliente --}}
                 <td>
-                    {{ $orden->equipo?->cliente?->nombre ?? 'Sin cliente' }}
+                    {{ $orden->cliente?->nombre ?? 'Sin cliente' }}
                 </td>
 
                 {{-- Estado --}}
